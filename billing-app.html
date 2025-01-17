@@ -1,3 +1,13 @@
+       printBtn.addEventListener('click', printBill);
+        exportCsvBtn.addEventListener('click', exportToCSV);
+
+        updateBill();
+    </script>
+</body>
+</html>
+
+Version 3 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -57,7 +67,8 @@
             display: block;
             margin-bottom: 5px;
         }
-        .form-group input {
+        .form-group input,
+        .form-group select {
             width: 100%;
             padding: 8px;
             font-size: 14px;
@@ -73,23 +84,10 @@
     <h1>Restaurant Billing App</h1>
     <div class="container">
         <div class="form-group">
-            <label for="customerName">Customer Name:</label>
-            <input type="text" id="customerName" placeholder="Enter customer name">
-            <div id="customerNameError" class="error"></div>
+            <label for="itemDropdown">Select Item:</label>
+            <input list="itemList" id="itemDropdown" placeholder="Type to search or add item">
+            <datalist id="itemList"></datalist>
         </div>
-        <div class="form-group">
-            <label for="customerPhone">Phone:</label>
-            <input type="text" id="customerPhone" placeholder="Enter phone number">
-            <div id="customerPhoneError" class="error"></div>
-        </div>
-        <div class="form-group">
-            <label for="customerEmail">Email:</label>
-            <input type="email" id="customerEmail" placeholder="Enter email">
-            <div id="customerEmailError" class="error"></div>
-        </div>
-
-        <label for="itemName">Item Name:</label>
-        <input type="text" id="itemName" placeholder="Enter item name" required>
         <label for="itemPrice">Price:</label>
         <input type="number" id="itemPrice" placeholder="Enter price" required>
         <label for="itemQuantity">Quantity:</label>
@@ -112,60 +110,35 @@
         </table>
 
         <p class="total">Total: ₹<span id="totalAmount">0.00</span></p>
-        <button class="btn" id="saveBillBtn" disabled>Save Bill</button>
-        <button class="btn" id="printBtn" disabled>Print Bill</button>
-        <button class="btn btn-danger" id="clearBillBtn">Clear Bill</button>
-        <button class="btn" id="exportCsvBtn">Export Bills as CSV</button>
+        <button class="btn btn-danger" id="clearItemsBtn">Reset Items</button>
     </div>
 
     <script>
         const addItemBtn = document.getElementById('addItemBtn');
-        const saveBillBtn = document.getElementById('saveBillBtn');
-        const printBtn = document.getElementById('printBtn');
-        const clearBillBtn = document.getElementById('clearBillBtn');
-        const exportCsvBtn = document.getElementById('exportCsvBtn');
-        const itemNameInput = document.getElementById('itemName');
+        const clearItemsBtn = document.getElementById('clearItemsBtn');
+        const itemDropdown = document.getElementById('itemDropdown');
+        const itemList = document.getElementById('itemList');
         const itemPriceInput = document.getElementById('itemPrice');
         const itemQuantityInput = document.getElementById('itemQuantity');
         const billTableBody = document.getElementById('billTableBody');
         const totalAmountEl = document.getElementById('totalAmount');
 
-        const customerNameInput = document.getElementById('customerName');
-        const customerPhoneInput = document.getElementById('customerPhone');
-        const customerEmailInput = document.getElementById('customerEmail');
+        let bill = [];
+        let savedItems = JSON.parse(localStorage.getItem('savedItems')) || [];
 
-        let bill = JSON.parse(localStorage.getItem('currentBill')) || [];
-        let savedBills = JSON.parse(localStorage.getItem('savedBills')) || [];
+        function populateDropdown() {
+            itemList.innerHTML = '';
+            savedItems.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.name;
+                itemList.appendChild(option);
+            });
+        }
 
-        function validateCustomerDetails() {
-            const name = customerNameInput.value.trim();
-            const phone = customerPhoneInput.value.trim();
-            const email = customerEmailInput.value.trim();
-
-            let isValid = true;
-
-            if (!name) {
-                document.getElementById('customerNameError').textContent = 'Name is required.';
-                isValid = false;
-            } else {
-                document.getElementById('customerNameError').textContent = '';
-            }
-
-            if (!/^\d{10}$/.test(phone)) {
-                document.getElementById('customerPhoneError').textContent = 'Phone must be a valid 10-digit number.';
-                isValid = false;
-            } else {
-                document.getElementById('customerPhoneError').textContent = '';
-            }
-
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                document.getElementById('customerEmailError').textContent = 'Email must be valid.';
-                isValid = false;
-            } else {
-                document.getElementById('customerEmailError').textContent = '';
-            }
-
-            return isValid;
+        function addItemToDropdown(name, price) {
+            savedItems.push({ name, price });
+            localStorage.setItem('savedItems', JSON.stringify(savedItems));
+            populateDropdown();
         }
 
         function updateBill() {
@@ -174,7 +147,6 @@
 
             bill.forEach((item, index) => {
                 const row = document.createElement('tr');
-
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${item.name}</td>
@@ -183,30 +155,30 @@
                     <td>₹${(item.price * item.quantity).toFixed(2)}</td>
                     <td><button class="btn btn-danger" onclick="removeItem(${index})">Remove</button></td>
                 `;
-
                 billTableBody.appendChild(row);
                 total += item.price * item.quantity;
             });
 
             totalAmountEl.textContent = total.toFixed(2);
-            localStorage.setItem('currentBill', JSON.stringify(bill));
-
-            saveBillBtn.disabled = bill.length === 0 || !validateCustomerDetails();
-            printBtn.disabled = bill.length === 0;
         }
 
         function addItem() {
-            const name = itemNameInput.value.trim();
+            const name = itemDropdown.value.trim();
             const price = parseFloat(itemPriceInput.value);
             const quantity = parseInt(itemQuantityInput.value);
 
             if (name && !isNaN(price) && price > 0 && quantity > 0) {
+                const existingItem = savedItems.find(item => item.name.toLowerCase() === name.toLowerCase());
+                if (!existingItem) {
+                    addItemToDropdown(name, price);
+                }
+
                 bill.push({ name, price, quantity });
                 updateBill();
-                itemNameInput.value = '';
+                itemDropdown.value = '';
                 itemPriceInput.value = '';
                 itemQuantityInput.value = '';
-                itemNameInput.focus();
+                itemDropdown.focus();
             } else {
                 alert('Please enter valid item details.');
             }
@@ -217,95 +189,21 @@
             updateBill();
         }
 
-        function clearBill() {
-            if (confirm('Are you sure you want to clear the current bill?')) {
-                bill = [];
-                updateBill();
+        function resetItems() {
+            if (confirm('Are you sure you want to reset the saved items?')) {
+                localStorage.setItem('backupItems', JSON.stringify(savedItems));
+                savedItems = [];
+                localStorage.setItem('savedItems', JSON.stringify(savedItems));
+                populateDropdown();
+                alert('Items reset. Backup saved.');
             }
-        }
-
-        function saveBill() {
-            if (!validateCustomerDetails()) {
-                alert('Please correct customer details before saving.');
-                return;
-            }
-
-            const timestamp = new Date().toLocaleString();
-            const customer = {
-                name: customerNameInput.value.trim(),
-                phone: customerPhoneInput.value.trim(),
-                email: customerEmailInput.value.trim()
-            };
-
-            savedBills.push({ timestamp, customer, bill, total: parseFloat(totalAmountEl.textContent) });
-            localStorage.setItem('savedBills', JSON.stringify(savedBills));
-
-            alert('Bill saved successfully!');
-            clearBill();
-        }
-
-        function exportToCSV() {
-            if (savedBills.length === 0) {
-                alert('No saved bills to export!');
-                return;
-            }
-
-            let csvContent = 'data:text/csv;charset=utf-8,Date/Time,Customer Name,Customer Phone,Customer Email,Item Name,Price,Quantity,Total\n';
-
-            savedBills.forEach(({ timestamp, customer, bill, total }) => {
-                bill.forEach((item) => {
-                    csvContent += `${timestamp},"${customer.name}",${customer.phone},${customer.email},"${item.name}",${item.price},${item.quantity},${(item.price * item.quantity)}\n`;
-                });
-                csvContent += `,,,,,,,"₹${total}"\n\n`;
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', 'saved_bills.csv');
-            document.body.appendChild(link);
-
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function printBill() {
-            if (!validateCustomerDetails()) {
-                alert('Please correct customer details before printing.');
-                return;
-            }
-
-            const customer = {
-                name: customerNameInput.value.trim(),
-                phone: customerPhoneInput.value.trim(),
-                email: customerEmailInput.value.trim()
-            };
-
-            const printWindow = window.open('', '', 'width=800,height=600');
-            printWindow.document.write('<html><head><title>Bill</title></head><body>');
-            printWindow.document.write('<h1>Restaurant Bill</h1>');
-            printWindow.document.write(`<p><strong>Customer Name:</strong> ${customer.name}</p>`);
-            printWindow.document.write(`<p><strong>Phone:</strong> ${customer.phone}</p>`);
-            printWindow.document.write(`<p><strong>Email:</strong> ${customer.email}</p>`);
-            printWindow.document.write('<table border="1" style="width:100%;border-collapse:collapse;">');
-            printWindow.document.write('<tr><th>#</th><th>Item Name</th><th>Price</th><th>Quantity</th><th>Total</th></tr>');
-            bill.forEach((item, index) => {
-                printWindow.document.write(`<tr><td>${index + 1}</td><td>${item.name}</td><td>₹${item.price.toFixed(2)}</td><td>${item.quantity}</td><td>₹${(item.price * item.quantity).toFixed(2)}</td></tr>`);
-            });
-            printWindow.document.write('</table>');
-            printWindow.document.write(`<h2>Total: ₹${parseFloat(totalAmountEl.textContent).toFixed(2)}</h2>`);
-            printWindow.document.write('</body></html>');
-            printWindow.document.close();
-            printWindow.print();
         }
 
         addItemBtn.addEventListener('click', addItem);
-        saveBillBtn.addEventListener('click', saveBill);
-        clearBillBtn.addEventListener('click', clearBill);
-        printBtn.addEventListener('click', printBill);
-        exportCsvBtn.addEventListener('click', exportToCSV);
+        clearItemsBtn.addEventListener('click', resetItems);
 
-        updateBill();
+        // Populate dropdown on load
+        populateDropdown();
     </script>
 </body>
 </html>
