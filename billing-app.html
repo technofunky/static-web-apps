@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restaurant Billing App - by Berserker Labs</title>
+    <title>Restaurant Billing App</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -73,6 +73,24 @@
 <body>
     <h1>Restaurant Billing App - by Berserker Labs</h1>
     <div class="container">
+        <h2>Customer Details</h2>
+        <div class="form-group">
+            <label for="customerName">Name:</label>
+            <input type="text" id="customerName" placeholder="Enter customer name">
+            <div id="customerNameError" class="error"></div>
+        </div>
+        <div class="form-group">
+            <label for="customerPhone">Phone:</label>
+            <input type="text" id="customerPhone" placeholder="Enter phone number">
+            <div id="customerPhoneError" class="error"></div>
+        </div>
+        <div class="form-group">
+            <label for="customerEmail">Email:</label>
+            <input type="email" id="customerEmail" placeholder="Enter email">
+            <div id="customerEmailError" class="error"></div>
+        </div>
+
+        <h2>Item Details</h2>
         <div class="form-group">
             <label for="itemDropdown">Select Item:</label>
             <input list="itemList" id="itemDropdown" placeholder="Type to search or add item">
@@ -101,20 +119,26 @@
 
         <p class="total">Total: ₹<span id="totalAmount">0.00</span></p>
         <button class="btn btn-danger" id="clearItemsBtn">Reset Items</button>
+        <button class="btn" id="saveBillBtn" disabled>Save Bill</button>
     </div>
 
     <script>
         const addItemBtn = document.getElementById('addItemBtn');
         const clearItemsBtn = document.getElementById('clearItemsBtn');
+        const saveBillBtn = document.getElementById('saveBillBtn');
         const itemDropdown = document.getElementById('itemDropdown');
         const itemList = document.getElementById('itemList');
         const itemPriceInput = document.getElementById('itemPrice');
         const itemQuantityInput = document.getElementById('itemQuantity');
         const billTableBody = document.getElementById('billTableBody');
         const totalAmountEl = document.getElementById('totalAmount');
+        const customerNameInput = document.getElementById('customerName');
+        const customerPhoneInput = document.getElementById('customerPhone');
+        const customerEmailInput = document.getElementById('customerEmail');
 
         let bill = [];
         let savedItems = JSON.parse(localStorage.getItem('savedItems')) || [];
+        let savedBills = JSON.parse(localStorage.getItem('savedBills')) || [];
 
         function populateDropdown() {
             itemList.innerHTML = '';
@@ -129,6 +153,37 @@
             savedItems.push({ name, price });
             localStorage.setItem('savedItems', JSON.stringify(savedItems));
             populateDropdown();
+        }
+
+        function validateCustomerDetails() {
+            const name = customerNameInput.value.trim();
+            const phone = customerPhoneInput.value.trim();
+            const email = customerEmailInput.value.trim();
+
+            let isValid = true;
+
+            if (!name) {
+                document.getElementById('customerNameError').textContent = 'Name is required.';
+                isValid = false;
+            } else {
+                document.getElementById('customerNameError').textContent = '';
+            }
+
+            if (!/^\d{10}$/.test(phone)) {
+                document.getElementById('customerPhoneError').textContent = 'Phone must be a valid 10-digit number.';
+                isValid = false;
+            } else {
+                document.getElementById('customerPhoneError').textContent = '';
+            }
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                document.getElementById('customerEmailError').textContent = 'Email must be valid.';
+                isValid = false;
+            } else {
+                document.getElementById('customerEmailError').textContent = '';
+            }
+
+            return isValid;
         }
 
         function updateBill() {
@@ -150,6 +205,7 @@
             });
 
             totalAmountEl.textContent = total.toFixed(2);
+            saveBillBtn.disabled = bill.length === 0 || !validateCustomerDetails();
         }
 
         function addItem() {
@@ -189,11 +245,39 @@
             }
         }
 
+        function saveBill() {
+            if (!validateCustomerDetails()) {
+                alert('Please correct customer details before saving.');
+                return;
+            }
+
+            const customer = {
+                name: customerNameInput.value.trim(),
+                phone: customerPhoneInput.value.trim(),
+                email: customerEmailInput.value.trim(),
+            };
+
+            savedBills.push({
+                customer,
+                bill,
+                total: parseFloat(totalAmountEl.textContent),
+                date: new Date().toLocaleString(),
+            });
+
+            localStorage.setItem('savedBills', JSON.stringify(savedBills));
+            alert('Bill saved successfully.');
+            bill = [];
+            updateBill();
+        }
+
         addItemBtn.addEventListener('click', addItem);
         clearItemsBtn.addEventListener('click', resetItems);
+        saveBillBtn.addEventListener('click', saveBill);
+        [customerNameInput, customerPhoneInput, customerEmailInput].forEach(input =>
+            input.addEventListener('input', updateBill)
+        );
 
         // Populate dropdown on load
         populateDropdown();
     </script>
 </body>
-</html>
