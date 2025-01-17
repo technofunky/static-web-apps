@@ -1,284 +1,245 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restaurant Billing App</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        h1 {
-            text-align: center;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border: 1px solid #ddd;
-        }
-        th {
-            background-color: #f4f4f4;
-        }
-        .total {
-            text-align: right;
-            font-size: 18px;
-            margin-top: 20px;
-        }
-        .btn {
-            display: inline-block;
-            margin: 10px 0;
-            padding: 10px 15px;
-            font-size: 16px;
-            color: white;
-            background-color: #007bff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn:disabled {
-            background-color: #ccc;
-        }
-        .btn-danger {
-            background-color: #dc3545;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 8px;
-            font-size: 14px;
-        }
-        .error {
-            color: red;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restaurant Billing App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      font-weight: bold;
+    }
+    .form-group input, .form-group select, .form-group button, .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    #billTable {
+      margin-top: 20px;
+    }
+    #pastBillsTable {
+      margin-top: 20px;
+    }
+    .actions {
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
     <h1>Restaurant Billing App</h1>
-    <div class="container">
-        <h2>Customer Details</h2>
-        <div class="form-group">
-            <label for="customerName">Name:</label>
-            <input type="text" id="customerName" placeholder="Enter customer name">
-            <div id="customerNameError" class="error"></div>
-        </div>
-        <div class="form-group">
-            <label for="customerPhone">Phone:</label>
-            <input type="text" id="customerPhone" placeholder="Enter phone number">
-            <div id="customerPhoneError" class="error"></div>
-        </div>
-        <div class="form-group">
-            <label for="customerEmail">Email:</label>
-            <input type="email" id="customerEmail" placeholder="Enter email">
-            <div id="customerEmailError" class="error"></div>
-        </div>
 
-        <h2>Item Details</h2>
-        <div class="form-group">
-            <label for="itemDropdown">Select Item:</label>
-            <input list="itemList" id="itemDropdown" placeholder="Type to search or add item">
-            <datalist id="itemList"></datalist>
-        </div>
-        <label for="itemPrice">Price:</label>
-        <input type="number" id="itemPrice" placeholder="Enter price" required>
-        <label for="itemQuantity">Quantity:</label>
-        <input type="number" id="itemQuantity" placeholder="Enter quantity" required>
-        <button class="btn" id="addItemBtn">Add Item</button>
-
-        <h2>Current Bill</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Item Name</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Total</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="billTableBody"></tbody>
-        </table>
-
-        <p class="total">Total: ₹<span id="totalAmount">0.00</span></p>
-        <button class="btn btn-danger" id="clearItemsBtn">Reset Items</button>
-        <button class="btn" id="saveBillBtn" disabled>Save Bill</button>
+    <div class="form-group">
+      <label for="customerName">Customer Name:</label>
+      <input type="text" id="customerName" placeholder="Enter customer name">
     </div>
 
-    <script>
-        const addItemBtn = document.getElementById('addItemBtn');
-        const clearItemsBtn = document.getElementById('clearItemsBtn');
-        const saveBillBtn = document.getElementById('saveBillBtn');
-        const itemDropdown = document.getElementById('itemDropdown');
-        const itemList = document.getElementById('itemList');
-        const itemPriceInput = document.getElementById('itemPrice');
-        const itemQuantityInput = document.getElementById('itemQuantity');
-        const billTableBody = document.getElementById('billTableBody');
-        const totalAmountEl = document.getElementById('totalAmount');
-        const customerNameInput = document.getElementById('customerName');
-        const customerPhoneInput = document.getElementById('customerPhone');
-        const customerEmailInput = document.getElementById('customerEmail');
+    <div class="form-group">
+      <label for="menuItems">Select Menu Item:</label>
+      <select id="menuItems"></select>
+      <button onclick="addItem()">Add Item</button>
+    </div>
 
-        let bill = [];
-        let savedItems = JSON.parse(localStorage.getItem('savedItems')) || [];
-        let savedBills = JSON.parse(localStorage.getItem('savedBills')) || [];
+    <div id="billTable">
+      <h2>Current Bill</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Price</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="billItems"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2"><strong>Subtotal</strong></td>
+            <td id="subtotal">0.00</td>
+          </tr>
+          <tr>
+            <td colspan="2"><strong>Tax (10%)</strong></td>
+            <td id="tax">0.00</td>
+          </tr>
+          <tr>
+            <td colspan="2"><strong>Total</strong></td>
+            <td id="total">0.00</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
 
-        function populateDropdown() {
-            itemList.innerHTML = '';
-            savedItems.forEach(item => {
-                const option = document.createElement('option');
-                option.value = `${item.name} - ₹${item.price}`;
-                itemList.appendChild(option);
-            });
-        }
+    <div class="actions">
+      <button onclick="saveBill()">Save Bill</button>
+      <button onclick="printBill()">Print Bill</button>
+    </div>
 
-        function addItemToDropdown(name, price) {
-            savedItems.push({ name, price });
-            localStorage.setItem('savedItems', JSON.stringify(savedItems));
-            populateDropdown();
-        }
+    <div id="pastBills">
+      <h2>Past Bills</h2>
+      <button onclick="exportBillsToCSV()">Export All Bills to CSV</button>
+      <table id="pastBillsTable">
+        <thead>
+          <tr>
+            <th>Customer Name</th>
+            <th>Items</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
 
-        function validateCustomerDetails() {
-            const name = customerNameInput.value.trim();
-            const phone = customerPhoneInput.value.trim();
-            const email = customerEmailInput.value.trim();
+  <script>
+    let menu = [
+      { name: 'Burger', price: 5.99 },
+      { name: 'Pizza', price: 8.99 },
+      { name: 'Pasta', price: 6.99 },
+      { name: 'Salad', price: 4.99 },
+    ];
 
-            let isValid = true;
+    let currentBill = [];
+    let pastBills = JSON.parse(localStorage.getItem('pastBills')) || [];
 
-            if (!name) {
-                document.getElementById('customerNameError').textContent = 'Name is required.';
-                isValid = false;
-            } else {
-                document.getElementById('customerNameError').textContent = '';
-            }
+    function loadMenu() {
+      const menuDropdown = document.getElementById('menuItems');
+      menu.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.name;
+        option.textContent = `${item.name} - $${item.price.toFixed(2)}`;
+        menuDropdown.appendChild(option);
+      });
+    }
 
-            if (!/^\d{10}$/.test(phone)) {
-                document.getElementById('customerPhoneError').textContent = 'Phone must be a valid 10-digit number.';
-                isValid = false;
-            } else {
-                document.getElementById('customerPhoneError').textContent = '';
-            }
+    function addItem() {
+      const selectedItem = document.getElementById('menuItems').value;
+      const item = menu.find(m => m.name === selectedItem);
+      if (item) {
+        currentBill.push(item);
+        renderBill();
+      }
+    }
 
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                document.getElementById('customerEmailError').textContent = 'Email must be valid.';
-                isValid = false;
-            } else {
-                document.getElementById('customerEmailError').textContent = '';
-            }
+    function removeItem(index) {
+      currentBill.splice(index, 1);
+      renderBill();
+    }
 
-            return isValid;
-        }
+    function renderBill() {
+      const billItems = document.getElementById('billItems');
+      const subtotalElem = document.getElementById('subtotal');
+      const taxElem = document.getElementById('tax');
+      const totalElem = document.getElementById('total');
 
-        function updateBill() {
-            billTableBody.innerHTML = '';
-            let total = 0;
+      billItems.innerHTML = '';
+      let subtotal = 0;
 
-            bill.forEach((item, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${item.name}</td>
-                    <td>₹${item.price.toFixed(2)}</td>
-                    <td>${item.quantity}</td>
-                    <td>₹${(item.price * item.quantity).toFixed(2)}</td>
-                    <td><button class="btn btn-danger" onclick="removeItem(${index})">Remove</button></td>
-                `;
-                billTableBody.appendChild(row);
-                total += item.price * item.quantity;
-            });
+      currentBill.forEach((item, index) => {
+        subtotal += item.price;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.name}</td>
+          <td>$${item.price.toFixed(2)}</td>
+          <td><button onclick="removeItem(${index})">Remove</button></td>
+        `;
+        billItems.appendChild(row);
+      });
 
-            totalAmountEl.textContent = total.toFixed(2);
-            saveBillBtn.disabled = bill.length === 0 || !validateCustomerDetails();
-        }
+      const tax = subtotal * 0.1;
+      const total = subtotal + tax;
 
-        function addItem() {
-            const name = itemDropdown.value.trim().split(' - ')[0];
-            const price = parseFloat(itemPriceInput.value);
-            const quantity = parseInt(itemQuantityInput.value);
+      subtotalElem.textContent = subtotal.toFixed(2);
+      taxElem.textContent = tax.toFixed(2);
+      totalElem.textContent = total.toFixed(2);
+    }
 
-            if (name && !isNaN(price) && price > 0 && quantity > 0) {
-                const existingItem = savedItems.find(item => item.name.toLowerCase() === name.toLowerCase());
-                if (!existingItem) {
-                    addItemToDropdown(name, price);
-                }
+    function saveBill() {
+      const customerName = document.getElementById('customerName').value.trim();
+      if (!customerName) {
+        alert('Customer name is required.');
+        return;
+      }
+      if (currentBill.length === 0) {
+        alert('Add at least one item to the bill.');
+        return;
+      }
 
-                bill.push({ name, price, quantity });
-                updateBill();
-                itemDropdown.value = '';
-                itemPriceInput.value = '';
-                itemQuantityInput.value = '';
-                itemDropdown.focus();
-            } else {
-                alert('Please enter valid item details.');
-            }
-        }
+      const total = parseFloat(document.getElementById('total').textContent);
+      const newBill = {
+        customerName,
+        items: currentBill,
+        total,
+      };
 
-        function removeItem(index) {
-            bill.splice(index, 1);
-            updateBill();
-        }
+      pastBills.push(newBill);
+      localStorage.setItem('pastBills', JSON.stringify(pastBills));
+      renderPastBills();
+      currentBill = [];
+      document.getElementById('customerName').value = '';
+      renderBill();
+      alert('Bill saved successfully!');
+    }
 
-        function resetItems() {
-            if (confirm('Are you sure you want to reset the saved items?')) {
-                localStorage.setItem('backupItems', JSON.stringify(savedItems));
-                savedItems = [];
-                localStorage.setItem('savedItems', JSON.stringify(savedItems));
-                populateDropdown();
-                alert('Items reset. Backup saved.');
-            }
-        }
+    function renderPastBills() {
+      const pastBillsTable = document.getElementById('pastBillsTable').querySelector('tbody');
+      pastBillsTable.innerHTML = '';
+      pastBills.forEach(bill => {
+        const row = document.createElement('tr');
+        const itemsList = bill.items.map(item => `${item.name} ($${item.price.toFixed(2)})`).join(', ');
+        row.innerHTML = `
+          <td>${bill.customerName}</td>
+          <td>${itemsList}</td>
+          <td>$${bill.total.toFixed(2)}</td>
+        `;
+        pastBillsTable.appendChild(row);
+      });
+    }
 
-        function saveBill() {
-            if (!validateCustomerDetails()) {
-                alert('Please correct customer details before saving.');
-                return;
-            }
+    function exportBillsToCSV() {
+      let csv = 'Customer Name,Items,Total\n';
+      pastBills.forEach(bill => {
+        const itemsList = bill.items.map(item => `${item.name} ($${item.price.toFixed(2)})`).join('; ');
+        csv += `"${bill.customerName}","${itemsList}",${bill.total.toFixed(2)}\n`;
+      });
 
-            const customer = {
-                name: customerNameInput.value.trim(),
-                phone: customerPhoneInput.value.trim(),
-                email: customerEmailInput.value.trim(),
-            };
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'past_bills.csv';
+      a.click();
+    }
 
-            savedBills.push({
-                customer,
-                bill,
-                total: parseFloat(totalAmountEl.textContent),
-                date: new Date().toLocaleString(),
-            });
+    function printBill() {
+      window.print();
+    }
 
-            localStorage.setItem('savedBills', JSON.stringify(savedBills));
-            alert('Bill saved successfully.');
-            bill = [];
-            updateBill();
-        }
-
-        addItemBtn.addEventListener('click', addItem);
-        clearItemsBtn.addEventListener('click', resetItems);
-        saveBillBtn.addEventListener('click', saveBill);
-        [customerNameInput, customerPhoneInput, customerEmailInput].forEach(input =>
-            input.addEventListener('input', updateBill)
-        );
-
-        // Populate dropdown on load
-        populateDropdown();
-    </script>
+    window.onload = () => {
+      loadMenu();
+      renderPastBills();
+    };
+  </script>
 </body>
 </html>
