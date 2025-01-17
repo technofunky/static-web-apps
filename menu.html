@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Menu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .btn {
+            margin-top: 10px;
+            padding: 10px 15px;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <h1>Manage Menu</h1>
+    <button onclick="navigateTo('billing.html')">Create Bill</button>
+    <button onclick="navigateTo('bills.html')">View Bills</button>
+
+    <h2>Upload Menu from CSV</h2>
+    <input type="file" id="csvFileInput" accept=".csv">
+    <button class="btn" onclick="uploadMenu()">Upload Menu</button>
+
+    <h2>Menu</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Item Name</th>
+                <th>Price</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="menuTable"></tbody>
+    </table>
+
+    <script>
+        let menu = JSON.parse(localStorage.getItem('menu')) || [];
+
+        function updateMenuTable() {
+            const menuTable = document.getElementById('menuTable');
+            menuTable.innerHTML = '';
+            menu.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.name}</td>
+                    <td>₹${item.price.toFixed(2)}</td>
+                    <td><button class="btn btn-danger" onclick="deleteMenuItem(${index})">Delete</button></td>
+                `;
+                menuTable.appendChild(row);
+            });
+        }
+
+        function uploadMenu() {
+            const fileInput = document.getElementById('csvFileInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select a CSV file.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const csvData = event.target.result;
+                const rows = csvData.split('\n');
+                const newMenu = rows.map(row => {
+                    const [name, price] = row.split(',');
+                    if (name && price) {
+                        return { name: name.trim(), price: parseFloat(price.trim()) };
+                    }
+                }).filter(Boolean);
+                menu = menu.concat(newMenu);
+                localStorage.setItem('menu', JSON.stringify(menu));
+                updateMenuTable();
+                alert('Menu updated successfully.');
+            };
+            reader.readAsText(file);
+        }
+
+        function deleteMenuItem(index) {
+            menu.splice(index, 1);
+            localStorage.setItem('menu', JSON.stringify(menu));
+            updateMenuTable();
+        }
+
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        updateMenuTable();
+    </script>
+</body>
+</html>

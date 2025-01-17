@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Bill</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .split-container {
+            display: flex;
+            gap: 20px;
+        }
+        .split-container > div {
+            flex: 1;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+        }
+        .btn {
+            margin-top: 10px;
+            padding: 10px 15px;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Create Bill</h1>
+    <button onclick="navigateTo('menu.html')">Manage Menu</button>
+    <button onclick="navigateTo('bills.html')">View Bills</button>
+
+    <div class="split-container">
+        <!-- Menu Section -->
+        <div>
+            <h2>Search Menu Items</h2>
+            <div class="search-bar">
+                <input type="text" id="searchItem" placeholder="Search item by name" onkeyup="filterMenu()">
+            </div>
+
+            <h2>Menu</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Item Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="menuTable"></tbody>
+            </table>
+        </div>
+
+        <!-- Bill Section -->
+        <div>
+            <h2>Bill Details</h2>
+            <div class="form-group">
+                <label for="customerName">Customer Name:</label>
+                <input type="text" id="customerName" placeholder="Enter customer name">
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Item Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="billTable"></tbody>
+            </table>
+            <h3>Total: ₹<span id="totalAmount">0.00</span></h3>
+            <button class="btn" onclick="saveBill()">Save Bill</button>
+        </div>
+    </div>
+
+    <script>
+        let menu = JSON.parse(localStorage.getItem('menu')) || [];
+        let currentBill = [];
+
+        function updateMenuTable() {
+            const menuTable = document.getElementById('menuTable');
+            menuTable.innerHTML = '';
+            menu.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.name}</td>
+                    <td>₹${item.price.toFixed(2)}</td>
+                    <td><input type="number" id="quantity-${index}" min="1" value="1"></td>
+                    <td><button class="btn" onclick="addToBill(${index})">Add</button></td>
+                `;
+                menuTable.appendChild(row);
+            });
+        }
+
+        function filterMenu() {
+            const searchValue = document.getElementById('searchItem').value.toLowerCase();
+            const filteredMenu = menu.filter(item => item.name.toLowerCase().includes(searchValue));
+            const menuTable = document.getElementById('menuTable');
+            menuTable.innerHTML = '';
+            filteredMenu.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.name}</td>
+                    <td>₹${item.price.toFixed(2)}</td>
+                    <td><input type="number" id="quantity-${index}" min="1" value="1"></td>
+                    <td><button class="btn" onclick="addToBill(${menu.indexOf(item)})">Add</button></td>
+                `;
+                menuTable.appendChild(row);
+            });
+        }
+
+        function addToBill(index) {
+            const quantity = parseInt(document.getElementById(`quantity-${index}`).value);
+            if (quantity > 0) {
+                const item = menu[index];
+                const existingItem = currentBill.find(billItem => billItem.name === item.name);
+                if (existingItem) {
+                    existingItem.quantity += quantity;
+                } else {
+                    currentBill.push({ ...item, quantity });
+                }
+                updateBillTable();
+            } else {
+                alert('Enter a valid quantity.');
+            }
+        }
+
+        function updateBillTable() {
+            const billTable = document.getElementById('billTable');
+            const totalAmount = document.getElementById('totalAmount');
+            billTable.innerHTML = '';
+            let total = 0;
+            currentBill.forEach((item, index) => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.name}</td>
+                    <td>₹${item.price.toFixed(2)}</td>
+                    <td>${item.quantity}</td>
+                    <td>₹${itemTotal.toFixed(2)}</td>
+                    <td><button class="btn btn-danger" onclick="removeFromBill(${index})">Remove</button></td>
+                `;
+                billTable.appendChild(row);
+            });
+            totalAmount.textContent = total.toFixed(2);
+        }
+
+        function removeFromBill(index) {
+            currentBill.splice(index, 1);
+            updateBillTable();
+        }
+
+        function saveBill() {
+            const customerName = document.getElementById('customerName').value.trim();
+            if (customerName && currentBill.length > 0) {
+                const total = currentBill.reduce((sum, item) => sum + item.price * item.quantity, 0);
+                const bill = {
+                    customer: { name: customerName },
+                    bill: currentBill,
+                    total,
+                    timestamp: new Date().toLocaleString(),
+                };
+                const savedBills = JSON.parse(localStorage.getItem('savedBills')) || [];
+                savedBills.push(bill);
+                localStorage.setItem('savedBills', JSON.stringify(savedBills));
+                alert('Bill saved successfully.');
+                currentBill = [];
+                updateBillTable();
+                document.getElementById('customerName').value = '';
+            } else {
+                alert('Please add items to the bill and enter the customer name.');
+            }
+        }
+
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        updateMenuTable();
+    </script>
+</body>
+</html>
