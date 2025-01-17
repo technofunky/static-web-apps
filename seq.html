@@ -40,6 +40,10 @@
       border: 1px solid #ccc;
       white-space: pre-wrap;
     }
+    canvas {
+      border: 1px solid #ccc;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -85,6 +89,8 @@
   <h3>PlantUML Script:</h3>
   <pre id="plantUMLOutput">Click "Generate PlantUML Script" to see the output here.</pre>
 </div>
+
+<canvas id="sequenceCanvas" width="800" height="400"></canvas>
 
 <script>
   const actors = JSON.parse(localStorage.getItem('actors')) || [];
@@ -194,6 +200,7 @@
 
     // Display the script
     document.getElementById('plantUMLOutput').textContent = plantUMLScript;
+    renderCanvas(plantUMLScript);
     saveToLocalStorage();
   }
 
@@ -233,6 +240,52 @@
 
     saveToLocalStorage();
     alert('Table generated from PlantUML script!');
+  }
+
+  function renderCanvas(plantUMLScript) {
+    const canvas = document.getElementById('sequenceCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const lines = plantUMLScript.split('\n');
+    const actorPositions = {};
+    let y = 50;
+
+    // Draw actors
+    lines.forEach((line, index) => {
+      if (line.startsWith('actor')) {
+        const actor = line.split(' ')[1];
+        const x = 100 + index * 150;
+        actorPositions[actor] = x;
+
+        ctx.fillText(actor, x, y);
+        ctx.beginPath();
+        ctx.arc(x, y + 20, 10, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    });
+
+    y += 80;
+
+    // Draw interactions
+    lines.forEach(line => {
+      if (line.includes('->')) {
+        const [from, right] = line.split('->');
+        const to = right.split(':')[0].trim();
+        const message = right.split(':')[1].trim();
+
+        const x1 = actorPositions[from.trim()];
+        const x2 = actorPositions[to.trim()];
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y);
+        ctx.lineTo(x2, y);
+        ctx.stroke();
+
+        ctx.fillText(message, (x1 + x2) / 2, y - 10);
+        y += 40;
+      }
+    });
   }
 
   function saveToLocalStorage() {
