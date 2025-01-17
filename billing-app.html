@@ -71,7 +71,7 @@
     </style>
 </head>
 <body>
-    <h1>Restaurant Billing App - by Berserker Labs</h1>
+    <h1>Restaurant Billing App</h1>
     <div class="container">
         <h2>Customer Details</h2>
         <div class="form-group">
@@ -144,7 +144,7 @@
             itemList.innerHTML = '';
             savedItems.forEach(item => {
                 const option = document.createElement('option');
-                option.value = item.name;
+                option.value = `${item.name} - ₹${item.price}`;
                 itemList.appendChild(option);
             });
         }
@@ -209,7 +209,7 @@
         }
 
         function addItem() {
-            const name = itemDropdown.value.trim();
+            const name = itemDropdown.value.trim().split(' - ')[0];
             const price = parseFloat(itemPriceInput.value);
             const quantity = parseInt(itemQuantityInput.value);
 
@@ -281,3 +281,4 @@
         populateDropdown();
     </script>
 </body>
+</html>
