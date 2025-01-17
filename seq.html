@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sequence Diagram Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    .form-container {
+      margin-bottom: 20px;
+    }
+    .form-container input, select, button, textarea {
+      margin-right: 10px;
+      padding: 5px;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+    }
+    #outputContainer {
+      margin-top: 20px;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      border: 1px solid #ccc;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Sequence Diagram Generator</h1>
+
+<div class="form-container">
+  <label for="actor">Add Actor:</label>
+  <input type="text" id="actor" placeholder="Enter actor name">
+  <button onclick="addActor()">Add Actor</button>
+</div>
+
+<div class="form-container">
+  <button onclick="addRow()">Add Message Row</button>
+</div>
+
+<table id="sequenceTable">
+  <thead>
+    <tr>
+      <th>Actor 1</th>
+      <th>Actor 2</th>
+      <th>Message</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- Rows will be added dynamically -->
+  </tbody>
+</table>
+
+<div class="form-container">
+  <button onclick="generatePlantUML()">Generate PlantUML Script</button>
+  <button onclick="copyToClipboard()">Copy to Clipboard</button>
+</div>
+
+<div class="form-container">
+  <h3>Input PlantUML Script:</h3>
+  <textarea id="plantUMLInput" placeholder="Enter PlantUML script here"></textarea>
+  <button onclick="parsePlantUML()">Generate Table from Script</button>
+</div>
+
+<div id="outputContainer">
+  <h3>PlantUML Script:</h3>
+  <pre id="plantUMLOutput">Click "Generate PlantUML Script" to see the output here.</pre>
+</div>
+
+<script>
+  const actors = JSON.parse(localStorage.getItem('actors')) || [];
+  const tableData = JSON.parse(localStorage.getItem('tableData')) || [];
+  const plantUMLInput = localStorage.getItem('plantUMLInput') || '';
+
+  // Populate data from localStorage on load
+  window.onload = () => {
+    document.getElementById('plantUMLInput').value = plantUMLInput;
+    actors.forEach(actor => addActorToList(actor));
+    tableData.forEach(row => addRow(row.actor1, row.actor2, row.message));
+  };
+
+  function addActor() {
+    const actorInput = document.getElementById('actor');
+    const actorName = actorInput.value.trim();
+
+    if (actorName && !actors.includes(actorName)) {
+      actors.push(actorName);
+      addActorToList(actorName);
+      actorInput.value = '';
+      saveToLocalStorage();
+      alert(`Actor "${actorName}" added!`);
+    } else {
+      alert('Actor name is empty or already exists.');
+    }
+  }
+
+  function addActorToList(actorName) {
+    if (!actors.includes(actorName)) actors.push(actorName);
+  }
+
+  function addRow(actor1 = '', actor2 = '', message = '') {
+    const tableBody = document.getElementById('sequenceTable').querySelector('tbody');
+    const row = document.createElement('tr');
+
+    const actor1Cell = document.createElement('td');
+    const actor2Cell = document.createElement('td');
+    const messageCell = document.createElement('td');
+    const actionCell = document.createElement('td');
+
+    const actor1Select = createActorDropdown(actor1);
+    const actor2Select = createActorDropdown(actor2);
+    const messageInput = document.createElement('input');
+    messageInput.type = 'text';
+    messageInput.value = message;
+    messageInput.placeholder = 'Enter message';
+
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.onclick = () => {
+      row.remove();
+      saveToLocalStorage();
+    };
+
+    actor1Cell.appendChild(actor1Select);
+    actor2Cell.appendChild(actor2Select);
+    messageCell.appendChild(messageInput);
+    actionCell.appendChild(deleteButton);
+
+    row.appendChild(actor1Cell);
+    row.appendChild(actor2Cell);
+    row.appendChild(messageCell);
+    row.appendChild(actionCell);
+
+    tableBody.appendChild(row);
+    saveToLocalStorage();
+  }
+
+  function createActorDropdown(selectedValue = '') {
+    const select = document.createElement('select');
+    actors.forEach(actor => {
+      const option = document.createElement('option');
+      option.value = actor;
+      option.textContent = actor;
+      if (actor === selectedValue) {
+        option.selected = true;
+      }
+      select.appendChild(option);
+    });
+    select.onchange = saveToLocalStorage; // Save on change
+    return select;
+  }
+
+  function generatePlantUML() {
+    const tableBody = document.getElementById('sequenceTable').querySelector('tbody');
+    const rows = tableBody.querySelectorAll('tr');
+    let plantUMLScript = '@startuml\n';
+
+    // Declare actors
+    actors.forEach(actor => {
+      plantUMLScript += `actor ${actor}\n`;
+    });
+
+    // Add interactions
+    rows.forEach(row => {
+      const actor1 = row.cells[0].querySelector('select').value;
+      const actor2 = row.cells[1].querySelector('select').value;
+      const message = row.cells[2].querySelector('input').value.trim();
+
+      if (actor1 && actor2 && message) {
+        plantUMLScript += `${actor1} -> ${actor2} : ${message}\n`;
+      }
+    });
+
+    plantUMLScript += '@enduml';
+
+    // Display the script
+    document.getElementById('plantUMLOutput').textContent = plantUMLScript;
+    saveToLocalStorage();
+  }
+
+  function copyToClipboard() {
+    const plantUMLScript = document.getElementById('plantUMLOutput').textContent;
+    navigator.clipboard.writeText(plantUMLScript).then(() => {
+      alert('PlantUML script copied to clipboard!');
+    }).catch(err => {
+      alert('Failed to copy text: ', err);
+    });
+  }
+
+  function parsePlantUML() {
+    const input = document.getElementById('plantUMLInput').value.trim();
+    const tableBody = document.getElementById('sequenceTable').querySelector('tbody');
+    tableBody.innerHTML = ''; // Clear the table
+    actors.length = 0; // Reset actors array
+
+    const lines = input.split('\n');
+
+    lines.forEach(line => {
+      line = line.trim();
+      if (line.startsWith('actor')) {
+        const actorName = line.split(' ')[1];
+        if (!actors.includes(actorName)) {
+          actors.push(actorName);
+        }
+      } else if (line.includes('->')) {
+        const [left, right] = line.split('->');
+        const actor1 = left.trim();
+        const [actor2, message] = right.split(':').map(s => s.trim());
+        if (actor1 && actor2 && message) {
+          addRow(actor1, actor2, message);
+        }
+      }
+    });
+
+    saveToLocalStorage();
+    alert('Table generated from PlantUML script!');
+  }
+
+  function saveToLocalStorage() {
+    const tableBody = document.getElementById('sequenceTable').querySelector('tbody');
+    const rows = tableBody.querySelectorAll('tr');
+    const tableData = Array.from(rows).map(row => ({
+      actor1: row.cells[0].querySelector('select').value,
+      actor2: row.cells[1].querySelector('select').value,
+      message: row.cells[2].querySelector('input').value.trim(),
+    }));
+
+    localStorage.setItem('actors', JSON.stringify(actors));
+    localStorage.setItem('tableData', JSON.stringify(tableData));
+    localStorage.setItem('plantUMLInput', document.getElementById('plantUMLInput').value.trim());
+  }
+</script>
+
+</body>
+</html>
