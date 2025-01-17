@@ -242,7 +242,7 @@
     alert('Table generated from PlantUML script!');
   }
 
-  function renderCanvas(plantUMLScript) {
+function renderCanvas(plantUMLScript) {
   const canvas = document.getElementById('sequenceCanvas');
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
@@ -250,9 +250,11 @@
   const lines = plantUMLScript.split('\n');
   const actorPositions = {};
   const actorY = 50; // Y-coordinate for actors
-  let messageY = 100; // Initial Y-coordinate for messages
+  const lifelineYStart = actorY + 30; // Starting point of the lifeline
+  const lifelineYEnd = canvas.height - 50; // Ending point of the lifeline
+  let messageY = lifelineYStart + 20; // Initial Y-coordinate for messages
 
-  // Draw actors
+  // Draw actors and their lifelines
   let actorIndex = 0;
   lines.forEach(line => {
     if (line.startsWith('actor')) {
@@ -260,14 +262,19 @@
       const x = 100 + actorIndex * 150; // Spacing between actors
       actorPositions[actor] = x;
 
-      // Draw actor label and circle
+      // Draw actor label
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
       ctx.fillText(actor, x, actorY);
+
+      // Draw actor lifeline (vertical dashed line)
+      ctx.setLineDash([5, 5]); // Dashed line
       ctx.beginPath();
-      ctx.arc(x, actorY + 20, 10, 0, 2 * Math.PI); // Draw actor as a circle
-      ctx.fill();
+      ctx.moveTo(x, lifelineYStart);
+      ctx.lineTo(x, lifelineYEnd);
+      ctx.stroke();
       ctx.closePath();
+      ctx.setLineDash([]); // Reset to solid line
 
       actorIndex++;
     }
@@ -314,8 +321,7 @@
       }
     }
   });
-}
-  
+}  
     function saveToLocalStorage() {
     const tableBody = document.getElementById('sequenceTable').querySelector('tbody');
     const rows = tableBody.querySelectorAll('tr');
