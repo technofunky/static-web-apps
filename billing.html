@@ -147,7 +147,7 @@
                     <td>${item.name}</td>
                     <td>₹${item.price.toFixed(2)}</td>
                     <td><input type="number" id="quantity-${index}" min="1" value="1"></td>
-                    <td><button class="btn" onclick="addToBill(${menu.indexOf(item)})">Add</button></td>
+                    <td><button class="btn" onclick="addToBill(${index})">Add</button></td>
                 `;
                 menuTable.appendChild(row);
             });
