@@ -32,6 +32,17 @@
         .btn-danger {
             background-color: #dc3545;
         }
+        @media print {
+            body {
+                width: 58mm;
+                margin: 0;
+            }
+            .receipt {
+                font-size: 12px;
+                line-height: 1.5;
+                font-family: "Courier New", monospace;
+            }
+        }
     </style>
 </head>
 <body>
@@ -78,7 +89,9 @@
         function printBill(index) {
             const bill = savedBills[index];
             const printWindow = window.open('', '', 'width=800,height=600');
-            printWindow.document.write('<html><head><title>Bill</title></head><body>');
+            printWindow.document.write('<html><head><title>Bill</title>')
+            printWindow.document.write('<style>@media print {body {width: 58mm;margin: 0;}.receipt {font-size: 12px;line-height: 1.5;font-family: "Courier New", monospace;}}</style>');
+            printWindow.document.write('</head><body><div class="receipt">');
             printWindow.document.write('<h1>Sambar Restaurant Bill</h1>');
             printWindow.document.write(`<p><strong>Customer:</strong> ${bill.customer.name}</p>`);
             printWindow.document.write('<table border="1" style="width:20%;border-collapse:collapse;">');
@@ -96,7 +109,7 @@
             });
             printWindow.document.write('</table>');
             printWindow.document.write(`<h2>Total: ₹${bill.total.toFixed(2)}</h2>`);
-            printWindow.document.write('</body></html>');
+            printWindow.document.write('</div></body></html>');
             printWindow.document.close();
             printWindow.print();
         }
