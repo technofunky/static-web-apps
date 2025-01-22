@@ -117,6 +117,7 @@
 
     <script>
         let menu = JSON.parse(localStorage.getItem('menu')) || [];
+        let filteredMenu = JSON.parse(localStorage.getItem('menu')) || [];
         let currentBill = [];
 
         function updateMenuTable() {
@@ -128,8 +129,8 @@
                     <td>${index + 1}</td>
                     <td>${item.name}</td>
                     <td>₹${item.price.toFixed(2)}</td>
-                    <td><input type="number" id="quantity-${index}" min="1" value="1"></td>
-                    <td><button class="btn" onclick="addToBill(${index})">Add</button></td>
+                    <td><input type="number" id="quantity-${item.name}" min="1" value="1"></td>
+                    <td><button class="btn" onclick="addToBill('${item.name}')">Add</button></td>
                 `;
                 menuTable.appendChild(row);
             });
@@ -138,6 +139,7 @@
         function filterMenu() {
             const searchValue = document.getElementById('searchItem').value.toLowerCase();
             const filteredMenu = menu.filter(item => item.name.toLowerCase().includes(searchValue));
+
             const menuTable = document.getElementById('menuTable');
             menuTable.innerHTML = '';
             filteredMenu.forEach((item, index) => {
@@ -146,14 +148,34 @@
                     <td>${index + 1}</td>
                     <td>${item.name}</td>
                     <td>₹${item.price.toFixed(2)}</td>
-                    <td><input type="number" id="quantity-${index}" min="1" value="1"></td>
-                    <td><button class="btn" onclick="addToBill(${index})">Add</button></td>
+                    <td><input type="number" id="quantity-${item.name}" min="1" value="1"></td>
+                    <td><button class="btn" onclick="addToBill('${item.name}')">Add</button></td>
                 `;
                 menuTable.appendChild(row);
             });
         }
 
-        function addToBill(index) {
+        function addToBill(item_name) {
+            const quantity = parseInt(document.getElementById(`quantity-${item_name}`).value);
+
+            if (quantity > 0) {
+                // const item = menu[item_name];
+                const item = menu.find(item => item.name === item_name);
+                // alert("item is " + item)
+                const existingItem = currentBill.find(billItem => billItem.name === item.name);
+                if (existingItem) {
+                    existingItem.quantity += quantity;
+                } else {
+                    currentBill.push({ ...item, quantity });
+                }
+                updateBillTable();
+            } else {
+                alert('Enter a valid quantity.');
+            }
+        }
+
+// might be deleted if the function above starts working
+        function addToBill_v1(index) {
             const quantity = parseInt(document.getElementById(`quantity-${index}`).value);
             if (quantity > 0) {
                 const item = menu[index];
