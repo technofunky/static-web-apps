@@ -19,6 +19,9 @@
 <body>
 <h2>🔒 Encrypted Offline Journal</h2>
 
+<label for="username">Enter Username (if one does not exist then it will be created!):</label>
+<input type="text" id="username">
+
 <label for="password">Set/Enter Password:</label>
 <input type="password" id="password">
 <button onclick="setPassword()">Unlock</button>
@@ -58,8 +61,8 @@
 <h3>Export & Share</h3>
 <button onclick="exportData('json')">Export as JSON</button>
 <button onclick="exportData('csv')">Export as CSV</button>
-<button onclick="sendEmail()">Send via Email</button>
-<button onclick="shareOnWhatsApp()">Share on WhatsApp</button>
+<!--button onclick="sendEmail()">Send via Email</button>
+<button onclick="shareOnWhatsApp()">Share on WhatsApp</button-->
 
 <h2>Delete Specific Local Storage Key</h2>
 
@@ -73,9 +76,20 @@
 <p id="message"></p>
 <script>
     let userPassword = "";
-
+    let userName = "";
+    let journalName = ""; // either the dropdown value or the username is needed
+    
     function setPassword() {
         userPassword = document.getElementById("password").value;
+        userName = document.getElementById("username").value;
+
+        if (!userName) {
+            alert("Please enter a user name (the journal will be chosen based on this)!");
+            return;
+        }
+        else{
+            journalName = "journal_" + userName;
+        }
         if (!userPassword) {
             alert("Please enter a password!");
             return;
@@ -105,10 +119,10 @@
         if (!text) return alert("Entry cannot be empty.");
 
         let entry = { id: Date.now(), text: text, mood: mood, timestamp: new Date().toISOString() };
-        let entries = decryptData(localStorage.getItem("journalEntries"), userPassword) || [];
+        let entries = decryptData(localStorage.getItem(journalName), userPassword) || [];
 
         entries.unshift(entry);
-        localStorage.setItem("journalEntries", encryptData(entries, userPassword));
+        localStorage.setItem(journalName, encryptData(entries, userPassword));
 
         document.getElementById("journalEntry").value = "";
         loadEntries();
@@ -117,7 +131,8 @@
     function loadEntries() {
         if (!userPassword) return;
 
-        let encryptedData = localStorage.getItem("journalEntries");
+
+        let encryptedData = localStorage.getItem(journalName);
         if (!encryptedData) {
             document.getElementById("entries").innerHTML = "<p>No entries found.</p>";
             return;
@@ -137,7 +152,7 @@
     }
 
     function editEntry(id) {
-        let encryptedData = localStorage.getItem("journalEntries");
+        let encryptedData = localStorage.getItem(journalName);
         let entries = decryptData(encryptedData, userPassword);
         if (!entries) return;
 
@@ -149,7 +164,7 @@
         if (newText !== null && newMood !== null) {
             entry.text = newText;
             entry.mood = newMood;
-            localStorage.setItem("journalEntries", encryptData(entries, userPassword));
+            localStorage.setItem(journalName, encryptData(entries, userPassword));
             loadEntries();
         }
     }
@@ -157,17 +172,17 @@
     function deleteEntry(id) {
         if (!confirm("Are you sure?")) return;
 
-        let encryptedData = localStorage.getItem("journalEntries");
+        let encryptedData = localStorage.getItem(journalName);
         let entries = decryptData(encryptedData, userPassword);
         if (!entries) return;
 
         entries = entries.filter(e => e.id !== id);
-        localStorage.setItem("journalEntries", encryptData(entries, userPassword));
+        localStorage.setItem(journalName, encryptData(entries, userPassword));
         loadEntries();
     }
 
     function exportData(format) {
-        let encryptedData = localStorage.getItem("journalEntries");
+        let encryptedData = localStorage.getItem(journalName);
         let entries = decryptData(encryptedData, userPassword);
         if (!entries) return;
 
@@ -198,7 +213,7 @@
         let searchText = document.getElementById("searchText").value.toLowerCase();
         let searchDate = document.getElementById("searchDate").value;
         let searchMood = document.getElementById("searchMood").value;
-        let entries = decryptData(localStorage.getItem("journalEntries"), userPassword) || [];
+        let entries = decryptData(localStorage.getItem(journalName), userPassword) || [];
         let filteredEntries = entries.filter(entry =>
             entry.text.toLowerCase().includes(searchText) &&
             (!searchDate || entry.timestamp.startsWith(searchDate)) &&
@@ -261,7 +276,7 @@
     // 20250131.Berserker adding code for wordcloud
             function generateWordCloud() {
             if (!userPassword) return alert("Enter your password and unlock first!");
-        let entries = decryptData(localStorage.getItem("journalEntries"), userPassword) || [];
+        let entries = decryptData(localStorage.getItem(journalName), userPassword) || [];
         let text = entries.map(entry => entry.text).join(" ");
 
         let words = text.toLowerCase().match(/\b\w+\b/g) || [];
@@ -288,7 +303,7 @@
     // 20250131.Berserker adding code for activity map
             function generateActivityMap() {
             if (!userPassword) return alert("Enter your password and unlock first!");
-        let entries = decryptData(localStorage.getItem("journalEntries"), userPassword) || [];
+        let entries = decryptData(localStorage.getItem(journalName), userPassword) || [];
 
         let dailyCounts = entries.reduce((acc, entry) => {
             let date = entry.timestamp.split("T")[0];
@@ -320,7 +335,7 @@
             }
         });
     }
+    </script>
 
-</script>
 </body>
 </html>
