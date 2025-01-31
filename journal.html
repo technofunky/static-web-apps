@@ -78,7 +78,7 @@
     let userPassword = "";
     let userName = "";
     let journalName = ""; // either the dropdown value or the username is needed
-    
+
     function setPassword() {
         userPassword = document.getElementById("password").value;
         userName = document.getElementById("username").value;
@@ -240,10 +240,13 @@
         // Get all keys from localStorage and populate the dropdown
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            const option = document.createElement("option");
-            option.value = key;
-            option.textContent = key;
-            keySelect.appendChild(option);
+            if(key.includes("journal_")){
+                const option = document.createElement("option");
+                option.value = key;
+                option.textContent = key;
+                keySelect.appendChild(option);
+            }
+
         }
     }
 
