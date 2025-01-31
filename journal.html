@@ -84,7 +84,7 @@
             if (!text) return alert("Entry cannot be empty.");
 
             let entry = { id: Date.now(), text: text, mood: mood, timestamp: new Date().toISOString() };
-            let entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
+            let entries = decryptData(localStorage.getItem("journalEntries"), userPassword) || [];
 
             entries.unshift(entry);
             localStorage.setItem("journalEntries", encryptData(entries, userPassword));
