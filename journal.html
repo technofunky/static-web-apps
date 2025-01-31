@@ -7,6 +7,8 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.0.6/wordcloud2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
@@ -15,185 +17,310 @@
     </style>
 </head>
 <body>
-    <h2>🔒 Encrypted Offline Journal</h2>
+<h2>🔒 Encrypted Offline Journal</h2>
 
-    <label for="password">Set/Enter Password:</label>
-    <input type="password" id="password">
-    <button onclick="setPassword()">Unlock</button>
-    <br><br>
+<label for="password">Set/Enter Password:</label>
+<input type="password" id="password">
+<button onclick="setPassword()">Unlock</button>
+<br><br>
 
-    <textarea id="journalEntry" placeholder="Write your journal entry..."></textarea>
-    <label for="mood">Mood:</label>
-    <select id="mood">
-        <option value="Low">Low</option>
-        <option value="Okay" selected>Okay</option>
-        <option value="High">High</option>
-    </select>
-    <button onclick="saveEntry()">Save Entry</button>
+<textarea id="journalEntry" placeholder="Write your journal entry..."></textarea>
+<label for="mood">Mood:</label>
+<select id="mood">
+    <option value="Low">Low</option>
+    <option value="Okay" selected>Okay</option>
+    <option value="High">High</option>
+</select>
+<button onclick="saveEntry()">Save Entry</button>
 
-    <h3>Search</h3>
-    <input type="text" id="searchText" placeholder="Search text..." oninput="filterEntries()">
-    <input type="date" id="searchDate" oninput="filterEntries()">
-    <select id="searchMood" onchange="filterEntries()">
-        <option value="">All Moods</option>
-        <option value="Low">Low</option>
-        <option value="Okay">Okay</option>
-        <option value="High">High</option>
-    </select>
+<h3>Search</h3>
+<input type="text" id="searchText" placeholder="Search text..." oninput="filterEntries()">
+<input type="date" id="searchDate" oninput="filterEntries()">
+<select id="searchMood" onchange="filterEntries()">
+    <option value="">All Moods</option>
+    <option value="Low">Low</option>
+    <option value="Okay">Okay</option>
+    <option value="High">High</option>
+</select>
 
-    <h3>Entries</h3>
-    <div id="entries"></div>
+<h3>Entries</h3>
+<div id="entries"></div>
 
-    <h3>Export & Share</h3>
-    <button onclick="exportData('json')">Export as JSON</button>
-    <button onclick="exportData('csv')">Export as CSV</button>
-    <button onclick="sendEmail()">Send via Email</button>
-    <button onclick="shareOnWhatsApp()">Share on WhatsApp</button>
+<h3>Word Cloud</h3>
+<canvas id="wordCloudCanvas" width="400" height="400"></canvas>
+<button onclick="generateWordCloud()">Generate Word Cloud</button>
+<h3>Activity Map</h3>
+<canvas id="activityChart" width="400" height="200"></canvas>
+<button onclick="generateActivityMap()">Generate Activity Map</button>
 
-    <script>
-        let userPassword = "";
 
-        function setPassword() {
-            userPassword = document.getElementById("password").value;
-            if (!userPassword) {
-                alert("Please enter a password!");
-                return;
-            }
-            loadEntries();
+
+<h3>Export & Share</h3>
+<button onclick="exportData('json')">Export as JSON</button>
+<button onclick="exportData('csv')">Export as CSV</button>
+<button onclick="sendEmail()">Send via Email</button>
+<button onclick="shareOnWhatsApp()">Share on WhatsApp</button>
+
+<h2>Delete Specific Local Storage Key</h2>
+
+<!-- Dropdown to select a key -->
+<label for="keyToDelete">Select a key to delete:</label>
+<select id="keyToDelete">
+    <option value="">-- Select a Key --</option>
+</select>
+
+<button onclick="deleteLocalStorageKey()">Delete All Journal Entries</button>
+<p id="message"></p>
+<script>
+    let userPassword = "";
+
+    function setPassword() {
+        userPassword = document.getElementById("password").value;
+        if (!userPassword) {
+            alert("Please enter a password!");
+            return;
+        }
+        loadEntries();
+    }
+
+    function encryptData(data, password) {
+        return CryptoJS.AES.encrypt(JSON.stringify(data), password).toString();
+    }
+
+    function decryptData(encryptedData, password) {
+        try {
+            let bytes = CryptoJS.AES.decrypt(encryptedData, password);
+            return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        } catch (error) {
+            alert("Incorrect password! Cannot decrypt entries.");
+            return null;
+        }
+    }
+
+    function saveEntry() {
+        if (!userPassword) return alert("Enter your password first!");
+
+        let text = document.getElementById("journalEntry").value.trim();
+        let mood = document.getElementById("mood").value;
+        if (!text) return alert("Entry cannot be empty.");
+
+        let entry = { id: Date.now(), text: text, mood: mood, timestamp: new Date().toISOString() };
+        let entries = decryptData(localStorage.getItem("journalEntries"), userPassword) || [];
+
+        entries.unshift(entry);
+        localStorage.setItem("journalEntries", encryptData(entries, userPassword));
+
+        document.getElementById("journalEntry").value = "";
+        loadEntries();
+    }
+
+    function loadEntries() {
+        if (!userPassword) return;
+
+        let encryptedData = localStorage.getItem("journalEntries");
+        if (!encryptedData) {
+            document.getElementById("entries").innerHTML = "<p>No entries found.</p>";
+            return;
         }
 
-        function encryptData(data, password) {
-            return CryptoJS.AES.encrypt(JSON.stringify(data), password).toString();
-        }
+        let entries = decryptData(encryptedData, userPassword);
+        if (!entries) return;
 
-        function decryptData(encryptedData, password) {
-            try {
-                let bytes = CryptoJS.AES.decrypt(encryptedData, password);
-                return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-            } catch (error) {
-                alert("Incorrect password! Cannot decrypt entries.");
-                return null;
-            }
-        }
+        document.getElementById("entries").innerHTML = entries.map(entry => `
+            <div class="entry">
+                <strong>${new Date(entry.timestamp).toLocaleString()}</strong> - <span>${entry.mood}</span>
+                <p>${entry.text}</p>
+                <button onclick="editEntry(${entry.id})">Edit</button>
+                <button onclick="deleteEntry(${entry.id})">Delete</button>
+            </div>
+        `).join("");
+    }
 
-        function saveEntry() {
-            if (!userPassword) return alert("Enter your password first!");
+    function editEntry(id) {
+        let encryptedData = localStorage.getItem("journalEntries");
+        let entries = decryptData(encryptedData, userPassword);
+        if (!entries) return;
 
-            let text = document.getElementById("journalEntry").value.trim();
-            let mood = document.getElementById("mood").value;
-            if (!text) return alert("Entry cannot be empty.");
+        let entry = entries.find(e => e.id === id);
+        if (!entry) return;
 
-            let entry = { id: Date.now(), text: text, mood: mood, timestamp: new Date().toISOString() };
-            let entries = decryptData(localStorage.getItem("journalEntries"), userPassword) || [];
-
-            entries.unshift(entry);
+        let newText = prompt("Edit your entry:", entry.text);
+        let newMood = prompt("Edit your mood (Low, Okay, High):", entry.mood);
+        if (newText !== null && newMood !== null) {
+            entry.text = newText;
+            entry.mood = newMood;
             localStorage.setItem("journalEntries", encryptData(entries, userPassword));
-
-            document.getElementById("journalEntry").value = "";
             loadEntries();
         }
+    }
 
-        function loadEntries() {
-            if (!userPassword) return;
+    function deleteEntry(id) {
+        if (!confirm("Are you sure?")) return;
 
-            let encryptedData = localStorage.getItem("journalEntries");
-            if (!encryptedData) {
-                document.getElementById("entries").innerHTML = "<p>No entries found.</p>";
-                return;
-            }
+        let encryptedData = localStorage.getItem("journalEntries");
+        let entries = decryptData(encryptedData, userPassword);
+        if (!entries) return;
 
-            let entries = decryptData(encryptedData, userPassword);
-            if (!entries) return;
+        entries = entries.filter(e => e.id !== id);
+        localStorage.setItem("journalEntries", encryptData(entries, userPassword));
+        loadEntries();
+    }
 
-            document.getElementById("entries").innerHTML = entries.map(entry => `
-                <div class="entry">
-                    <strong>${new Date(entry.timestamp).toLocaleString()}</strong> - <span>${entry.mood}</span>
-                    <p>${entry.text}</p>
-                    <button onclick="editEntry(${entry.id})">Edit</button>
-                    <button onclick="deleteEntry(${entry.id})">Delete</button>
-                </div>
-            `).join("");
+    function exportData(format) {
+        let encryptedData = localStorage.getItem("journalEntries");
+        let entries = decryptData(encryptedData, userPassword);
+        if (!entries) return;
+
+        let data = format === "json" ? JSON.stringify(entries, null, 2) :
+            "Timestamp,Text,Mood\n" + entries.map(e => `${e.timestamp},"${e.text}",${e.mood}`).join("\n");
+
+        let blob = new Blob([data], { type: format === "json" ? "application/json" : "text/csv" });
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement("a");
+        a.href = url; a.download = `journal.${format}`; a.click();
+        return url;
+    }
+
+    function sendEmail() {
+        let url = exportData('json');
+        let subject = "My Encrypted Journal Entries";
+        let body = "Download my journal entries:\n\n" + url;
+        window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+
+    function shareOnWhatsApp() {
+        let url = exportData('json');
+        let message = `Download my journal entries:\n\n${url}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+    }
+    function filterEntries() {
+        if (!userPassword) return alert("Enter your password and unlock first!");
+        let searchText = document.getElementById("searchText").value.toLowerCase();
+        let searchDate = document.getElementById("searchDate").value;
+        let searchMood = document.getElementById("searchMood").value;
+        let entries = decryptData(localStorage.getItem("journalEntries"), userPassword) || [];
+        let filteredEntries = entries.filter(entry =>
+            entry.text.toLowerCase().includes(searchText) &&
+            (!searchDate || entry.timestamp.startsWith(searchDate)) &&
+            (!searchMood || entry.mood === searchMood)
+        );
+
+        document.getElementById("entries").innerHTML = filteredEntries.map(entry => `
+            <div class="entry">
+                <strong>${new Date(entry.timestamp).toLocaleString()}</strong>
+                <p>${entry.text}</p>
+                <small>🌍 ${entry.location} | 😊 Mood: ${entry.mood}</small><br>
+                <button class="edit-btn" onclick="editEntry(${entry.id})">Edit</button>
+                <button class="delete-btn" onclick="deleteEntry(${entry.id})">Delete</button>
+            </div>
+        `).join("");
+    }
+
+    // 20250131 Berserker - adding code to clear local storage in case the user forgets the password
+    // Function to update the dropdown list with all keys from localStorage
+    function updateKeyList() {
+        const keySelect = document.getElementById("keyToDelete");
+        keySelect.innerHTML = '<option value="">-- Select a Key --</option>'; // Reset options
+
+        // Get all keys from localStorage and populate the dropdown
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            const option = document.createElement("option");
+            option.value = key;
+            option.textContent = key;
+            keySelect.appendChild(option);
+        }
+    }
+
+    // Call updateKeyList on page load to show the current keys
+    window.onload = updateKeyList;
+
+    // Function to delete the selected key from localStorage
+    function deleteLocalStorageKey() {
+        const key = document.getElementById("keyToDelete").value;
+
+        if (!key) {
+            alert("Please select a key to delete.");
+            return;
         }
 
-        function editEntry(id) {
-            let encryptedData = localStorage.getItem("journalEntries");
-            let entries = decryptData(encryptedData, userPassword);
-            if (!entries) return;
+        const userConfirmed = confirm(`Are you sure you want to delete the key "${key}"?`);
 
-            let entry = entries.find(e => e.id === id);
-            if (!entry) return;
+        if (userConfirmed) {
+            localStorage.removeItem(key);
+            document.getElementById("message").textContent = `Key "${key}" deleted successfully!`;
 
-            let newText = prompt("Edit your entry:", entry.text);
-            let newMood = prompt("Edit your mood (Low, Okay, High):", entry.mood);
-            if (newText !== null && newMood !== null) {
-                entry.text = newText;
-                entry.mood = newMood;
-                localStorage.setItem("journalEntries", encryptData(entries, userPassword));
-                loadEntries();
-            }
+            // Update the list of keys after deletion
+            updateKeyList();
+        } else {
+            document.getElementById("message").textContent = "Action canceled. The key remains in local storage.";
         }
+    }
+    // 20250131 Berserker - adding code to clear local storage in case the user forgets the password
 
-        function deleteEntry(id) {
-            if (!confirm("Are you sure?")) return;
-
-            let encryptedData = localStorage.getItem("journalEntries");
-            let entries = decryptData(encryptedData, userPassword);
-            if (!entries) return;
-
-            entries = entries.filter(e => e.id !== id);
-            localStorage.setItem("journalEntries", encryptData(entries, userPassword));
-            loadEntries();
-        }
-
-        function exportData(format) {
-            let encryptedData = localStorage.getItem("journalEntries");
-            let entries = decryptData(encryptedData, userPassword);
-            if (!entries) return;
-
-            let data = format === "json" ? JSON.stringify(entries, null, 2) :
-                "Timestamp,Text,Mood\n" + entries.map(e => `${e.timestamp},"${e.text}",${e.mood}`).join("\n");
-
-            let blob = new Blob([data], { type: format === "json" ? "application/json" : "text/csv" });
-            let url = URL.createObjectURL(blob);
-            let a = document.createElement("a");
-            a.href = url; a.download = `journal.${format}`; a.click();
-            return url;
-        }
-
-        function sendEmail() {
-            let url = exportData('json');
-            let subject = "My Encrypted Journal Entries";
-            let body = "Download my journal entries:\n\n" + url;
-            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        }
-
-        function shareOnWhatsApp() {
-            let url = exportData('json');
-            let message = `Download my journal entries:\n\n${url}`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
-        }
-        function filterEntries() {
+    // 20250131.Berserker adding code for wordcloud
+            function generateWordCloud() {
             if (!userPassword) return alert("Enter your password and unlock first!");
-            let searchText = document.getElementById("searchText").value.toLowerCase();
-            let searchDate = document.getElementById("searchDate").value;
-            let searchMood = document.getElementById("searchMood").value;
-            let entries = decryptData(localStorage.getItem("journalEntries"), userPassword) || [];
-            let filteredEntries = entries.filter(entry => 
-                entry.text.toLowerCase().includes(searchText) && 
-                (!searchDate || entry.timestamp.startsWith(searchDate)) &&
-                (!searchMood || entry.mood === searchMood)
-            );
+        let entries = decryptData(localStorage.getItem("journalEntries"), userPassword) || [];
+        let text = entries.map(entry => entry.text).join(" ");
 
-            document.getElementById("entries").innerHTML = filteredEntries.map(entry => `
-                <div class="entry">
-                    <strong>${new Date(entry.timestamp).toLocaleString()}</strong>
-                    <p>${entry.text}</p>
-                    <small>🌍 ${entry.location} | 😊 Mood: ${entry.mood}</small><br>
-                    <button class="edit-btn" onclick="editEntry(${entry.id})">Edit</button>
-                    <button class="delete-btn" onclick="deleteEntry(${entry.id})">Delete</button>
-                </div>
-            `).join("");
-        }
-    </script>
+        let words = text.toLowerCase().match(/\b\w+\b/g) || [];
+        let wordCounts = words.reduce((acc, word) => {
+            acc[word] = (acc[word] || 0) + 1;
+            return acc;
+        }, {});
+
+        let wordArray = Object.entries(wordCounts).map(([word, count]) => [word, count]);
+
+        WordCloud(document.getElementById("wordCloudCanvas"), {
+            list: wordArray,
+            gridSize: 8,
+            weightFactor: 10,
+            fontFamily: "Arial",
+            color: "random-dark",
+            rotateRatio: 0.5,
+            backgroundColor: "#f8f9fa"
+        });
+    }
+
+    // 20250131.Berserker adding code for wordcloud
+
+    // 20250131.Berserker adding code for activity map
+            function generateActivityMap() {
+            if (!userPassword) return alert("Enter your password and unlock first!");
+        let entries = decryptData(localStorage.getItem("journalEntries"), userPassword) || [];
+
+        let dailyCounts = entries.reduce((acc, entry) => {
+            let date = entry.timestamp.split("T")[0];
+            acc[date] = (acc[date] || 0) + 1;
+            return acc;
+        }, {});
+
+        let labels = Object.keys(dailyCounts).sort();
+        let data = labels.map(date => dailyCounts[date]);
+
+        let ctx = document.getElementById("activityChart").getContext("2d");
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Journal Entries per Day",
+                    data: data,
+                    backgroundColor: "rgba(54, 162, 235, 0.5)",
+                    borderColor: "rgba(54, 162, 235, 1)",
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    x: { title: { display: true, text: "Date" } },
+                    y: { title: { display: true, text: "Entries" }, beginAtZero: true }
+                }
+            }
+        });
+    }
+
+</script>
 </body>
 </html>
