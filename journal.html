@@ -77,7 +77,7 @@
         }
 
         function saveEntry() {
-            if (!userPassword) return alert("Enter your password first!");
+            if (!userPassword) return alert("Enter your password first! current value:" + userPassword);
 
             let text = document.getElementById("journalEntry").value.trim();
             let mood = document.getElementById("mood").value;
