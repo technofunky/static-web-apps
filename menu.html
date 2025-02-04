@@ -23,13 +23,6 @@
         th {
             background-color: #f4f4f4;
         }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-        }
         .btn {
             margin-top: 10px;
             padding: 10px 15px;
@@ -52,7 +45,7 @@
     <h2>Upload Menu from CSV</h2>
     <input type="file" id="csvFileInput" accept=".csv">
     <button class="btn" onclick="uploadMenu()">Upload Menu</button>
-    <button onclick="downloadMenu()">Download Existing Menu</button>
+    <button class="btn" onclick="downloadMenu()">Download Existing Menu</button>
 
     <h2>Menu</h2>
     <table>
@@ -95,14 +88,21 @@
 
             const reader = new FileReader();
             reader.onload = function (event) {
-                const csvData = event.target.result;
-                const rows = csvData.split('\n');
-                const newMenu = rows.map(row => {
-                    const [name, price] = row.split(',');
-                    if (name && price) {
-                        return { name: name.trim(), price: parseFloat(price.trim()) };
+                const csvData = event.target.result.trim();
+                const rows = csvData.split('\n').map(row => row.split(',').map(cell => cell.trim()));
+                
+                if (rows.length < 2) {
+                    alert("Invalid CSV format. Ensure it has a header and at least one row.");
+                    return;
+                }
+
+                const newMenu = rows.slice(1).map(row => {
+                    const [name, price] = row;
+                    if (name && price && !isNaN(parseFloat(price))) {
+                        return { name, price: parseFloat(price) };
                     }
                 }).filter(Boolean);
+
                 menu = menu.concat(newMenu);
                 localStorage.setItem('menu', JSON.stringify(menu));
                 updateMenuTable();
@@ -121,16 +121,14 @@
             window.location.href = page;
         }
 
-function downloadMenu() {
-            const jsonData = localStorage.getItem("menu");
-
-            if (!jsonData) {
+        function downloadMenu() {
+            if (menu.length === 0) {
                 alert("No menu data found in local storage.");
                 return;
             }
 
-            const rows = JSON.parse(jsonData);
-            const csvContent = rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(",")).join("\n");
+            let csvContent = "Item Name,Price\n"; // Add header row
+            csvContent += menu.map(item => `"${item.name.replace(/"/g, '""')}",${item.price}`).join("\n");
 
             const blob = new Blob([csvContent], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
