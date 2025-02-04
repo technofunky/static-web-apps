@@ -121,13 +121,18 @@
             window.location.href = page;
         }
 
-        function downloadMenu() {
-            const csvData = localStorage.getItem("menu");
-            if (!csvData) {
+function downloadMenu() {
+            const jsonData = localStorage.getItem("menu");
+
+            if (!jsonData) {
                 alert("No menu data found in local storage.");
                 return;
             }
-            const blob = new Blob([csvData], { type: 'text/csv' });
+
+            const rows = JSON.parse(jsonData);
+            const csvContent = rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(",")).join("\n");
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
