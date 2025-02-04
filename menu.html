@@ -52,6 +52,7 @@
     <h2>Upload Menu from CSV</h2>
     <input type="file" id="csvFileInput" accept=".csv">
     <button class="btn" onclick="uploadMenu()">Upload Menu</button>
+    <button onclick="downloadMenu()">Download Existing Menu</button>
 
     <h2>Menu</h2>
     <table>
@@ -118,6 +119,23 @@
 
         function navigateTo(page) {
             window.location.href = page;
+        }
+
+        function downloadMenu() {
+            const csvData = localStorage.getItem("menu");
+            if (!csvData) {
+                alert("No menu data found in local storage.");
+                return;
+            }
+            const blob = new Blob([csvData], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'menu.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         updateMenuTable();
