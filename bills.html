@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -109,7 +111,10 @@
             });
             printWindow.document.write('</table>');
             printWindow.document.write(`<h2>Total: ₹${bill.total.toFixed(2)}</h2>`);
-            printWindow.document.write('</div></body></html>');
+            printWindow.document.write(`<h2>GST: ₹${bill.gst.toFixed(2)}</h2>`);
+	    printWindow.document.write(`<h2>Grand Total: ₹${bill.grandTotal.toFixed(2)}</h2>`);
+	    printWindow.document.write(`<h2>Payment Mode: ${bill.paymentMode}</h2>`);
+	    printWindow.document.write('</div></body></html>');
             printWindow.document.close();
             printWindow.print();
         }
@@ -130,3 +135,4 @@
     </script>
 </body>
 </html>
+
