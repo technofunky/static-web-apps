@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -97,7 +99,11 @@
                 <label for="customerName">Customer Name:</label>
                 <input type="text" id="customerName" placeholder="Enter customer name">
             </div>
-            <table>
+	    <div class="form-group">
+                <label for="customerPhone">Customer Phone (Optional):</label>
+                <input type="text" id="customerPhone" placeholder="Enter customer phone">
+            </div>           
+	    <table>
                 <thead>
                     <tr>
                         <th>#</th>
@@ -110,8 +116,17 @@
                 </thead>
                 <tbody id="billTable"></tbody>
             </table>
-            <h3>Total: ₹<span id="totalAmount">0.00</span></h3>
-            <button class="btn" onclick="saveBill()">Save Bill</button>
+		<div class="form-group">
+                	<label for="paymentMode">Payment Mode:</label>
+                	<select id="paymentMode">
+                    		<option value="cash">Cash</option>
+                    		<option value="online">Online</option>
+                	</select>
+            	</div>            
+		<h3>Total: ₹<span id="totalAmount">0.00</span></h3>
+            <h3>GST (18%): ₹<span id="gstAmount">0.00</span></h3>
+            <h3>Grand Total: ₹<span id="grandTotal">0.00</span></h3>   
+	    <button class="btn" onclick="saveBill()">Save Bill</button>
         </div>
     </div>
 
@@ -211,6 +226,7 @@
                 billTable.appendChild(row);
             });
             totalAmount.textContent = total.toFixed(2);
+		calculateGST();
         }
 
         function removeFromBill(index) {
@@ -220,12 +236,19 @@
 
         function saveBill() {
             const customerName = document.getElementById('customerName').value.trim();
-            if (customerName && currentBill.length > 0) {
+	    const customerPhone = document.getElementById('customerPhone').value.trim();
+        const paymentMode = document.getElementById('paymentMode').value;    
+	if (customerName && currentBill.length > 0) {
                 const total = currentBill.reduce((sum, item) => sum + item.price * item.quantity, 0);
-                const bill = {
-                    customer: { name: customerName },
-                    bill: currentBill,
+            	const gst = total * 0.18;
+            	const grandTotal = total + gst;
+		const bill = {
+                    customer: { name: customerName, phone:customerPhone },
+                    paymentMode: paymentMode,
+			bill: currentBill,
                     total,
+			gst: gst,
+                    grandTotal: grandTotal,
                     timestamp: new Date().toLocaleString(),
                 };
                 const savedBills = JSON.parse(localStorage.getItem('savedBills')) || [];
@@ -239,11 +262,17 @@
                 alert('Please add items to the bill and enter the customer name.');
             }
         }
-
+	function calculateGST() {
+            let total = parseFloat(document.getElementById('totalAmount').textContent) || 0;
+            let gst = total * 0.18;
+            let grandTotal = total + gst;
+            document.getElementById('gstAmount').textContent = gst.toFixed(2);
+            document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
+        }	
         function navigateTo(page) {
             window.location.href = page;
         }
-
+		
         updateMenuTable();
     </script>
 </body>
