@@ -258,9 +258,12 @@
                 currentBill = [];
                 updateBillTable();
                 document.getElementById('customerName').value = '';
-            } else {
-                alert('Please add items to the bill and enter the customer name.');
+            } else if (!customerName) {
+                alert('Please enter the customer name.');
             }
+		else if (currentBill.length == 0){
+		alert('Please add items to the bill first!');
+		}
         }
 	function calculateGST() {
             let total = parseFloat(document.getElementById('totalAmount').textContent) || 0;
@@ -277,3 +280,4 @@
     </script>
 </body>
 </html>
+
