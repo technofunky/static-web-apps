@@ -153,7 +153,7 @@
 
         function filterMenu() {
             const searchValue = document.getElementById('searchItem').value.toLowerCase();
-            const filteredMenu = menu.filter(item => item.name.toLowerCase().includes(searchValue));
+        	filteredMenu = menu.filter(item => item.name.toLowerCase().includes(searchValue));
 
             const menuTable = document.getElementById('menuTable');
             menuTable.innerHTML = '';
