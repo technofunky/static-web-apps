@@ -79,13 +79,13 @@
                 const row = document.createElement('tr');
 		// 20250207.berserker code added for data check
 		if(!bill.gst){
-			bill.get = 0;
+			bill.gst = 0;
 		}
 		if (!bill.grandTotal){
 			bill.grandTotal = bill.total;
 		}
 		if(!bill.paymentMode){
-			bill.paymentMode =""
+			bill.paymentMode ="";
 		}
 		// 20250207.berserker code added for data check
                 row.innerHTML = `
@@ -152,4 +152,3 @@
     </script>
 </body>
 </html>
-
