@@ -123,7 +123,7 @@
         </div>
         <div>
             <label for="gstCheckbox">Discount</label>
-            <input type="text" id="discount" onblur="calculateGST()">
+            <input type="text" id="discount" onblur="applyDiscount()">
         </div>
         <div>
             <label for="gstCheckbox">Apply GST (5%)?</label>
@@ -281,6 +281,16 @@ if (customerName && currentBill.length > 0) {
     else if (currentBill.length == 0){
     alert('Please add items to the bill first!');
     }
+    }
+    function applyDiscount()
+    {
+        let discount = parseFloat(document.getElementById('discount').value) || 0;
+        if (!discount) {
+            alert("Please enter a valid discount number");
+            document.getElementById('discount').value = 0;
+            return;
+        }
+        else calculateGST();
     }
      function calculateGST() {
         let total = parseFloat(document.getElementById('totalAmount').textContent) || 0;
