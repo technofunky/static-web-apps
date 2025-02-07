@@ -115,7 +115,8 @@
             const bill = savedBills[index];
             const printWindow = window.open('', '', 'width=100%,height=100%');
             printWindow.document.write('<html><head><title>Bill</title>');
-            printWindow.document.write('<style>@media print {body {width: 58mm;margin: 0;}.receipt {font-size: 12px;line-height: 1.5;font-family: "Courier New", monospace;}}</style>');
+            //printWindow.document.write('<style>@media print {body {width: 58mm;margin: 0;}.receipt {font-size: 12px;line-height: 1.5;font-family: "Courier New", monospace;}}</style>');
+            printWindow.document.write('<style>@media print {body {width: 58mm;margin: 0;font-size: 12px;line-height: 1.5;font-family: "Courier New", monospace;}}</style>');
             printWindow.document.write('</head><body><div class="receipt">');
             printWindow.document.write('<h1>Sambar Restaurant Bill</h1>');
             printWindow.document.write(`<p><strong>Customer:</strong> ${bill.customer.name}</p>`);
