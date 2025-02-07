@@ -122,11 +122,16 @@
             </select>
         </div>
         <div>
+            <label for="gstCheckbox">Discount</label>
+            <input type="text" id="discount" onblur="calculateGST()">
+        </div>
+        <div>
             <label for="gstCheckbox">Apply GST (5%)?</label>
             <input type="checkbox" id="gstCheckbox" onclick="calculateGST()">
         </div>
         <h3>Total: ₹<span id="totalAmount">0.00</span></h3>
-        <h3>GST (18%): ₹<span id="gstAmount">0.00</span></h3>
+        <h3>Discount: ₹<span id="discountAmount">0.00</span></h3>
+        <h3>GST (5%): ₹<span id="gstAmount">0.00</span></h3>
         <h3>Grand Total: ₹<span id="grandTotal">0.00</span></h3>
         <button class="btn" onclick="saveBill()">Save Bill</button>
     </div>
@@ -228,7 +233,7 @@
             billTable.appendChild(row);
         });
         totalAmount.textContent = total.toFixed(2);
-    calculateGST();
+        calculateGST();
     }
 
     function removeFromBill(index) {
@@ -242,15 +247,24 @@
         const paymentMode = document.getElementById('paymentMode').value;
 if (customerName && currentBill.length > 0) {
             const total = currentBill.reduce((sum, item) => sum + item.price * item.quantity, 0);
-            let gst = document.getElementById('gstCheckbox').checked ? total * 0.05 : 0;
-            const gst_amount = total * gst;
-            const grandTotal = total + gst_amount;
+            // 20250207.berserker changes for discount
+            let discount = parseFloat(document.getElementById('discount').value) || 0;
+            let discountedTotal = total - discount;
+            if (discountedTotal < 0) discountedTotal = 0;
+
+            // 20250207.berserker changes for discount
+
+            let gst_amount = document.getElementById('gstCheckbox').checked ? discountedTotal * 0.05 : 0;
+
+            const grandTotal = discountedTotal + gst_amount;
+
     const bill = {
                 customer: { name: customerName, phone:customerPhone },
                 paymentMode: paymentMode,
-        bill: currentBill,
-                total,
-        gst: gst_amount,
+                bill: currentBill,
+                total: total,
+                discount: discount,
+                gst: gst_amount,
                 grandTotal: grandTotal,
                 timestamp: new Date().toLocaleString(),
             };
@@ -270,9 +284,13 @@ if (customerName && currentBill.length > 0) {
     }
      function calculateGST() {
         let total = parseFloat(document.getElementById('totalAmount').textContent) || 0;
-        let gst = document.getElementById('gstCheckbox').checked ? total * 0.18 : 0;
-        let grandTotal = total + gst;
+        let discount = parseFloat(document.getElementById('discount').value) || 0;
+        let discountedTotal = total - discount;
+    if (discountedTotal < 0) discountedTotal = 0;
+        let gst = document.getElementById('gstCheckbox').checked ? discountedTotal * 0.05 : 0;
+        let grandTotal = discountedTotal + gst;
         document.getElementById('totalAmount').textContent = total.toFixed(2);
+        document.getElementById('discountAmount').textContent = discount.toFixed(2);
         document.getElementById('gstAmount').textContent = gst.toFixed(2);
         document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
     }
