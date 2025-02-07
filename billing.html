@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -65,219 +63,224 @@
     </style>
 </head>
 <body>
-    <h1>Create Bill</h1>
-    <button onclick="navigateTo('menu.html')">Manage Menu</button>
-    <button onclick="navigateTo('bills.html')">View Bills</button>
+<h1>Create Bill</h1>
+<button onclick="navigateTo('menu.html')">Manage Menu</button>
+<button onclick="navigateTo('bills.html')">View Bills</button>
 
-    <div class="split-container">
-        <!-- Menu Section -->
-        <div>
-            <h2>Search Menu Items</h2>
-            <div class="search-bar">
-                <input type="text" id="searchItem" placeholder="Search item by name" onkeyup="filterMenu()">
-            </div>
-
-            <h2>Menu</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Item Name</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="menuTable"></tbody>
-            </table>
+<div class="split-container">
+    <!-- Menu Section -->
+    <div>
+        <h2>Search Menu Items</h2>
+        <div class="search-bar">
+            <input type="text" id="searchItem" placeholder="Search item by name" onkeyup="filterMenu()">
         </div>
 
-        <!-- Bill Section -->
-        <div>
-            <h2>Bill Details</h2>
-            <div class="form-group">
-                <label for="customerName">Customer Name:</label>
-                <input type="text" id="customerName" placeholder="Enter customer name">
-            </div>
-	    <div class="form-group">
-                <label for="customerPhone">Customer Phone (Optional):</label>
-                <input type="text" id="customerPhone" placeholder="Enter customer phone">
-            </div>           
-	    <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Item Name</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Total</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="billTable"></tbody>
-            </table>
-		<div class="form-group">
-                	<label for="paymentMode">Payment Mode:</label>
-                	<select id="paymentMode">
-                    		<option value="cash">Cash</option>
-                    		<option value="online">Online</option>
-                	</select>
-            	</div>            
-		<h3>Total: ₹<span id="totalAmount">0.00</span></h3>
-            <h3>GST (18%): ₹<span id="gstAmount">0.00</span></h3>
-            <h3>Grand Total: ₹<span id="grandTotal">0.00</span></h3>   
-	    <button class="btn" onclick="saveBill()">Save Bill</button>
-        </div>
+        <h2>Menu</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Item Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="menuTable"></tbody>
+        </table>
     </div>
 
-    <script>
-        let menu = JSON.parse(localStorage.getItem('menu')) || [];
-        let filteredMenu = JSON.parse(localStorage.getItem('menu')) || [];
-        let currentBill = [];
+    <!-- Bill Section -->
+    <div>
+        <h2>Bill Details</h2>
+        <div class="form-group">
+            <label for="customerName">Customer Name:</label>
+            <input type="text" id="customerName" placeholder="Enter customer name">
+        </div>
+        <div class="form-group">
+            <label for="customerPhone">Customer Phone (Optional):</label>
+            <input type="text" id="customerPhone" placeholder="Enter customer phone">
+        </div>
+        <table>
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Item Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="billTable"></tbody>
+        </table>
+        <div class="form-group">
+            <label for="paymentMode">Payment Mode:</label>
+            <select id="paymentMode">
+                <option value="cash">Cash</option>
+                <option value="online">Online</option>
+            </select>
+        </div>
+        <div>
+            <label for="gstCheckbox">Apply GST (5%)?</label>
+            <input type="checkbox" id="gstCheckbox" onclick="calculateGST()">
+        </div>
+        <h3>Total: ₹<span id="totalAmount">0.00</span></h3>
+        <h3>GST (18%): ₹<span id="gstAmount">0.00</span></h3>
+        <h3>Grand Total: ₹<span id="grandTotal">0.00</span></h3>
+        <button class="btn" onclick="saveBill()">Save Bill</button>
+    </div>
+</div>
 
-        function updateMenuTable() {
-            const menuTable = document.getElementById('menuTable');
-            menuTable.innerHTML = '';
-            menu.forEach((item, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${item.name}</td>
-                    <td>₹${item.price.toFixed(2)}</td>
-                    <td><input type="number" id="quantity-${item.name}" min="1" value="1"></td>
-                    <td><button class="btn" onclick="addToBill('${item.name}')">Add</button></td>
-                `;
-                menuTable.appendChild(row);
-            });
-        }
+<script>
+    let menu = JSON.parse(localStorage.getItem('menu')) || [];
+    let filteredMenu = JSON.parse(localStorage.getItem('menu')) || [];
+    let currentBill = [];
 
-        function filterMenu() {
-            const searchValue = document.getElementById('searchItem').value.toLowerCase();
-        	filteredMenu = menu.filter(item => item.name.toLowerCase().includes(searchValue));
+    function updateMenuTable() {
+        const menuTable = document.getElementById('menuTable');
+        menuTable.innerHTML = '';
+        menu.forEach((item, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.name}</td>
+                <td>₹${item.price.toFixed(2)}</td>
+                <td><input type="number" id="quantity-${item.name}" min="1" value="1"></td>
+                <td><button class="btn" onclick="addToBill('${item.name}')">Add</button></td>
+            `;
+            menuTable.appendChild(row);
+        });
+    }
 
-            const menuTable = document.getElementById('menuTable');
-            menuTable.innerHTML = '';
-            filteredMenu.forEach((item, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${item.name}</td>
-                    <td>₹${item.price.toFixed(2)}</td>
-                    <td><input type="number" id="quantity-${item.name}" min="1" value="1"></td>
-                    <td><button class="btn" onclick="addToBill('${item.name}')">Add</button></td>
-                `;
-                menuTable.appendChild(row);
-            });
-        }
+    function filterMenu() {
+        const searchValue = document.getElementById('searchItem').value.toLowerCase();
+        filteredMenu = menu.filter(item => item.name.toLowerCase().includes(searchValue));
 
-        function addToBill(item_name) {
-            const quantity = parseInt(document.getElementById(`quantity-${item_name}`).value);
+        const menuTable = document.getElementById('menuTable');
+        menuTable.innerHTML = '';
+        filteredMenu.forEach((item, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.name}</td>
+                <td>₹${item.price.toFixed(2)}</td>
+                <td><input type="number" id="quantity-${item.name}" min="1" value="1"></td>
+                <td><button class="btn" onclick="addToBill('${item.name}')">Add</button></td>
+            `;
+            menuTable.appendChild(row);
+        });
+    }
 
-            if (quantity > 0) {
-                // const item = menu[item_name];
-                const item = menu.find(item => item.name === item_name);
-                // alert("item is " + item)
-                const existingItem = currentBill.find(billItem => billItem.name === item.name);
-                if (existingItem) {
-                    existingItem.quantity += quantity;
-                } else {
-                    currentBill.push({ ...item, quantity });
-                }
-                updateBillTable();
+    function addToBill(item_name) {
+        const quantity = parseInt(document.getElementById(`quantity-${item_name}`).value);
+
+        if (quantity > 0) {
+            // const item = menu[item_name];
+            const item = menu.find(item => item.name === item_name);
+            // alert("item is " + item)
+            const existingItem = currentBill.find(billItem => billItem.name === item.name);
+            if (existingItem) {
+                existingItem.quantity += quantity;
             } else {
-                alert('Enter a valid quantity.');
+                currentBill.push({ ...item, quantity });
             }
+            updateBillTable();
+        } else {
+            alert('Enter a valid quantity.');
         }
+    }
 
 // might be deleted if the function above starts working
-        function addToBill_v1(index) {
-            const quantity = parseInt(document.getElementById(`quantity-${index}`).value);
-            if (quantity > 0) {
-                const item = menu[index];
-                const existingItem = currentBill.find(billItem => billItem.name === item.name);
-                if (existingItem) {
-                    existingItem.quantity += quantity;
-                } else {
-                    currentBill.push({ ...item, quantity });
-                }
-                updateBillTable();
+    function addToBill_v1(index) {
+        const quantity = parseInt(document.getElementById(`quantity-${index}`).value);
+        if (quantity > 0) {
+            const item = menu[index];
+            const existingItem = currentBill.find(billItem => billItem.name === item.name);
+            if (existingItem) {
+                existingItem.quantity += quantity;
             } else {
-                alert('Enter a valid quantity.');
+                currentBill.push({ ...item, quantity });
             }
-        }
-
-        function updateBillTable() {
-            const billTable = document.getElementById('billTable');
-            const totalAmount = document.getElementById('totalAmount');
-            billTable.innerHTML = '';
-            let total = 0;
-            currentBill.forEach((item, index) => {
-                const itemTotal = item.price * item.quantity;
-                total += itemTotal;
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${item.name}</td>
-                    <td>₹${item.price.toFixed(2)}</td>
-                    <td>${item.quantity}</td>
-                    <td>₹${itemTotal.toFixed(2)}</td>
-                    <td><button class="btn btn-danger" onclick="removeFromBill(${index})">Remove</button></td>
-                `;
-                billTable.appendChild(row);
-            });
-            totalAmount.textContent = total.toFixed(2);
-		calculateGST();
-        }
-
-        function removeFromBill(index) {
-            currentBill.splice(index, 1);
             updateBillTable();
+        } else {
+            alert('Enter a valid quantity.');
         }
+    }
 
-        function saveBill() {
-            const customerName = document.getElementById('customerName').value.trim();
-	    const customerPhone = document.getElementById('customerPhone').value.trim();
-        const paymentMode = document.getElementById('paymentMode').value;    
-	if (customerName && currentBill.length > 0) {
-                const total = currentBill.reduce((sum, item) => sum + item.price * item.quantity, 0);
-            	const gst = total * 0.18;
-            	const grandTotal = total + gst;
-		const bill = {
-                    customer: { name: customerName, phone:customerPhone },
-                    paymentMode: paymentMode,
-			bill: currentBill,
-                    total,
-			gst: gst,
-                    grandTotal: grandTotal,
-                    timestamp: new Date().toLocaleString(),
-                };
-                const savedBills = JSON.parse(localStorage.getItem('savedBills')) || [];
-                savedBills.push(bill);
-                localStorage.setItem('savedBills', JSON.stringify(savedBills));
-                alert('Bill saved successfully.');
-                currentBill = [];
-                updateBillTable();
-                document.getElementById('customerName').value = '';
-            } else if (!customerName) {
-                alert('Please enter the customer name.');
-            }
-		else if (currentBill.length == 0){
-		alert('Please add items to the bill first!');
-		}
+    function updateBillTable() {
+        const billTable = document.getElementById('billTable');
+        const totalAmount = document.getElementById('totalAmount');
+        billTable.innerHTML = '';
+        let total = 0;
+        currentBill.forEach((item, index) => {
+            const itemTotal = item.price * item.quantity;
+            total += itemTotal;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.name}</td>
+                <td>₹${item.price.toFixed(2)}</td>
+                <td>${item.quantity}</td>
+                <td>₹${itemTotal.toFixed(2)}</td>
+                <td><button class="btn btn-danger" onclick="removeFromBill(${index})">Remove</button></td>
+            `;
+            billTable.appendChild(row);
+        });
+        totalAmount.textContent = total.toFixed(2);
+    calculateGST();
+    }
+
+    function removeFromBill(index) {
+        currentBill.splice(index, 1);
+        updateBillTable();
+    }
+
+    function saveBill() {
+        const customerName = document.getElementById('customerName').value.trim();
+        const customerPhone = document.getElementById('customerPhone').value.trim();
+        const paymentMode = document.getElementById('paymentMode').value;
+if (customerName && currentBill.length > 0) {
+            const total = currentBill.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            let gst = document.getElementById('gstCheckbox').checked ? total * 0.05 : 0;
+            const gst_amount = total * gst;
+            const grandTotal = total + gst_amount;
+    const bill = {
+                customer: { name: customerName, phone:customerPhone },
+                paymentMode: paymentMode,
+        bill: currentBill,
+                total,
+        gst: gst_amount,
+                grandTotal: grandTotal,
+                timestamp: new Date().toLocaleString(),
+            };
+            const savedBills = JSON.parse(localStorage.getItem('savedBills')) || [];
+            savedBills.push(bill);
+            localStorage.setItem('savedBills', JSON.stringify(savedBills));
+            alert('Bill saved successfully.');
+            currentBill = [];
+            updateBillTable();
+            document.getElementById('customerName').value = '';
+        } else if (!customerName) {
+            alert('Please enter the customer name.');
         }
-	function calculateGST() {
-            let total = parseFloat(document.getElementById('totalAmount').textContent) || 0;
-            let gst = total * 0.18;
-            let grandTotal = total + gst;
-            document.getElementById('gstAmount').textContent = gst.toFixed(2);
-            document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
-        }	
-        function navigateTo(page) {
-            window.location.href = page;
-        }
-		
-        updateMenuTable();
-    </script>
+    else if (currentBill.length == 0){
+    alert('Please add items to the bill first!');
+    }
+    }
+     function calculateGST() {
+        let total = parseFloat(document.getElementById('totalAmount').textContent) || 0;
+        let gst = document.getElementById('gstCheckbox').checked ? total * 0.18 : 0;
+        let grandTotal = total + gst;
+        document.getElementById('totalAmount').textContent = total.toFixed(2);
+        document.getElementById('gstAmount').textContent = gst.toFixed(2);
+        document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
+    }
+    function navigateTo(page) {
+        window.location.href = page;
+    }
+
+    updateMenuTable();
+</script>
 </body>
 </html>
-
