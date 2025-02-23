@@ -89,6 +89,7 @@
     <!-- News Article Editor -->
     <div class="editor-container">
         <h2>News Article Editor</h2>
+        <input type="text" id="articleTitle" placeholder="Enter article title">
         <input type="file" id="imageUpload" accept="image/*">
         <button onclick="insertImage()">Insert Image</button>
         <div id="editor" contenteditable="true" class="editor">
@@ -150,32 +151,45 @@
                 return;
             }
 
-            let editorContent = document.getElementById("editor").innerHTML;
-            if (!editorContent.trim()) {
-                alert("Please write an article before publishing.");
+            let title = document.getElementById("articleTitle").value.trim();
+            let editorContent = document.getElementById("editor").innerHTML.trim();
+
+            if (!title || !editorContent) {
+                alert("Title and article content cannot be empty.");
                 return;
             }
 
-            // Encrypt the article
-            let encryptedContent = CryptoJS.AES.encrypt(editorContent, encryptionKey).toString();
+            // Encrypt the article (title + content)
+            let encryptedContent = CryptoJS.AES.encrypt(JSON.stringify({ title, content: editorContent }), encryptionKey).toString();
             let articles = JSON.parse(localStorage.getItem("articles")) || [];
-            let articleId = articles.length + 1;
-            let articleData = { id: articleId, content: encryptedContent };
+            let articleData = { id: articles.length + 1, encryptedContent };
 
             articles.push(articleData);
             localStorage.setItem("articles", JSON.stringify(articles));
 
             addArticleToList(articleData);
+            document.getElementById("articleTitle").value = "";
             document.getElementById("editor").innerHTML = "<p>Start writing your news article here...</p>";
         }
 
         function addArticleToList(article) {
             let articleList = document.getElementById("articleList");
             let listItem = document.createElement("li");
-            listItem.innerHTML = "Article " + article.id;
+            listItem.dataset.encryptedContent = article.encryptedContent;
+            listItem.innerHTML = "Loading title...";
             listItem.onclick = function() {
-                decryptAndShowArticle(article.content);
+                decryptAndShowArticle(listItem.dataset.encryptedContent);
             };
+
+            // Decrypt title only
+            try {
+                let decryptedBytes = CryptoJS.AES.decrypt(article.encryptedContent, encryptionKey);
+                let decryptedData = JSON.parse(decryptedBytes.toString(CryptoJS.enc.Utf8));
+                listItem.innerHTML = decryptedData.title || "Untitled Article";
+            } catch (error) {
+                listItem.innerHTML = "🔒 Encrypted Article (Login to View)";
+            }
+
             articleList.appendChild(listItem);
         }
 
@@ -187,11 +201,11 @@
 
             try {
                 let decryptedBytes = CryptoJS.AES.decrypt(encryptedContent, encryptionKey);
-                let decryptedText = decryptedBytes.toString(CryptoJS.enc.Utf8);
+                let decryptedData = JSON.parse(decryptedBytes.toString(CryptoJS.enc.Utf8));
 
-                if (!decryptedText) throw new Error("Incorrect password");
+                if (!decryptedData) throw new Error("Incorrect password");
 
-                document.getElementById("preview").innerHTML = decryptedText;
+                document.getElementById("preview").innerHTML = `<h3>${decryptedData.title}</h3>${decryptedData.content}`;
             } catch (error) {
                 alert("Invalid credentials! Cannot decrypt the article.");
             }
