@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure News Article Editor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .article-list, .editor-container, .auth-container {
+            width: 80%;
+            margin: 20px auto;
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .article-list h3, .auth-container h3 {
+            margin-top: 0;
+        }
+        .article-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .article-list li {
+            padding: 5px;
+            cursor: pointer;
+            color: #007AFF;
+            text-decoration: underline;
+        }
+        .editor {
+            width: 100%;
+            min-height: 200px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            text-align: left;
+            background: #fff;
+        }
+        input, button {
+            margin-top: 10px;
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007AFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005BBB;
+        }
+        .preview {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+            text-align: left;
+        }
+    </style>
+</head>
+<body onload="loadArticles()">
+
+    <!-- Login Section -->
+    <div class="auth-container">
+        <h3>Login</h3>
+        <input type="text" id="username" placeholder="Enter Username">
+        <input type="password" id="password" placeholder="Enter Password">
+        <button onclick="setUserCredentials()">Save Credentials</button>
+    </div>
+
+    <!-- Published Articles List -->
+    <div class="article-list">
+        <h3>Published Articles</h3>
+        <ul id="articleList">
+            <!-- Articles will be added here dynamically -->
+        </ul>
+    </div>
+
+    <!-- News Article Editor -->
+    <div class="editor-container">
+        <h2>News Article Editor</h2>
+        <input type="file" id="imageUpload" accept="image/*">
+        <button onclick="insertImage()">Insert Image</button>
+        <div id="editor" contenteditable="true" class="editor">
+            <p>Start writing your news article here...</p>
+        </div>
+        <button onclick="previewArticle()">Preview Article</button>
+        <button onclick="publishArticle()">Publish Article</button>
+    </div>
+
+    <!-- Preview Section -->
+    <h3>Preview</h3>
+    <div id="preview" class="preview"></div>
+
+    <script>
+        let encryptionKey = "";
+
+        function setUserCredentials() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            if (username.trim() === "" || password.trim() === "") {
+                alert("Username and password cannot be empty.");
+                return;
+            }
+
+            encryptionKey = CryptoJS.SHA256(username + password).toString();
+            alert("Credentials set successfully! You can now publish articles.");
+        }
+
+        function insertImage() {
+            let fileInput = document.getElementById("imageUpload");
+            let editor = document.getElementById("editor");
+
+            if (fileInput.files.length > 0) {
+                let file = fileInput.files[0];
+                let reader = new FileReader();
+
+                reader.onload = function(e) {
+                    let img = document.createElement("img");
+                    img.src = e.target.result;
+                    img.style.maxWidth = "100%";
+                    img.style.marginTop = "10px";
+
+                    editor.appendChild(img);
+                };
+
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function previewArticle() {
+            let editorContent = document.getElementById("editor").innerHTML;
+            document.getElementById("preview").innerHTML = editorContent;
+        }
+
+        function publishArticle() {
+            if (encryptionKey === "") {
+                alert("Please set your username and password first.");
+                return;
+            }
+
+            let editorContent = document.getElementById("editor").innerHTML;
+            if (!editorContent.trim()) {
+                alert("Please write an article before publishing.");
+                return;
+            }
+
+            // Encrypt the article
+            let encryptedContent = CryptoJS.AES.encrypt(editorContent, encryptionKey).toString();
+            let articles = JSON.parse(localStorage.getItem("articles")) || [];
+            let articleId = articles.length + 1;
+            let articleData = { id: articleId, content: encryptedContent };
+
+            articles.push(articleData);
+            localStorage.setItem("articles", JSON.stringify(articles));
+
+            addArticleToList(articleData);
+            document.getElementById("editor").innerHTML = "<p>Start writing your news article here...</p>";
+        }
+
+        function addArticleToList(article) {
+            let articleList = document.getElementById("articleList");
+            let listItem = document.createElement("li");
+            listItem.innerHTML = "Article " + article.id;
+            listItem.onclick = function() {
+                decryptAndShowArticle(article.content);
+            };
+            articleList.appendChild(listItem);
+        }
+
+        function decryptAndShowArticle(encryptedContent) {
+            if (encryptionKey === "") {
+                alert("Please enter your username and password first.");
+                return;
+            }
+
+            try {
+                let decryptedBytes = CryptoJS.AES.decrypt(encryptedContent, encryptionKey);
+                let decryptedText = decryptedBytes.toString(CryptoJS.enc.Utf8);
+
+                if (!decryptedText) throw new Error("Incorrect password");
+
+                document.getElementById("preview").innerHTML = decryptedText;
+            } catch (error) {
+                alert("Invalid credentials! Cannot decrypt the article.");
+            }
+        }
+
+        function loadArticles() {
+            let articles = JSON.parse(localStorage.getItem("articles")) || [];
+            let articleList = document.getElementById("articleList");
+            articleList.innerHTML = "";
+            articles.forEach(addArticleToList);
+        }
+    </script>
+
+</body>
+</html>
