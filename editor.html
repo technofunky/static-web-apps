@@ -6,68 +6,16 @@
     <title>Secure News Article Editor</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        .container {
-            width: 80%;
-            margin: 0 auto;
-            text-align: left;
-        }
-        .article-list, .editor-container, .auth-container {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background: #f9f9f9;
-        }
-        .article-list ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        .article-list li {
-            padding: 5px;
-            cursor: pointer;
-            color: #007AFF;
-            text-decoration: underline;
-        }
-        .editor {
-            width: 100%;
-            min-height: 200px;
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 5px;
-            text-align: left;
-            background: #fff;
-        }
-        input, button {
-            margin-top: 10px;
-            padding: 8px;
-            font-size: 16px;
-            border-radius: 5px;
-        }
-        button {
-            background-color: #007AFF;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #005BBB;
-        }
-        .preview {
-            margin-top: 20px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background: #f9f9f9;
-            text-align: left;
-        }
-        .action-buttons {
-            margin-left: 10px;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        .container { width: 80%; margin: 0 auto; text-align: left; }
+        .article-list, .editor-container, .auth-container { margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; background: #f9f9f9; }
+        .article-list ul { list-style-type: none; padding: 0; }
+        .article-list li { padding: 5px; cursor: pointer; color: #007AFF; text-decoration: underline; }
+        .editor { width: 100%; min-height: 200px; border: 1px solid #ccc; padding: 10px; border-radius: 5px; background: #fff; }
+        input, button { margin-top: 10px; padding: 8px; font-size: 16px; border-radius: 5px; }
+        button { background-color: #007AFF; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #005BBB; }
+        .preview { margin-top: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background: #f9f9f9; }
     </style>
 </head>
 <body onload="loadArticles()">
@@ -94,9 +42,10 @@
             <div id="editor" contenteditable="true" class="editor">
                 <p>Start writing your news article here...</p>
             </div>
-            <button onclick="previewArticle()">Preview Article</button>
-            <button onclick="publishArticle()">Publish Article</button>
-            <button onclick="updateArticle()" style="display: none;" id="updateBtn">Update Article</button>
+            <button onclick="previewArticle()">Preview</button>
+            <button onclick="publishArticle()">Publish</button>
+            <button onclick="updateArticle()" style="display: none;" id="updateBtn">Update</button>
+            <button onclick="sendToServer()">Send to Server</button>
         </div>
 
         <!-- Preview Section -->
@@ -107,6 +56,7 @@
     <script>
         let encryptionKey = "";
         let editIndex = null;
+        const API_URL = "https://your-server.com/api/upload"; // Replace with your actual server API URL
 
         function setUserCredentials() {
             const username = document.getElementById("username").value;
@@ -163,8 +113,8 @@
             let listItem = document.createElement("li");
             listItem.dataset.index = index;
             listItem.innerHTML = `<span>Loading title...</span> 
-                                  <button class="action-buttons" onclick="editArticle(${index})">Edit</button> 
-                                  <button class="action-buttons" onclick="deleteArticle(${index})">Delete</button>`;
+                                  <button onclick="editArticle(${index})">Edit</button> 
+                                  <button onclick="deleteArticle(${index})">Delete</button>`;
 
             try {
                 let decryptedBytes = CryptoJS.AES.decrypt(article.encryptedContent, encryptionKey);
@@ -190,60 +140,42 @@
                 let decryptedBytes = CryptoJS.AES.decrypt(encryptedContent, encryptionKey);
                 let decryptedData = JSON.parse(decryptedBytes.toString(CryptoJS.enc.Utf8));
 
-                if (!decryptedData) throw new Error("Incorrect password");
-
                 document.getElementById("preview").innerHTML = `<h3>${decryptedData.title}</h3>${decryptedData.content}`;
             } catch (error) {
                 alert("Invalid credentials! Cannot decrypt the article.");
             }
         }
 
-        function editArticle(index) {
-            let articles = JSON.parse(localStorage.getItem("articles")) || [];
-            let article = articles[index];
-
-            try {
-                let decryptedBytes = CryptoJS.AES.decrypt(article.encryptedContent, encryptionKey);
-                let decryptedData = JSON.parse(decryptedBytes.toString(CryptoJS.enc.Utf8));
-
-                document.getElementById("articleTitle").value = decryptedData.title;
-                document.getElementById("editor").innerHTML = decryptedData.content;
-                editIndex = index;
-
-                document.getElementById("updateBtn").style.display = "inline-block";
-            } catch (error) {
-                alert("Invalid credentials! Cannot edit the article.");
+        function sendToServer() {
+            if (encryptionKey === "") {
+                alert("Please set your username and password first.");
+                return;
             }
-        }
 
-        function updateArticle() {
-            if (editIndex === null) return;
-
-            let articles = JSON.parse(localStorage.getItem("articles")) || [];
             let title = document.getElementById("articleTitle").value.trim();
             let content = document.getElementById("editor").innerHTML.trim();
 
+            if (!title || !content) {
+                alert("Title and article content cannot be empty.");
+                return;
+            }
+
             let encryptedContent = CryptoJS.AES.encrypt(JSON.stringify({ title, content }), encryptionKey).toString();
-            articles[editIndex].encryptedContent = encryptedContent;
-            localStorage.setItem("articles", JSON.stringify(articles));
 
-            loadArticles();
-            resetEditor();
-        }
-
-        function deleteArticle(index) {
-            let articles = JSON.parse(localStorage.getItem("articles")) || [];
-            articles.splice(index, 1);
-            localStorage.setItem("articles", JSON.stringify(articles));
-
-            loadArticles();
-        }
-
-        function resetEditor() {
-            document.getElementById("articleTitle").value = "";
-            document.getElementById("editor").innerHTML = "<p>Start writing your news article here...</p>";
-            document.getElementById("updateBtn").style.display = "none";
-            editIndex = null;
+            fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, encryptedContent })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("Article sent successfully!");
+                console.log("Server Response:", data);
+            })
+            .catch(error => {
+                alert("Failed to send article to server.");
+                console.error("Error:", error);
+            });
         }
     </script>
 
