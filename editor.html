@@ -75,7 +75,8 @@
             let editorContent = document.getElementById("editor").innerHTML;
             document.getElementById("preview").innerHTML = editorContent;
         }
-function publishArticle() {
+// adding section
+        function publishArticle() {
     if (encryptionKey === "" || savedUsername === "") {
         alert("Please set your username and password first.");
         return;
@@ -83,16 +84,17 @@ function publishArticle() {
     let title = document.getElementById("articleTitle").value.trim();
     let content = document.getElementById("editor").innerHTML.trim();
     let location = document.getElementById("selectedLocation").value;
+    let section = document.getElementById("articleSection").value;
     let timestamp = new Date().toISOString().replace("T", " ").split(".")[0]; // Format timestamp
 
-    if (!title || !content || !location) {
-        alert("Title, article content, and location cannot be empty.");
+    if (!title || !content || !location || !section) {
+        alert("Title, article content, location, and section cannot be empty.");
         return;
     }
 
-    let formattedTitle = `${timestamp}_${location}_${title}_${savedUsername}`;
+    let formattedTitle = `${timestamp}_${location}_${section}_${title}_${savedUsername}`;
 
-    let articleData = { formattedTitle, content, timestamp, location, username: savedUsername };
+    let articleData = { formattedTitle, content, timestamp, location, section, username: savedUsername };
     let encryptedContent = CryptoJS.AES.encrypt(JSON.stringify(articleData), encryptionKey).toString();
     
     let articles = JSON.parse(localStorage.getItem("articles")) || [];
@@ -133,60 +135,6 @@ function addArticleToList(article, index) {
 
     articleList.appendChild(listItem);
 }
-        function publishArticle_old() {
-            if (encryptionKey === "") {
-                alert("Please set your username and password first.");
-                return;
-            }
-
-            let title = document.getElementById("articleTitle").value.trim();
-            let editorContent = document.getElementById("editor").innerHTML.trim();
-
-            if (!title || !editorContent) {
-                alert("Title and article content cannot be empty.");
-                return;
-            }
-
-            let encryptedContent = CryptoJS.AES.encrypt(JSON.stringify({ title, content: editorContent }), encryptionKey).toString();
-            let articles = JSON.parse(localStorage.getItem("articles")) || [];
-            let articleData = { id: articles.length + 1, encryptedContent };
-
-            articles.push(articleData);
-            localStorage.setItem("articles", JSON.stringify(articles));
-
-            loadArticles();
-            resetEditor();
-        }
-
-        function loadArticles_old() {
-            let articles = JSON.parse(localStorage.getItem("articles")) || [];
-            let articleList = document.getElementById("articleList");
-            articleList.innerHTML = "";
-            articles.forEach((article, index) => addArticleToList(article, index));
-        }
-
-        function addArticleToList_old(article, index) {
-            let articleList = document.getElementById("articleList");
-            let listItem = document.createElement("li");
-            listItem.dataset.index = index;
-            listItem.innerHTML = `<span>Loading title...</span> 
-                                  <button onclick="editArticle(${index})">Edit</button> 
-                                  <button onclick="deleteArticle(${index})">Delete</button>`;
-
-            try {
-                let decryptedBytes = CryptoJS.AES.decrypt(article.encryptedContent, encryptionKey);
-                let decryptedData = JSON.parse(decryptedBytes.toString(CryptoJS.enc.Utf8));
-                listItem.firstChild.innerHTML = decryptedData.title || "Untitled Article";
-                listItem.onclick = function() {
-                    decryptAndShowArticle(article.encryptedContent);
-                };
-            } catch (error) {
-                listItem.firstChild.innerHTML = "🔒 Encrypted Article (Login to View)";
-            }
-
-            articleList.appendChild(listItem);
-        }
-
         function decryptAndShowArticle(encryptedContent) {
             if (encryptionKey === "") {
                 alert("Please enter your username and password first.");
