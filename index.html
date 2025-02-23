@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Files List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin: 10px 0;
+        }
+        a {
+            text-decoration: none;
+            color: #007AFF;
+            font-size: 18px;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Available HTML Files</h2>
+    <ul id="fileList"></ul>
+
+    <script>
+        // List of HTML files
+        const htmlFiles = [
+            "timestamp-location.html",
+            "seq.html"
+        ];
+
+        // Get the file list container
+        const fileList = document.getElementById("fileList");
+
+        // Generate links dynamically
+        htmlFiles.forEach(file => {
+            let listItem = document.createElement("li");
+            let link = document.createElement("a");
+            link.href = file;
+            link.textContent = file;
+            listItem.appendChild(link);
+            fileList.appendChild(listItem);
+        });
+    </script>
+
+</body>
+</html>
