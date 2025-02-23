@@ -11,17 +11,17 @@
             text-align: center;
             padding: 20px;
         }
-        .article-list, .editor-container, .auth-container {
+        .container {
             width: 80%;
-            margin: 20px auto;
+            margin: 0 auto;
             text-align: left;
-            padding: 10px;
+        }
+        .article-list, .editor-container, .auth-container {
+            margin-top: 20px;
+            padding: 15px;
             border: 1px solid #ccc;
             border-radius: 5px;
             background: #f9f9f9;
-        }
-        .article-list h3, .auth-container h3 {
-            margin-top: 0;
         }
         .article-list ul {
             list-style-type: none;
@@ -38,7 +38,6 @@
             min-height: 200px;
             border: 1px solid #ccc;
             padding: 10px;
-            font-size: 16px;
             border-radius: 5px;
             text-align: left;
             background: #fff;
@@ -66,45 +65,48 @@
             background: #f9f9f9;
             text-align: left;
         }
+        .action-buttons {
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body onload="loadArticles()">
 
-    <!-- Login Section -->
-    <div class="auth-container">
-        <h3>Login</h3>
-        <input type="text" id="username" placeholder="Enter Username">
-        <input type="password" id="password" placeholder="Enter Password">
-        <button onclick="setUserCredentials()">Save Credentials</button>
-    </div>
-
-    <!-- Published Articles List -->
-    <div class="article-list">
-        <h3>Published Articles</h3>
-        <ul id="articleList">
-            <!-- Articles will be added here dynamically -->
-        </ul>
-    </div>
-
-    <!-- News Article Editor -->
-    <div class="editor-container">
-        <h2>News Article Editor</h2>
-        <input type="text" id="articleTitle" placeholder="Enter article title">
-        <input type="file" id="imageUpload" accept="image/*">
-        <button onclick="insertImage()">Insert Image</button>
-        <div id="editor" contenteditable="true" class="editor">
-            <p>Start writing your news article here...</p>
+    <div class="container">
+        <!-- Login Section -->
+        <div class="auth-container">
+            <h3>Login</h3>
+            <input type="text" id="username" placeholder="Enter Username">
+            <input type="password" id="password" placeholder="Enter Password">
+            <button onclick="setUserCredentials()">Save Credentials</button>
         </div>
-        <button onclick="previewArticle()">Preview Article</button>
-        <button onclick="publishArticle()">Publish Article</button>
-    </div>
 
-    <!-- Preview Section -->
-    <h3>Preview</h3>
-    <div id="preview" class="preview"></div>
+        <!-- Published Articles List -->
+        <div class="article-list">
+            <h3>Published Articles</h3>
+            <ul id="articleList"></ul>
+        </div>
+
+        <!-- News Article Editor -->
+        <div class="editor-container">
+            <h2>News Article Editor</h2>
+            <input type="text" id="articleTitle" placeholder="Enter article title">
+            <div id="editor" contenteditable="true" class="editor">
+                <p>Start writing your news article here...</p>
+            </div>
+            <button onclick="previewArticle()">Preview Article</button>
+            <button onclick="publishArticle()">Publish Article</button>
+            <button onclick="updateArticle()" style="display: none;" id="updateBtn">Update Article</button>
+        </div>
+
+        <!-- Preview Section -->
+        <h3>Preview</h3>
+        <div id="preview" class="preview"></div>
+    </div>
 
     <script>
         let encryptionKey = "";
+        let editIndex = null;
 
         function setUserCredentials() {
             const username = document.getElementById("username").value;
@@ -117,27 +119,6 @@
 
             encryptionKey = CryptoJS.SHA256(username + password).toString();
             alert("Credentials set successfully! You can now publish articles.");
-        }
-
-        function insertImage() {
-            let fileInput = document.getElementById("imageUpload");
-            let editor = document.getElementById("editor");
-
-            if (fileInput.files.length > 0) {
-                let file = fileInput.files[0];
-                let reader = new FileReader();
-
-                reader.onload = function(e) {
-                    let img = document.createElement("img");
-                    img.src = e.target.result;
-                    img.style.maxWidth = "100%";
-                    img.style.marginTop = "10px";
-
-                    editor.appendChild(img);
-                };
-
-                reader.readAsDataURL(file);
-            }
         }
 
         function previewArticle() {
@@ -159,7 +140,6 @@
                 return;
             }
 
-            // Encrypt the article (title + content)
             let encryptedContent = CryptoJS.AES.encrypt(JSON.stringify({ title, content: editorContent }), encryptionKey).toString();
             let articles = JSON.parse(localStorage.getItem("articles")) || [];
             let articleData = { id: articles.length + 1, encryptedContent };
@@ -167,27 +147,34 @@
             articles.push(articleData);
             localStorage.setItem("articles", JSON.stringify(articles));
 
-            addArticleToList(articleData);
-            document.getElementById("articleTitle").value = "";
-            document.getElementById("editor").innerHTML = "<p>Start writing your news article here...</p>";
+            loadArticles();
+            resetEditor();
         }
 
-        function addArticleToList(article) {
+        function loadArticles() {
+            let articles = JSON.parse(localStorage.getItem("articles")) || [];
+            let articleList = document.getElementById("articleList");
+            articleList.innerHTML = "";
+            articles.forEach((article, index) => addArticleToList(article, index));
+        }
+
+        function addArticleToList(article, index) {
             let articleList = document.getElementById("articleList");
             let listItem = document.createElement("li");
-            listItem.dataset.encryptedContent = article.encryptedContent;
-            listItem.innerHTML = "Loading title...";
-            listItem.onclick = function() {
-                decryptAndShowArticle(listItem.dataset.encryptedContent);
-            };
+            listItem.dataset.index = index;
+            listItem.innerHTML = `<span>Loading title...</span> 
+                                  <button class="action-buttons" onclick="editArticle(${index})">Edit</button> 
+                                  <button class="action-buttons" onclick="deleteArticle(${index})">Delete</button>`;
 
-            // Decrypt title only
             try {
                 let decryptedBytes = CryptoJS.AES.decrypt(article.encryptedContent, encryptionKey);
                 let decryptedData = JSON.parse(decryptedBytes.toString(CryptoJS.enc.Utf8));
-                listItem.innerHTML = decryptedData.title || "Untitled Article";
+                listItem.firstChild.innerHTML = decryptedData.title || "Untitled Article";
+                listItem.onclick = function() {
+                    decryptAndShowArticle(article.encryptedContent);
+                };
             } catch (error) {
-                listItem.innerHTML = "🔒 Encrypted Article (Login to View)";
+                listItem.firstChild.innerHTML = "🔒 Encrypted Article (Login to View)";
             }
 
             articleList.appendChild(listItem);
@@ -211,11 +198,52 @@
             }
         }
 
-        function loadArticles() {
+        function editArticle(index) {
             let articles = JSON.parse(localStorage.getItem("articles")) || [];
-            let articleList = document.getElementById("articleList");
-            articleList.innerHTML = "";
-            articles.forEach(addArticleToList);
+            let article = articles[index];
+
+            try {
+                let decryptedBytes = CryptoJS.AES.decrypt(article.encryptedContent, encryptionKey);
+                let decryptedData = JSON.parse(decryptedBytes.toString(CryptoJS.enc.Utf8));
+
+                document.getElementById("articleTitle").value = decryptedData.title;
+                document.getElementById("editor").innerHTML = decryptedData.content;
+                editIndex = index;
+
+                document.getElementById("updateBtn").style.display = "inline-block";
+            } catch (error) {
+                alert("Invalid credentials! Cannot edit the article.");
+            }
+        }
+
+        function updateArticle() {
+            if (editIndex === null) return;
+
+            let articles = JSON.parse(localStorage.getItem("articles")) || [];
+            let title = document.getElementById("articleTitle").value.trim();
+            let content = document.getElementById("editor").innerHTML.trim();
+
+            let encryptedContent = CryptoJS.AES.encrypt(JSON.stringify({ title, content }), encryptionKey).toString();
+            articles[editIndex].encryptedContent = encryptedContent;
+            localStorage.setItem("articles", JSON.stringify(articles));
+
+            loadArticles();
+            resetEditor();
+        }
+
+        function deleteArticle(index) {
+            let articles = JSON.parse(localStorage.getItem("articles")) || [];
+            articles.splice(index, 1);
+            localStorage.setItem("articles", JSON.stringify(articles));
+
+            loadArticles();
+        }
+
+        function resetEditor() {
+            document.getElementById("articleTitle").value = "";
+            document.getElementById("editor").innerHTML = "<p>Start writing your news article here...</p>";
+            document.getElementById("updateBtn").style.display = "none";
+            editIndex = null;
         }
     </script>
 
