@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iOS-Style Date & Time Picker with Location Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .picker-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .picker {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .btn {
+            background-color: #007AFF;
+            color: white;
+            border: none;
+            padding: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .btn:active {
+            background-color: #005BBB;
+        }
+        .value {
+            font-size: 22px;
+            margin: 10px;
+            min-width: 60px;
+            text-align: center;
+        }
+        .search-container {
+            margin: 20px 0;
+        }
+        .search-box {
+            width: 250px;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .dropdown {
+            position: absolute;
+            width: 250px;
+            background: white;
+            border: 1px solid #ccc;
+            display: none;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .dropdown div {
+            padding: 8px;
+            cursor: pointer;
+        }
+        .dropdown div:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Select Date, Time & Location</h2>
+
+    <!-- Location Search -->
+    <div class="search-container">
+        <input type="text" id="searchBox" class="search-box" placeholder="Search location (name or PIN)" onkeyup="filterLocations()">
+        <div id="dropdown" class="dropdown"></div>
+    </div>
+
+    <!-- Date & Time Picker -->
+    <div class="picker-container">
+        <!-- Date Picker -->
+        <div class="picker">
+            <button class="btn" onclick="changeDate(1)">▲</button>
+            <span id="dateValue" class="value"></span>
+            <button class="btn" onclick="changeDate(-1)">▼</button>
+        </div>
+        <!-- Hour Picker -->
+        <div class="picker">
+            <button class="btn" onclick="changeHour(1)">▲</button>
+            <span id="hourValue" class="value"></span>
+            <button class="btn" onclick="changeHour(-1)">▼</button>
+        </div>
+        <!-- Minute Picker -->
+        <div class="picker">
+            <button class="btn" onclick="changeMinute(1)">▲</button>
+            <span id="minuteValue" class="value"></span>
+            <button class="btn" onclick="changeMinute(-1)">▼</button>
+        </div>
+    </div>
+
+    <p>Selected Date & Time: <span id="selectedDateTime"></span></p>
+    <p>Selected Location: <span id="selectedLocation">None</span></p>
+
+    <script>
+        let currentDate = new Date();
+        let locations = [
+            { name: "New York, USA", pin: "10001" },
+            { name: "Los Angeles, USA", pin: "90001" },
+            { name: "London, UK", pin: "EC1A" },
+            { name: "Paris, France", pin: "75001" },
+            { name: "Mumbai, India", pin: "400001" },
+            { name: "Tokyo, Japan", pin: "100-0001" }
+        ];
+
+        function updateDisplay() {
+            document.getElementById("dateValue").innerText = currentDate.toDateString();
+            document.getElementById("hourValue").innerText = currentDate.getHours().toString().padStart(2, '0');
+            document.getElementById("minuteValue").innerText = currentDate.getMinutes().toString().padStart(2, '0');
+            document.getElementById("selectedDateTime").innerText = currentDate.toLocaleString();
+        }
+
+        function changeDate(days) {
+            currentDate.setDate(currentDate.getDate() + days);
+            updateDisplay();
+        }
+
+        function changeHour(hours) {
+            currentDate.setHours(currentDate.getHours() + hours);
+            updateDisplay();
+        }
+
+        function changeMinute(minutes) {
+            currentDate.setMinutes(currentDate.getMinutes() + minutes);
+            updateDisplay();
+        }
+
+        function filterLocations() {
+            let searchInput = document.getElementById("searchBox").value.toLowerCase();
+            let dropdown = document.getElementById("dropdown");
+
+            if (searchInput === "") {
+                dropdown.style.display = "none";
+                return;
+            }
+
+            let filtered = locations.filter(loc =>
+                loc.name.toLowerCase().includes(searchInput) || loc.pin.includes(searchInput)
+            );
+
+            dropdown.innerHTML = "";
+            if (filtered.length > 0) {
+                filtered.forEach(loc => {
+                    let div = document.createElement("div");
+                    div.textContent = `${loc.name} (${loc.pin})`;
+                    div.onclick = function() {
+                        document.getElementById("searchBox").value = loc.name;
+                        document.getElementById("selectedLocation").innerText = loc.name;
+                        dropdown.style.display = "none";
+                    };
+                    dropdown.appendChild(div);
+                });
+                dropdown.style.display = "block";
+            } else {
+                dropdown.style.display = "none";
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", function(event) {
+            if (!event.target.closest(".search-container")) {
+                document.getElementById("dropdown").style.display = "none";
+            }
+        });
+
+        // Initialize display
+        updateDisplay();
+    </script>
+
+</body>
+</html>
