@@ -75,8 +75,65 @@
             let editorContent = document.getElementById("editor").innerHTML;
             document.getElementById("preview").innerHTML = editorContent;
         }
+function publishArticle() {
+    if (encryptionKey === "" || savedUsername === "") {
+        alert("Please set your username and password first.");
+        return;
+    }
+    let title = document.getElementById("articleTitle").value.trim();
+    let content = document.getElementById("editor").innerHTML.trim();
+    let location = document.getElementById("selectedLocation").value;
+    let timestamp = new Date().toISOString().replace("T", " ").split(".")[0]; // Format timestamp
 
-        function publishArticle() {
+    if (!title || !content || !location) {
+        alert("Title, article content, and location cannot be empty.");
+        return;
+    }
+
+    let formattedTitle = `${timestamp}_${location}_${title}_${savedUsername}`;
+
+    let articleData = { formattedTitle, content, timestamp, location, username: savedUsername };
+    let encryptedContent = CryptoJS.AES.encrypt(JSON.stringify(articleData), encryptionKey).toString();
+    
+    let articles = JSON.parse(localStorage.getItem("articles")) || [];
+    articles.push({ id: articles.length + 1, formattedTitle, encryptedContent });
+    localStorage.setItem("articles", JSON.stringify(articles));
+
+    loadArticles();
+}
+
+function loadArticles() {
+    let articles = JSON.parse(localStorage.getItem("articles")) || [];
+
+    // Sort by timestamp (since it's the first part of the title)
+    articles.sort((a, b) => a.formattedTitle.localeCompare(b.formattedTitle));
+
+    let articleList = document.getElementById("articleList");
+    articleList.innerHTML = "";
+    articles.forEach((article, index) => addArticleToList(article, index));
+}
+
+function addArticleToList(article, index) {
+    let articleList = document.getElementById("articleList");
+    let listItem = document.createElement("li");
+    listItem.dataset.index = index;
+    listItem.innerHTML = `<span>Loading title...</span>`;
+
+    try {
+        let decryptedBytes = CryptoJS.AES.decrypt(article.encryptedContent, encryptionKey);
+        let decryptedData = JSON.parse(decryptedBytes.toString(CryptoJS.enc.Utf8));
+
+        listItem.firstChild.innerHTML = decryptedData.formattedTitle;
+        listItem.onclick = function() {
+            document.getElementById("preview").innerHTML = `<h3>${decryptedData.formattedTitle}</h3><p>${decryptedData.content}</p>`;
+        };
+    } catch (error) {
+        listItem.firstChild.innerHTML = "🔒 Encrypted Article (Login to View)";
+    }
+
+    articleList.appendChild(listItem);
+}
+        function publishArticle_old() {
             if (encryptionKey === "") {
                 alert("Please set your username and password first.");
                 return;
@@ -101,14 +158,14 @@
             resetEditor();
         }
 
-        function loadArticles() {
+        function loadArticles_old() {
             let articles = JSON.parse(localStorage.getItem("articles")) || [];
             let articleList = document.getElementById("articleList");
             articleList.innerHTML = "";
             articles.forEach((article, index) => addArticleToList(article, index));
         }
 
-        function addArticleToList(article, index) {
+        function addArticleToList_old(article, index) {
             let articleList = document.getElementById("articleList");
             let listItem = document.createElement("li");
             listItem.dataset.index = index;
