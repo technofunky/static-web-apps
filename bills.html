@@ -103,7 +103,48 @@
 	function printBill(index){
 		//get the bill	
 		const bill = savedBills[index];	
-  		let billContent = `
+  		let styleContent = `
+    			@media print {
+			    body {
+			        font-family: Arial, sans-serif; /* Thermal printers work best with simple fonts */
+			        font-size: 12px; /* Small but readable */
+			        width: 58mm; /* Ensure content fits within the 58mm width */
+			        margin: 0; /* Remove default margins */
+			        padding: 0;
+			    }
+			
+			    .bill {
+			        width: 100%;
+			        text-align: center; /* Center align text */
+			    }
+			
+			    .bill-header, .bill-footer {
+			        font-size: 14px; /* Make headers slightly larger */
+			        font-weight: bold;
+			    }
+			
+			    .bill-items {
+			        border-collapse: collapse;
+			        width: 100%;
+			    }
+			
+			    .bill-items th, .bill-items td {
+			        text-align: left;
+			        padding: 5px;
+			        border-bottom: 1px dashed black; /* Dashed lines for separation */
+			    }
+			
+			    .total {
+			        font-weight: bold;
+			        font-size: 14px;
+			    }
+			
+			    /* Remove unnecessary elements in print */
+			    button, .no-print {
+			        display: none !important;
+			    }
+			}`;
+		let billContent = `
     		<div class="bill">
 		        <div class="bill-header">
 		            <p>Sambar Restaurant</p>
@@ -148,11 +189,12 @@
 		        <p>Thank you!</p>
 		</div>`;
 
-		alert(billContent);
+
 		// Open new window and print
 		let printWindow = window.open('', '', 'width=58mm,height=auto');
 		printWindow.document.write('<html><head><title>Print Bill</title>');
-		printWindow.document.write('<link rel="stylesheet" href="billprint.css">');
+		printWindow.document.write(styleContent);
+		//printWindow.document.write('<link rel="stylesheet" href="billprint.css">');
 		printWindow.document.write('</head><body>');
 		printWindow.document.write(billContent);
 		printWindow.document.write('</body></html>');
