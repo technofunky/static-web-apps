@@ -147,14 +147,23 @@ billContent += `
 </div>`;
 
 
-// Open new window and print
-let printWindow = window.open('', '', 'width=auto,height=auto');
-printWindow.document.write('<html><head><title>Print Bill</title>');
-printWindow.document.write('</head><body>');
-printWindow.document.write(billContent);
-printWindow.document.write('</body></html>');
-printWindow.document.close();
-printWindow.print();
+// Open print window
+    let printWindow = window.open('', '_blank', 'width=auto,height=auto');
+
+    if (printWindow) {
+        printWindow.document.write('<html><head><title>Print Bill</title></head><body>');
+        printWindow.document.write(billContent);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+
+        // Ensure print window loads before calling print
+        printWindow.onload = function () {
+            printWindow.print();
+            printWindow.onafterprint = function () {
+                printWindow.close(); // Close window after printing
+            };
+        };
+    }
 
 } // 20250318.berserker adding the new print bill function
 function deleteBill(index) {
