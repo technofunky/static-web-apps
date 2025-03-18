@@ -245,7 +245,7 @@
         const customerName = document.getElementById('customerName').value.trim();
         const customerPhone = document.getElementById('customerPhone').value.trim();
         const paymentMode = document.getElementById('paymentMode').value;
-if (customerName && currentBill.length > 0) {
+        if (customerName && currentBill.length > 0) {
             const total = currentBill.reduce((sum, item) => sum + item.price * item.quantity, 0);
             // 20250207.berserker changes for discount
             let discount = parseFloat(document.getElementById('discount').value) || 0;
@@ -256,9 +256,12 @@ if (customerName && currentBill.length > 0) {
 
             let gst_amount = document.getElementById('gstCheckbox').checked ? discountedTotal * 0.05 : 0;
 
+            alert(gst_amount);
+            alert(discountedTotal);
+            
             const grandTotal = discountedTotal + gst_amount;
 
-    const bill = {
+            const bill = {
                 customer: { name: customerName, phone:customerPhone },
                 paymentMode: paymentMode,
                 bill: currentBill,
