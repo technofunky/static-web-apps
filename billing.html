@@ -196,23 +196,6 @@
         }
     }
 
-// might be deleted if the function above starts working
-    function addToBill_v1(index) {
-        const quantity = parseInt(document.getElementById(`quantity-${index}`).value);
-        if (quantity > 0) {
-            const item = menu[index];
-            const existingItem = currentBill.find(billItem => billItem.name === item.name);
-            if (existingItem) {
-                existingItem.quantity += quantity;
-            } else {
-                currentBill.push({ ...item, quantity });
-            }
-            updateBillTable();
-        } else {
-            alert('Enter a valid quantity.');
-        }
-    }
-
     function updateBillTable() {
         const billTable = document.getElementById('billTable');
         const totalAmount = document.getElementById('totalAmount');
