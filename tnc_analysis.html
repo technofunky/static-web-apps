@@ -20,7 +20,7 @@
 
     <script>
         function checkFairness() {
-            const strongWords = ["must", "should", "must not", "should not", "shall not", "shall", "can not"];
+            const strongWords = ["must", "should", "must not", "should not", "shall not", "shall", "can not", "bound", "pay"];
             let inputText = document.getElementById("termsInput").value;
             let sentences = inputText.match(/[^.!?]+[.!?]/g) || [inputText];
             
