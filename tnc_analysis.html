@@ -8,6 +8,7 @@
         body { font-family: Arial, sans-serif; margin: 20px; }
         textarea { width: 100%; height: 200px; margin-bottom: 10px; }
         .highlight { color: red; font-weight: bold; }
+        .sentence-highlight { background-color: lightblue; padding: 2px; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -21,14 +22,24 @@
         function checkFairness() {
             const strongWords = ["must", "should", "must not", "should not", "shall not", "shall", "can not"];
             let inputText = document.getElementById("termsInput").value;
-            let highlightedText = inputText;
+            let sentences = inputText.match(/[^.!?]+[.!?]/g) || [inputText];
             
-            strongWords.forEach(word => {
-                let regex = new RegExp("\\b" + word + "\\b", "gi");
-                highlightedText = highlightedText.replace(regex, match => `<span class='highlight'>${match}</span>`);
-            });
+            let processedText = sentences.map(sentence => {
+                let modifiedSentence = sentence;
+                let containsStrongWord = false;
+                
+                strongWords.forEach(word => {
+                    let regex = new RegExp("\\b" + word + "\\b", "gi");
+                    if (regex.test(sentence)) {
+                        containsStrongWord = true;
+                        modifiedSentence = modifiedSentence.replace(regex, match => `<span class='highlight'>${match}</span>`);
+                    }
+                });
+                
+                return containsStrongWord ? `<span class='sentence-highlight'>${modifiedSentence}</span>` : sentence;
+            }).join(" ");
             
-            document.getElementById("output").innerHTML = highlightedText || "No input provided.";
+            document.getElementById("output").innerHTML = processedText || "No input provided.";
         }
     </script>
 </body>
