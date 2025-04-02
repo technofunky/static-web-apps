@@ -14,13 +14,15 @@
 <body>
     <h2>Terms and Conditions Fairness Checker</h2>
     <textarea id="termsInput" placeholder="Paste your terms and conditions here..."></textarea>
+    <h3>Strong Words (comma-separated):</h3>
+    <textarea id="strongWordsInput">must, should, must not, should not, shall not, shall, can not</textarea>
     <button onclick="checkFairness()">Check Fairness</button>
     <h3>Analysis:</h3>
     <div id="output"></div>
 
     <script>
         function checkFairness() {
-            const strongWords = ["must", "should", "must not", "should not", "shall not", "shall", "can not", "bound", "pay"];
+            let strongWords = document.getElementById("strongWordsInput").value.split(",").map(word => word.trim().toLowerCase());
             let inputText = document.getElementById("termsInput").value;
             let sentences = inputText.match(/[^.!?]+[.!?]/g) || [inputText];
             
