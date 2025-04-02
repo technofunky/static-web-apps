@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms Fairness Checker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        textarea { width: 100%; height: 200px; margin-bottom: 10px; }
+        .highlight { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>Terms and Conditions Fairness Checker</h2>
+    <textarea id="termsInput" placeholder="Paste your terms and conditions here..."></textarea>
+    <button onclick="checkFairness()">Check Fairness</button>
+    <h3>Analysis:</h3>
+    <div id="output"></div>
+
+    <script>
+        function checkFairness() {
+            const strongWords = ["must", "should", "must not", "should not", "shall not", "shall", "can not"];
+            let inputText = document.getElementById("termsInput").value;
+            let highlightedText = inputText;
+            
+            strongWords.forEach(word => {
+                let regex = new RegExp("\\b" + word + "\\b", "gi");
+                highlightedText = highlightedText.replace(regex, match => `<span class='highlight'>${match}</span>`);
+            });
+            
+            document.getElementById("output").innerHTML = highlightedText || "No input provided.";
+        }
+    </script>
+</body>
+</html>
