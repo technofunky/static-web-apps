@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Key Pair Generator & Chain</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, button { padding: 8px; margin: 5px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+  </style>
+</head>
+<body>
+  <h2>Generate User Key Pair and Save</h2>
+  <input type="text" id="username" placeholder="Enter Username">
+  <button onclick="generateAndSave()">Generate & Save</button>
+  <button onclick="showUsers()">Show Saved Users</button>
+
+  <table id="userTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Username</th>
+        <th>Public Key (Base64)</th>
+        <th>Previous Hash</th>
+        <th>Current Hash</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const users = [];
+
+    async function generateAndSave() {
+      const username = document.getElementById('username').value.trim();
+      if (!username) {
+        alert("Username required");
+        return;
+      }
+
+      const keyPair = await window.crypto.subtle.generateKey(
+        {
+          name: "RSA-OAEP",
+          modulusLength: 2048,
+          publicExponent: new Uint8Array([1, 0, 1]),
+          hash: "SHA-256"
+        },
+        true,
+        ["encrypt", "decrypt"]
+      );
+
+      const publicKey = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
+      const pubKeyBase64 = arrayBufferToBase64(publicKey);
+
+      const previousHash = users.length ? users[users.length - 1].hash : "GENESIS";
+      const currentHash = await digestHash(username + pubKeyBase64 + previousHash);
+
+      users.push({
+        username,
+        publicKey: pubKeyBase64,
+        previousHash,
+        hash: currentHash
+      });
+
+      alert("Key pair generated and user saved!");
+      document.getElementById('username').value = '';
+    }
+
+    async function digestHash(str) {
+      const data = new TextEncoder().encode(str);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      return arrayBufferToHex(hashBuffer);
+    }
+
+    function arrayBufferToBase64(buffer) {
+      return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    }
+
+    function arrayBufferToHex(buffer) {
+      return [...new Uint8Array(buffer)].map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function showUsers() {
+      const table = document.getElementById("userTable");
+      const tbody = table.querySelector("tbody");
+      tbody.innerHTML = "";
+
+      users.forEach((user, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${user.username}</td>
+          <td style="font-size: 10px;">${user.publicKey}</td>
+          <td style="font-size: 10px;">${user.previousHash}</td>
+          <td style="font-size: 10px;">${user.hash}</td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      table.style.display = "table";
+    }
+  </script>
+</body>
+</html>
