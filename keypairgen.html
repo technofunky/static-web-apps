@@ -1,106 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Key Pair Generator & Chain</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    input, button { padding: 8px; margin: 5px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Blockchain-like Key Pair App with GunDB</title>
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        input, button { margin: 5px; padding: 5px; }
+        table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; }
+    </style>
 </head>
 <body>
-  <h2>Generate User Key Pair and Save</h2>
-  <input type="text" id="username" placeholder="Enter Username">
-  <button onclick="generateAndSave()">Generate & Save</button>
-  <button onclick="showUsers()">Show Saved Users</button>
 
-  <table id="userTable" style="display:none;">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Username</th>
-        <th>Public Key (Base64)</th>
-        <th>Previous Hash</th>
-        <th>Current Hash</th>
-      </tr>
-    </thead>
+<h2>User Key Pair Generator</h2>
+<input id="username" placeholder="Username">
+<button onclick="generateUser()">Generate Key Pair</button>
+<input type="file" id="importFile" onchange="importData(event)">
+<button onclick="downloadData()">Export JSON</button>
+<button onclick="showData()">Show Users</button>
+<p id="status"></p>
+
+<h3>User Data</h3>
+<table id="userTable">
+    <thead><tr><th>Username</th><th>Public Key</th><th>Hash</th></tr></thead>
     <tbody></tbody>
-  </table>
+</table>
 
-  <script>
-    const users = [];
+<script>
+    const gun = Gun();
+    let blockchain = [];
 
-    async function generateAndSave() {
-      const username = document.getElementById('username').value.trim();
-      if (!username) {
-        alert("Username required");
-        return;
-      }
-
-      const keyPair = await window.crypto.subtle.generateKey(
-        {
-          name: "RSA-OAEP",
-          modulusLength: 2048,
-          publicExponent: new Uint8Array([1, 0, 1]),
-          hash: "SHA-256"
-        },
-        true,
-        ["encrypt", "decrypt"]
-      );
-
-      const publicKey = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
-      const pubKeyBase64 = arrayBufferToBase64(publicKey);
-
-      const previousHash = users.length ? users[users.length - 1].hash : "GENESIS";
-      const currentHash = await digestHash(username + pubKeyBase64 + previousHash);
-
-      users.push({
-        username,
-        publicKey: pubKeyBase64,
-        previousHash,
-        hash: currentHash
-      });
-
-      alert("Key pair generated and user saved!");
-      document.getElementById('username').value = '';
+    function sha256(text) {
+        return crypto.subtle.digest("SHA-256", new TextEncoder().encode(text))
+            .then(buf => Array.from(new Uint8Array(buf)).map(x => x.toString(16).padStart(2, '0')).join(''));
     }
 
-    async function digestHash(str) {
-      const data = new TextEncoder().encode(str);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-      return arrayBufferToHex(hashBuffer);
+    async function generateUser() {
+        const username = document.getElementById("username").value.trim();
+        const status = document.getElementById("status");
+        if (!username) return status.textContent = "Username required";
+
+        const userExists = blockchain.find(u => u.username === username);
+        if (userExists) return status.textContent = "Username already exists!";
+
+        const keyPair = await window.crypto.subtle.generateKey(
+            { name: "RSA-OAEP", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
+            true,
+            ["encrypt", "decrypt"]
+        );
+
+        const publicKey = await crypto.subtle.exportKey("spki", keyPair.publicKey);
+        const publicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(publicKey)));
+
+        const previousHash = blockchain.length ? blockchain[blockchain.length - 1].hash : "";
+        const blockData = { username, publicKey: publicKeyBase64, previousHash };
+        blockData.hash = await sha256(JSON.stringify(blockData));
+
+        blockchain.push(blockData);
+        gun.get("users").put({ data: blockchain });
+
+        status.textContent = `Key pair generated for ${username}`;
+        showData();
     }
 
-    function arrayBufferToBase64(buffer) {
-      return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    function showData() {
+        const table = document.querySelector("#userTable tbody");
+        table.innerHTML = "";
+        blockchain.forEach(u => {
+            const row = `<tr><td>${u.username}</td><td>${u.publicKey.slice(0, 30)}...</td><td>${u.hash.slice(0, 20)}...</td></tr>`;
+            table.innerHTML += row;
+        });
     }
 
-    function arrayBufferToHex(buffer) {
-      return [...new Uint8Array(buffer)].map(b => b.toString(16).padStart(2, '0')).join('');
+    function downloadData() {
+        const blob = new Blob([JSON.stringify(blockchain)], { type: "application/json" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "user_data.json";
+        link.click();
     }
 
-    function showUsers() {
-      const table = document.getElementById("userTable");
-      const tbody = table.querySelector("tbody");
-      tbody.innerHTML = "";
-
-      users.forEach((user, index) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${user.username}</td>
-          <td style="font-size: 10px;">${user.publicKey}</td>
-          <td style="font-size: 10px;">${user.previousHash}</td>
-          <td style="font-size: 10px;">${user.hash}</td>
-        `;
-        tbody.appendChild(row);
-      });
-
-      table.style.display = "table";
+    function importData(event) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const imported = JSON.parse(e.target.result);
+            for (const block of imported) {
+                const exists = blockchain.find(b => b.username === block.username);
+                if (!exists) blockchain.push(block);
+            }
+            gun.get("users").put({ data: blockchain });
+            showData();
+            document.getElementById("status").textContent = "Data imported successfully!";
+        };
+        reader.readAsText(event.target.files[0]);
     }
-  </script>
+
+    // Sync with GunDB
+    gun.get("users").on(data => {
+        if (data && data.data) {
+            blockchain = data.data;
+            showData();
+        }
+    });
+</script>
+
 </body>
 </html>
