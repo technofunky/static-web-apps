@@ -5,236 +5,495 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sequence Diagram Generator</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
+    :root {
+      --primary-color: #4285f4;
+      --secondary-color: #34a853;
+      --danger-color: #ea4335;
+      --light-gray: #f5f5f5;
+      --border-color: #ddd;
+      --text-color: #333;
     }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      color: var(--text-color);
+      line-height: 1.6;
+      background-color: #f9f9f9;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1, h2, h3 {
+      color: var(--primary-color);
+    }
+    
+    h1 {
+      margin-top: 0;
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 10px;
+    }
+    
     table {
       width: 100%;
       border-collapse: collapse;
+      margin: 20px 0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
-    table, th, td {
-      border: 1px solid #ccc;
-    }
-    th, td {
-      padding: 8px;
+    
+    th {
+      background-color: var(--primary-color);
+      color: white;
       text-align: left;
     }
+    
+    th, td {
+      padding: 12px 15px;
+      border: 1px solid var(--border-color);
+    }
+    
+    tr:nth-child(even) {
+      background-color: var(--light-gray);
+    }
+    
+    tr:hover {
+      background-color: #f0f0f0;
+    }
+    
     .form-container {
-      margin-bottom: 20px;
+      margin-bottom: 25px;
+      padding: 15px;
+      background-color: var(--light-gray);
+      border-radius: 5px;
     }
-    .form-container input, select, button, textarea {
-      margin-right: 10px;
-      padding: 5px;
+    
+    .form-group {
+      margin-bottom: 15px;
     }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    
+    input, select, button, textarea {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    input[type="text"], select {
+      width: 200px;
+    }
+    
     textarea {
       width: 100%;
-      height: 100px;
+      min-height: 120px;
+      resize: vertical;
     }
+    
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-right: 10px;
+    }
+    
+    button:hover {
+      background-color: #3367d6;
+    }
+    
+    button.secondary {
+      background-color: var(--secondary-color);
+    }
+    
+    button.secondary:hover {
+      background-color: #2d9249;
+    }
+    
+    button.danger {
+      background-color: var(--danger-color);
+    }
+    
+    button.danger:hover {
+      background-color: #d33426;
+    }
+    
     #outputContainer {
       margin-top: 20px;
     }
+    
     pre {
       background: #f4f4f4;
-      padding: 10px;
-      border: 1px solid #ccc;
+      padding: 15px;
+      border: 1px solid var(--border-color);
       white-space: pre-wrap;
+      border-radius: 4px;
+      overflow-x: auto;
     }
+    
     canvas {
-      border: 1px solid #ccc;
+      border: 1px solid var(--border-color);
       margin-top: 20px;
+      display: block;
+      background: white;
+      max-width: 100%;
+    }
+    
+    .actor-list {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .actor-item {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .actor-item button {
+      background: none;
+      border: none;
+      color: white;
+      margin-left: 8px;
+      padding: 0;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .btn-group button {
+      margin-right: 0;
+    }
+    
+    .alert {
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin: 10px 0;
+      display: none;
+    }
+    
+    .alert.success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .alert.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    @media (max-width: 768px) {
+      input[type="text"], select {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      
+      .form-container {
+        padding: 10px;
+      }
+      
+      th, td {
+        padding: 8px 10px;
+        font-size: 14px;
+      }
+      
+      .actor-list {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
 <body>
 
-<h1>Sequence Diagram Generator</h1>
+<div class="container">
+  <h1>Sequence Diagram Generator</h1>
+  
+  <div id="alert" class="alert"></div>
 
-<div class="form-container">
-  <label for="actor">Add Actor:</label>
-  <input type="text" id="actor" placeholder="Enter actor name">
-  <button onclick="addActor()">Add Actor</button>
-  <button onclick="deleteActor()">Delete Actor</button>
-  <select id="actorList"></select>
+  <div class="form-container">
+    <h2>Actors Management</h2>
+    <div class="form-group">
+      <label for="actor">Actor Name:</label>
+      <input type="text" id="actor" placeholder="Enter actor name">
+    </div>
+    <div class="btn-group">
+      <button onclick="addActor()">Add Actor</button>
+      <button class="danger" onclick="deleteSelectedActor()">Delete Selected</button>
+    </div>
+    
+    <h3>Current Actors:</h3>
+    <ul id="actorList" class="actor-list"></ul>
+  </div>
+
+  <div class="form-container">
+    <h2>Messages</h2>
+    <button onclick="addRow()" class="secondary">Add Message Row</button>
+    
+    <div style="overflow-x: auto;">
+      <table id="sequenceTable">
+        <thead>
+          <tr>
+            <th>From</th>
+            <th>To</th>
+            <th>Message</th>
+            <th>Actions</th>
+            <th>Reorder</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be added dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <h2>Generate Diagram</h2>
+    <div class="btn-group">
+      <button onclick="generatePlantUML()">Generate PlantUML</button>
+      <button onclick="copyToClipboard()">Copy to Clipboard</button>
+      <button onclick="clearAll()" class="danger">Clear All</button>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <h2>PlantUML Script</h2>
+    <pre id="plantUMLOutput">Click "Generate PlantUML Script" to see the output here.</pre>
+  </div>
+
+  <div class="form-container">
+    <h2>Import/Export</h2>
+    <div class="form-group">
+      <label for="plantUMLInput">Paste PlantUML Script:</label>
+      <textarea id="plantUMLInput" placeholder="Enter PlantUML script here"></textarea>
+    </div>
+    <div class="btn-group">
+      <button onclick="parsePlantUML()">Import from Script</button>
+      <button onclick="exportAsJSON()">Export as JSON</button>
+      <button onclick="importFromJSON()">Import from JSON</button>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <h2>Diagram Preview</h2>
+    <canvas id="sequenceCanvas" width="800" height="400"></canvas>
+  </div>
 </div>
-
-<div class="form-container">
-  <h3>Actors:</h3>
-  <ul id="actorList"></ul>
-</div>
-
-
-<div class="form-container">
-  <button onclick="addRow()">Add Message Row</button>
-</div>
-
-<table id="sequenceTable">
-  <thead>
-    <tr>
-      <th>Actor 1</th>
-      <th>Actor 2</th>
-      <th>Message</th>
-      <th>Actions</th>
-      <th>Reorder</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- Rows will be added dynamically -->
-  </tbody>
-</table>
-
-<div class="form-container">
-  <button onclick="generatePlantUML()">Generate PlantUML Script</button>
-  <button onclick="copyToClipboard()">Copy to Clipboard</button>
-</div>
-
-<div class="form-container">
-  <h3>Input PlantUML Script:</h3>
-  <textarea id="plantUMLInput" placeholder="Enter PlantUML script here"></textarea>
-  <button onclick="parsePlantUML()">Generate Table from Script</button>
-</div>
-
-<div id="outputContainer">
-  <h3>PlantUML Script:</h3>
-  <pre id="plantUMLOutput">Click "Generate PlantUML Script" to see the output here.</pre>
-</div>
-
-<canvas id="sequenceCanvas" width="800" height="400"></canvas>
 
 <script>
-  const actors = JSON.parse(localStorage.getItem('actors')) || [];
-  const tableData = JSON.parse(localStorage.getItem('tableData')) || [];
-  const plantUMLInput = localStorage.getItem('plantUMLInput') || '';
-
-  // Populate data from localStorage on load
-  window.onload = () => {
-    document.getElementById('plantUMLInput').value = plantUMLInput;
-    //actors.forEach(actor => addActorToList(actor));
-    addActorToList(); // Handles full UI setup
-
-    tableData.forEach(row => addRow(row.actor1, row.actor2, row.message));
+  // State management
+  const state = {
+    actors: JSON.parse(localStorage.getItem('actors')) || [],
+    tableData: JSON.parse(localStorage.getItem('tableData')) || [],
+    plantUMLInput: localStorage.getItem('plantUMLInput') || ''
   };
 
-  function addActor() {
-    const actorInput = document.getElementById('actor');
-    const actorName = actorInput.value.trim();
+  // DOM elements
+  const elements = {
+    actorInput: document.getElementById('actor'),
+    actorList: document.getElementById('actorList'),
+    sequenceTable: document.getElementById('sequenceTable').querySelector('tbody'),
+    plantUMLInput: document.getElementById('plantUMLInput'),
+    plantUMLOutput: document.getElementById('plantUMLOutput'),
+    sequenceCanvas: document.getElementById('sequenceCanvas'),
+    alert: document.getElementById('alert')
+  };
 
-    if (actorName && !actors.includes(actorName)) {
-      actors.push(actorName);
-      addActorToList(actorName);
-      actorInput.value = '';
-      saveToLocalStorage();
-      alert(`Actor "${actorName}" added!`);
-    } else {
-      alert('Actor name is empty or already exists.');
-    }
+  // Initialize the app
+  window.onload = () => {
+    elements.plantUMLInput.value = state.plantUMLInput;
+    renderActorList();
+    state.tableData.forEach(row => addRow(row.actor1, row.actor2, row.message));
+  };
+
+  // Helper functions
+  function showAlert(message, type = 'success') {
+    const alert = elements.alert;
+    alert.textContent = message;
+    alert.className = `alert ${type}`;
+    alert.style.display = 'block';
+    
+    setTimeout(() => {
+      alert.style.display = 'none';
+    }, 3000);
   }
 
-function addActorToList(actorName) {
-  const actorList = document.getElementById('actorList');
-  actorList.innerHTML = ''; // Clear list
+  function saveToLocalStorage() {
+    // Update state with current table data
+    state.tableData = [];
+    const rows = elements.sequenceTable.querySelectorAll('tr');
+    rows.forEach(row => {
+      const actor1 = row.cells[0].querySelector('select').value;
+      const actor2 = row.cells[1].querySelector('select').value;
+      const message = row.cells[2].querySelector('input').value.trim();
+      state.tableData.push({ actor1, actor2, message });
+    });
 
-  actors.forEach((actor, index) => {
-    const li = document.createElement('li');
-    li.textContent = actor + ' ';
+    // Save to localStorage
+    localStorage.setItem('actors', JSON.stringify(state.actors));
+    localStorage.setItem('tableData', JSON.stringify(state.tableData));
+    localStorage.setItem('plantUMLInput', elements.plantUMLInput.value);
+  }
 
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.style.marginLeft = '10px';
-    deleteBtn.onclick = () => deleteActor(index);
+  // Actor management
+  function addActor() {
+    const actorName = elements.actorInput.value.trim();
 
-    li.appendChild(deleteBtn);
-    actorList.appendChild(li);
-  });
-
-  refreshDropdowns();
-}
-
-function deleteActor(index) {
-  const removed = actors.splice(index, 1)[0];
-
-  // Remove rows that contain this actor
-  const rows = document.querySelectorAll('#sequenceTable tbody tr');
-  rows.forEach(row => {
-    const actor1 = row.cells[0].querySelector('select').value;
-    const actor2 = row.cells[1].querySelector('select').value;
-    if (actor1 === removed || actor2 === removed) {
-      row.remove();
+    if (!actorName) {
+      showAlert('Please enter an actor name', 'error');
+      return;
     }
-  });
 
-  addActorToList(); // Refresh UI list and dropdowns
-  saveToLocalStorage();
-  generatePlantUML(); // Update script and canvas
-}
+    if (state.actors.includes(actorName)) {
+      showAlert(`Actor "${actorName}" already exists`, 'error');
+      return;
+    }
+
+    state.actors.push(actorName);
+    elements.actorInput.value = '';
+    renderActorList();
+    saveToLocalStorage();
+    showAlert(`Actor "${actorName}" added successfully`);
+  }
+
+  function deleteSelectedActor() {
+    const select = document.querySelector('#actorList select');
+    if (!select) {
+      showAlert('No actor selected', 'error');
+      return;
+    }
+    
+    const index = select.selectedIndex;
+    if (index === -1) {
+      showAlert('Please select an actor to delete', 'error');
+      return;
+    }
+    
+    deleteActor(index);
+  }
+
+  function deleteActor(index) {
+    const removedActor = state.actors.splice(index, 1)[0];
+    
+    // Remove rows that contain this actor
+    const rows = elements.sequenceTable.querySelectorAll('tr');
+    rows.forEach(row => {
+      const actor1 = row.cells[0].querySelector('select').value;
+      const actor2 = row.cells[1].querySelector('select').value;
+      if (actor1 === removedActor || actor2 === removedActor) {
+        row.remove();
+      }
+    });
+
+    renderActorList();
+    saveToLocalStorage();
+    showAlert(`Actor "${removedActor}" deleted`);
+  }
+
+  function renderActorList() {
+    elements.actorList.innerHTML = '';
+    
+    if (state.actors.length === 0) {
+      elements.actorList.innerHTML = '<li>No actors added yet</li>';
+      return;
+    }
+    
+    // Create a dropdown for actor selection
+    const select = document.createElement('select');
+    state.actors.forEach(actor => {
+      const option = document.createElement('option');
+      option.value = actor;
+      option.textContent = actor;
+      select.appendChild(option);
+    });
+    
+    const container = document.createElement('div');
+    container.appendChild(select);
+    elements.actorList.appendChild(container);
+    
+    // Also display actors as tags
+    const tagsContainer = document.createElement('div');
+    tagsContainer.style.display = 'flex';
+    tagsContainer.style.flexWrap = 'wrap';
+    tagsContainer.style.gap = '8px';
+    tagsContainer.style.marginTop = '10px';
+    
+    state.actors.forEach((actor, index) => {
+      const tag = document.createElement('div');
+      tag.className = 'actor-item';
+      tag.textContent = actor;
+      
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = '×';
+      deleteBtn.title = 'Delete this actor';
+      deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        deleteActor(index);
+      };
+      
+      tag.appendChild(deleteBtn);
+      tagsContainer.appendChild(tag);
+    });
+    
+    elements.actorList.appendChild(tagsContainer);
+    refreshDropdowns();
+  }
 
   function refreshDropdowns() {
-  const rows = document.querySelectorAll('#sequenceTable tbody tr');
-  rows.forEach(row => {
-    ['actor1', 'actor2'].forEach((id, i) => {
-      const cell = row.cells[i];
-      const currentValue = cell.querySelector('select').value;
-
-      // Recreate dropdown
-      const newSelect = createActorDropdown(currentValue);
-      cell.innerHTML = ''; // Clear cell
-      cell.appendChild(newSelect);
+    const rows = elements.sequenceTable.querySelectorAll('tr');
+    rows.forEach(row => {
+      ['actor1', 'actor2'].forEach((id, i) => {
+        const cell = row.cells[i];
+        const currentValue = cell.querySelector('select')?.value || '';
+        
+        // Recreate dropdown
+        const newSelect = createActorDropdown(currentValue);
+        cell.innerHTML = '';
+        cell.appendChild(newSelect);
+      });
     });
-  });
-}
-
-  function addRow(actor1 = '', actor2 = '', message = '') {
-    const tableBody = document.getElementById('sequenceTable').querySelector('tbody');
-    const row = document.createElement('tr');
-
-    const actor1Cell = document.createElement('td');
-    const actor2Cell = document.createElement('td');
-    const messageCell = document.createElement('td');
-    const actionCell = document.createElement('td');
-    const reorderCell = document.createElement('td');
-
-    const actor1Select = createActorDropdown(actor1);
-    const actor2Select = createActorDropdown(actor2);
-    const messageInput = document.createElement('input');
-    messageInput.type = 'text';
-    messageInput.value = message;
-    messageInput.placeholder = 'Enter message';
-
-    const deleteButton = document.createElement('button');
-    deleteButton.textContent = 'Delete';
-    deleteButton.onclick = () => {
-      row.remove();
-      saveToLocalStorage();
-    };
-
-    const upButton = document.createElement('button');
-    upButton.textContent = 'Up';
-    upButton.onclick = () => moveRow(row, 'up');
-
-    const downButton = document.createElement('button');
-    downButton.textContent = 'Down';
-    downButton.onclick = () => moveRow(row, 'down');
-
-    actor1Cell.appendChild(actor1Select);
-    actor2Cell.appendChild(actor2Select);
-    messageCell.appendChild(messageInput);
-    actionCell.appendChild(deleteButton);
-    reorderCell.appendChild(upButton);
-    reorderCell.appendChild(downButton);
-
-    row.appendChild(actor1Cell);
-    row.appendChild(actor2Cell);
-    row.appendChild(messageCell);
-    row.appendChild(actionCell);
-    row.appendChild(reorderCell);
-
-    tableBody.appendChild(row);
-    saveToLocalStorage();
   }
 
   function createActorDropdown(selectedValue = '') {
     const select = document.createElement('select');
-    actors.forEach(actor => {
+    
+    // Add empty option if no selection
+    if (!selectedValue) {
+      const emptyOption = document.createElement('option');
+      emptyOption.value = '';
+      emptyOption.textContent = '-- Select --';
+      emptyOption.selected = true;
+      select.appendChild(emptyOption);
+    }
+    
+    state.actors.forEach(actor => {
       const option = document.createElement('option');
       option.value = actor;
       option.textContent = actor;
@@ -243,186 +502,393 @@ function deleteActor(index) {
       }
       select.appendChild(option);
     });
-    select.onchange = saveToLocalStorage; // Save on change
+    
+    select.onchange = saveToLocalStorage;
     return select;
   }
 
+  // Table row management
+  function addRow(actor1 = '', actor2 = '', message = '') {
+    const row = document.createElement('tr');
+    
+    // Create cells
+    const actor1Cell = document.createElement('td');
+    const actor2Cell = document.createElement('td');
+    const messageCell = document.createElement('td');
+    const actionCell = document.createElement('td');
+    const reorderCell = document.createElement('td');
+    
+    // Create form elements
+    const actor1Select = createActorDropdown(actor1);
+    const actor2Select = createActorDropdown(actor2);
+    
+    const messageInput = document.createElement('input');
+    messageInput.type = 'text';
+    messageInput.value = message;
+    messageInput.placeholder = 'Enter message';
+    messageInput.style.width = '100%';
+    messageInput.onchange = saveToLocalStorage;
+    messageInput.onkeyup = saveToLocalStorage;
+    
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'danger';
+    deleteButton.textContent = 'Delete';
+    deleteButton.onclick = () => {
+      row.remove();
+      saveToLocalStorage();
+      showAlert('Row deleted');
+    };
+    
+    const upButton = document.createElement('button');
+    upButton.textContent = '↑';
+    upButton.title = 'Move up';
+    upButton.onclick = () => moveRow(row, 'up');
+    
+    const downButton = document.createElement('button');
+    downButton.textContent = '↓';
+    downButton.title = 'Move down';
+    downButton.onclick = () => moveRow(row, 'down');
+    
+    // Assemble cells
+    actor1Cell.appendChild(actor1Select);
+    actor2Cell.appendChild(actor2Select);
+    messageCell.appendChild(messageInput);
+    actionCell.appendChild(deleteButton);
+    reorderCell.appendChild(upButton);
+    reorderCell.appendChild(downButton);
+    
+    // Assemble row
+    row.appendChild(actor1Cell);
+    row.appendChild(actor2Cell);
+    row.appendChild(messageCell);
+    row.appendChild(actionCell);
+    row.appendChild(reorderCell);
+    
+    // Add to table
+    elements.sequenceTable.appendChild(row);
+    saveToLocalStorage();
+  }
+
   function moveRow(row, direction) {
-    const tableBody = document.getElementById('sequenceTable').querySelector('tbody');
-    const rows = Array.from(tableBody.querySelectorAll('tr'));
+    const rows = Array.from(elements.sequenceTable.querySelectorAll('tr'));
     const index = rows.indexOf(row);
     
     if (direction === 'up' && index > 0) {
-      tableBody.insertBefore(row, rows[index - 1]);
+      elements.sequenceTable.insertBefore(row, rows[index - 1]);
     } else if (direction === 'down' && index < rows.length - 1) {
-      tableBody.insertBefore(row, rows[index + 1].nextSibling);
+      elements.sequenceTable.insertBefore(rows[index + 1], row);
     }
     
     saveToLocalStorage();
     generatePlantUML();
   }
 
+  // PlantUML generation
   function generatePlantUML() {
-    const tableBody = document.getElementById('sequenceTable').querySelector('tbody');
-    const rows = tableBody.querySelectorAll('tr');
+    const rows = elements.sequenceTable.querySelectorAll('tr');
     let plantUMLScript = '@startuml\n';
-
-    // Declare actors
-    actors.forEach(actor => {
-      plantUMLScript += `actor ${actor}\n`;
+    
+    // Add title if we have actors
+    if (state.actors.length > 0) {
+      plantUMLScript += `title Sequence Diagram\n\n`;
+    }
+    
+    // Declare participants (using 'participant' instead of 'actor' for better compatibility)
+    state.actors.forEach(actor => {
+      plantUMLScript += `participant "${actor}" as ${actor.replace(/\s+/g, '_')}\n`;
     });
-
+    
     // Add interactions
     rows.forEach(row => {
       const actor1 = row.cells[0].querySelector('select').value;
       const actor2 = row.cells[1].querySelector('select').value;
       const message = row.cells[2].querySelector('input').value.trim();
-
+      
       if (actor1 && actor2 && message) {
-        plantUMLScript += `${actor1} -> ${actor2} : ${message}\n`;
+        plantUMLScript += `${actor1.replace(/\s+/g, '_')} -> ${actor2.replace(/\s+/g, '_')} : ${message}\n`;
       }
     });
-
+    
     plantUMLScript += '@enduml';
-
+    
     // Display the script
-    document.getElementById('plantUMLOutput').textContent = plantUMLScript;
+    elements.plantUMLOutput.textContent = plantUMLScript;
     renderCanvas(plantUMLScript);
     saveToLocalStorage();
   }
 
   function copyToClipboard() {
-    const plantUMLScript = document.getElementById('plantUMLOutput').textContent;
+    const plantUMLScript = elements.plantUMLOutput.textContent;
+    if (!plantUMLScript || plantUMLScript === 'Click "Generate PlantUML Script" to see the output here.') {
+      showAlert('Nothing to copy. Generate a script first.', 'error');
+      return;
+    }
+    
     navigator.clipboard.writeText(plantUMLScript).then(() => {
-      alert('PlantUML script copied to clipboard!');
+      showAlert('PlantUML script copied to clipboard!');
     }).catch(err => {
-      alert('Failed to copy text: ', err);
+      showAlert('Failed to copy text: ' + err, 'error');
     });
   }
 
   function parsePlantUML() {
-    const input = document.getElementById('plantUMLInput').value.trim();
-    const tableBody = document.getElementById('sequenceTable').querySelector('tbody');
-    tableBody.innerHTML = ''; // Clear the table
-    actors.length = 0; // Reset actors array
-
+    const input = elements.plantUMLInput.value.trim();
+    if (!input) {
+      showAlert('Please enter a PlantUML script', 'error');
+      return;
+    }
+    
+    // Clear current data
+    elements.sequenceTable.innerHTML = '';
+    state.actors = [];
+    state.tableData = [];
+    
     const lines = input.split('\n');
-
+    const newRows = [];
+    
     lines.forEach(line => {
       line = line.trim();
-      if (line.startsWith('actor')) {
-        const actorName = line.split(' ')[1];
-        if (!actors.includes(actorName)) {
-          actors.push(actorName);
+      
+      // Skip comments and empty lines
+      if (!line || line.startsWith("'") || line.startsWith('@')) {
+        return;
+      }
+      
+      // Handle participant/actor declarations
+      if (line.startsWith('participant') || line.startsWith('actor')) {
+        const parts = line.split(/\s+/);
+        const actorName = parts[1].replace(/"/g, '').replace(/_/g, ' ');
+        if (!state.actors.includes(actorName)) {
+          state.actors.push(actorName);
         }
-      } else if (line.includes('->')) {
-        const [left, right] = line.split('->');
-        const actor1 = left.trim();
-        const [actor2, message] = right.split(':').map(s => s.trim());
-        if (actor1 && actor2 && message) {
-          addRow(actor1, actor2, message);
+      }
+      // Handle messages
+      else if (line.includes('->') || line.includes('<-')) {
+        const [left, right] = line.split(/->|<-/);
+        const actor1 = left.trim().replace(/_/g, ' ');
+        const [actor2Part, messagePart] = right.split(':').map(s => s.trim());
+        const actor2 = actor2Part.trim().replace(/_/g, ' ');
+        const message = messagePart ? messagePart.trim() : '';
+        
+        if (actor1 && actor2) {
+          newRows.push({ actor1, actor2, message });
         }
       }
     });
-
+    
+    // Update UI
+    renderActorList();
+    newRows.forEach(row => addRow(row.actor1, row.actor2, row.message));
     saveToLocalStorage();
-    alert('Table generated from PlantUML script!');
+    showAlert('Diagram imported from PlantUML script!');
   }
 
-  function renderCanvas(plantUMLScript) {
-    const canvas = document.getElementById('sequenceCanvas');
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+  // Import/Export functionality
+  function exportAsJSON() {
+    const data = {
+      actors: state.actors,
+      messages: state.tableData,
+      plantUML: elements.plantUMLOutput.textContent
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sequence-diagram.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showAlert('Diagram exported as JSON file');
+  }
 
+  function importFromJSON() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = event => {
+        try {
+          const data = JSON.parse(event.target.result);
+          
+          // Clear current data
+          elements.sequenceTable.innerHTML = '';
+          state.actors = data.actors || [];
+          state.tableData = data.messages || [];
+          
+          // Update UI
+          renderActorList();
+          state.tableData.forEach(row => addRow(row.actor1, row.actor2, row.message));
+          
+          if (data.plantUML) {
+            elements.plantUMLOutput.textContent = data.plantUML;
+            renderCanvas(data.plantUML);
+          }
+          
+          saveToLocalStorage();
+          showAlert('Diagram imported from JSON file');
+        } catch (err) {
+          showAlert('Error parsing JSON file: ' + err.message, 'error');
+        }
+      };
+      reader.readAsText(file);
+    };
+    
+    input.click();
+  }
+
+  function clearAll() {
+    if (!confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+      return;
+    }
+    
+    state.actors = [];
+    state.tableData = [];
+    state.plantUMLInput = '';
+    
+    elements.sequenceTable.innerHTML = '';
+    elements.plantUMLInput.value = '';
+    elements.plantUMLOutput.textContent = 'Click "Generate PlantUML Script" to see the output here.';
+    
+    const ctx = elements.sequenceCanvas.getContext('2d');
+    ctx.clearRect(0, 0, elements.sequenceCanvas.width, elements.sequenceCanvas.height);
+    
+    renderActorList();
+    saveToLocalStorage();
+    showAlert('All data cleared');
+  }
+
+  // Canvas rendering
+  function renderCanvas(plantUMLScript) {
+    const canvas = elements.sequenceCanvas;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Set canvas dimensions based on content
+    const lineCount = plantUMLScript.split('\n').length;
+    canvas.height = Math.max(400, 100 + lineCount * 40);
+    
     const lines = plantUMLScript.split('\n');
     const actorPositions = {};
-    const actorY = 50; // Y-coordinate for actors
-    const lifelineYStart = actorY + 30; // Starting point of the lifeline
-    const lifelineYEnd = canvas.height - 50; // Ending point of the lifeline
-    let messageY = lifelineYStart + 20; // Initial Y-coordinate for messages
-
+    const actorY = 50;
+    const lifelineYStart = actorY + 30;
+    const lifelineYEnd = canvas.height - 50;
+    let messageY = lifelineYStart + 20;
+    
     // Draw actors and their lifelines
     let actorIndex = 0;
+    const actorSpacing = Math.min(150, (canvas.width - 200) / Math.max(1, state.actors.length - 1));
+    
     lines.forEach(line => {
-      if (line.startsWith('actor')) {
-        const actor = line.split(' ')[1];
-        const x = 100 + actorIndex * 150; // Spacing between actors
-        actorPositions[actor] = x;
-
+      line = line.trim();
+      
+      if (line.startsWith('participant') || line.startsWith('actor')) {
+        const parts = line.split(/\s+/);
+        const actor = parts[1].replace(/"/g, '');
+        const x = 100 + actorIndex * actorSpacing;
+        actorPositions[actor.replace(/_/g, ' ')] = x;
+        
         // Draw actor label
         ctx.font = '14px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(actor, x, actorY);
-
+        ctx.fillText(actor.replace(/_/g, ' '), x, actorY);
+        
         // Draw actor lifeline (vertical dashed line)
-        ctx.setLineDash([5, 5]); // Dashed line
+        ctx.setLineDash([5, 5]);
         ctx.beginPath();
         ctx.moveTo(x, lifelineYStart);
         ctx.lineTo(x, lifelineYEnd);
+        ctx.strokeStyle = '#888';
         ctx.stroke();
         ctx.closePath();
-        ctx.setLineDash([]); // Reset to solid line
-
+        ctx.setLineDash([]);
+        
         actorIndex++;
       }
     });
-
+    
     // Draw interactions
+    ctx.strokeStyle = '#333';
+    ctx.fillStyle = '#333';
+    
     lines.forEach(line => {
-      if (line.includes('->')) {
-        const [from, right] = line.split('->');
-        const to = right.split(':')[0].trim();
-        const message = right.split(':')[1].trim();
-
-        const x1 = actorPositions[from.trim()];
-        const x2 = actorPositions[to.trim()];
-
+      if (line.includes('->') || line.includes('<-')) {
+        const isResponse = line.includes('<-');
+        const arrowParts = line.split(isResponse ? '<-' : '->');
+        const from = arrowParts[0].trim().replace(/_/g, ' ');
+        const toPart = arrowParts[1].split(':');
+        const to = toPart[0].trim().replace(/_/g, ' ');
+        const message = toPart[1] ? toPart[1].trim() : '';
+        
+        const x1 = actorPositions[isResponse ? to : from];
+        const x2 = actorPositions[isResponse ? from : to];
+        
         if (x1 && x2) {
           // Draw arrow line
           ctx.beginPath();
           ctx.moveTo(x1, messageY);
           ctx.lineTo(x2, messageY);
           ctx.stroke();
-
+          
           // Draw arrowhead
-          const arrowHeadSize = 6;
+          const arrowHeadSize = 8;
           const angle = Math.atan2(0, x2 - x1);
-          ctx.lineTo(
-            x2 - arrowHeadSize * Math.cos(angle - Math.PI / 6),
-            messageY - arrowHeadSize * Math.sin(angle - Math.PI / 6)
-          );
-          ctx.moveTo(x2, messageY);
-          ctx.lineTo(
-            x2 - arrowHeadSize * Math.cos(angle + Math.PI / 6),
-            messageY - arrowHeadSize * Math.sin(angle + Math.PI / 6)
-          );
-          ctx.stroke();
-
+          
+          if (isResponse) {
+            // Draw response arrow (dashed line with open arrowhead)
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(x1, messageY);
+            ctx.lineTo(x2, messageY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Open arrowhead for response
+            ctx.beginPath();
+            ctx.moveTo(x1, messageY);
+            ctx.lineTo(
+              x1 + arrowHeadSize * Math.cos(angle - Math.PI / 6),
+              messageY - arrowHeadSize * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.moveTo(x1, messageY);
+            ctx.lineTo(
+              x1 + arrowHeadSize * Math.cos(angle + Math.PI / 6),
+              messageY - arrowHeadSize * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.stroke();
+          } else {
+            // Solid arrowhead for request
+            ctx.beginPath();
+            ctx.moveTo(x2, messageY);
+            ctx.lineTo(
+              x2 - arrowHeadSize * Math.cos(angle - Math.PI / 6),
+              messageY - arrowHeadSize * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.lineTo(
+              x2 - arrowHeadSize * Math.cos(angle + Math.PI / 6),
+              messageY - arrowHeadSize * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fill();
+          }
+          
           // Add message text
           ctx.font = '12px Arial';
           ctx.textAlign = 'center';
-          ctx.fillText(message, (x1 + x2) / 2, messageY - 5);
-
-          // Increment Y-coordinate for the next message
+          ctx.fillText(message, (x1 + x2) / 2, messageY - 8);
+          
           messageY += 40;
         }
       }
     });
-  }
-
-  function saveToLocalStorage() {
-    const tableData = [];
-    const rows = document.querySelectorAll('#sequenceTable tbody tr');
-    rows.forEach(row => {
-      const actor1 = row.cells[0].querySelector('select').value;
-      const actor2 = row.cells[1].querySelector('select').value;
-      const message = row.cells[2].querySelector('input').value.trim();
-      tableData.push({ actor1, actor2, message });
-    });
-
-    localStorage.setItem('actors', JSON.stringify(actors));
-    localStorage.setItem('tableData', JSON.stringify(tableData));
-    localStorage.setItem('plantUMLInput', document.getElementById('plantUMLInput').value);
   }
 </script>
 
