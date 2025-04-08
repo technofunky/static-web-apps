@@ -54,6 +54,8 @@
   <label for="actor">Add Actor:</label>
   <input type="text" id="actor" placeholder="Enter actor name">
   <button onclick="addActor()">Add Actor</button>
+    <button onclick="deleteActor()">Delete Actor</button>
+  <select id="actorList"></select>
 </div>
 
 <div class="form-container">
@@ -101,7 +103,9 @@
   // Populate data from localStorage on load
   window.onload = () => {
     document.getElementById('plantUMLInput').value = plantUMLInput;
-    actors.forEach(actor => addActorToList(actor));
+    //actors.forEach(actor => addActorToList(actor));
+    addActorToList(); // Handles full UI setup
+
     tableData.forEach(row => addRow(row.actor1, row.actor2, row.message));
   };
 
@@ -120,9 +124,58 @@
     }
   }
 
-  function addActorToList(actorName) {
-    if (!actors.includes(actorName)) actors.push(actorName);
-  }
+function addActorToList(actorName) {
+  const actorList = document.getElementById('actorList');
+  actorList.innerHTML = ''; // Clear list
+
+  actors.forEach((actor, index) => {
+    const li = document.createElement('li');
+    li.textContent = actor + ' ';
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.style.marginLeft = '10px';
+    deleteBtn.onclick = () => deleteActor(index);
+
+    li.appendChild(deleteBtn);
+    actorList.appendChild(li);
+  });
+
+  refreshDropdowns();
+}
+
+function deleteActor(index) {
+  const removed = actors.splice(index, 1)[0];
+
+  // Remove rows that contain this actor
+  const rows = document.querySelectorAll('#sequenceTable tbody tr');
+  rows.forEach(row => {
+    const actor1 = row.cells[0].querySelector('select').value;
+    const actor2 = row.cells[1].querySelector('select').value;
+    if (actor1 === removed || actor2 === removed) {
+      row.remove();
+    }
+  });
+
+  addActorToList(); // Refresh UI list and dropdowns
+  saveToLocalStorage();
+  generatePlantUML(); // Update script and canvas
+}
+
+  function refreshDropdowns() {
+  const rows = document.querySelectorAll('#sequenceTable tbody tr');
+  rows.forEach(row => {
+    ['actor1', 'actor2'].forEach((id, i) => {
+      const cell = row.cells[i];
+      const currentValue = cell.querySelector('select').value;
+
+      // Recreate dropdown
+      const newSelect = createActorDropdown(currentValue);
+      cell.innerHTML = ''; // Clear cell
+      cell.appendChild(newSelect);
+    });
+  });
+}
 
   function addRow(actor1 = '', actor2 = '', message = '') {
     const tableBody = document.getElementById('sequenceTable').querySelector('tbody');
