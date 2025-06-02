@@ -69,6 +69,10 @@
         <label>Discount: <input type="number" id="editDiscount" step="0.01" required></label><br><br>
         <label>GST: <input type="number" id="editGst" step="0.01" required></label><br><br>
         <label>Payment Mode: <input type="text" id="editPaymentMode"></label><br><br>
+        <h4>Items</h4>
+        <div id="editItemsContainer"></div>
+        <button type="button" class="btn" onclick="addItem()">+ Add Item</button>
+        <br><br>
         <button type="submit" class="btn">Save Changes</button>
         <button type="button" class="btn btn-danger" onclick="cancelEdit()">Cancel</button>
     </form>
@@ -208,7 +212,9 @@ function editBill(index) {
     document.getElementById('editDiscount').value = bill.discount;
     document.getElementById('editGst').value = bill.gst;
     document.getElementById('editPaymentMode').value = bill.paymentMode;
+    renderEditItems(bill.bill);
     document.getElementById('editFormContainer').style.display = 'block';
+    
 }
 
 function cancelEdit() {
@@ -218,22 +224,69 @@ function cancelEdit() {
 
 document.getElementById('editBillForm').addEventListener('submit', function (e) {
     e.preventDefault();
-
     if (editIndex === null) return;
 
     let bill = savedBills[editIndex];
     bill.customer.name = document.getElementById('editCustomerName').value;
     bill.customer.phone = document.getElementById('editCustomerPhone').value;
-    bill.total = parseFloat(document.getElementById('editTotal').value);
     bill.discount = parseFloat(document.getElementById('editDiscount').value);
     bill.gst = parseFloat(document.getElementById('editGst').value);
     bill.paymentMode = document.getElementById('editPaymentMode').value;
+
+    // Update bill items from input
+    const updatedItems = [];
+    let newTotal = 0;
+    for (let i = 0; ; i++) {
+        const nameEl = document.getElementById(`itemName${i}`);
+        const qtyEl = document.getElementById(`itemQty${i}`);
+        const priceEl = document.getElementById(`itemPrice${i}`);
+        if (!nameEl || !qtyEl || !priceEl) break;
+
+        const name = nameEl.value.trim();
+        const quantity = parseInt(qtyEl.value);
+        const price = parseFloat(priceEl.value);
+        if (name && quantity > 0 && price >= 0) {
+            updatedItems.push({ name, quantity, price });
+            newTotal += quantity * price;
+        }
+    }
+
+    bill.bill = updatedItems;
+    bill.total = newTotal;
     bill.grandTotal = bill.total - bill.discount + bill.gst;
 
     localStorage.setItem('savedBills', JSON.stringify(savedBills));
     updateBillsTable();
     cancelEdit();
 });
+    function renderEditItems(items) {
+    const container = document.getElementById('editItemsContainer');
+    container.innerHTML = '';
+
+    items.forEach((item, i) => {
+        const div = document.createElement('div');
+        div.style.marginBottom = '10px';
+        div.innerHTML = `
+            <input type="text" placeholder="Name" value="${item.name}" id="itemName${i}" required>
+            <input type="number" placeholder="Qty" value="${item.quantity}" id="itemQty${i}" min="1" required style="width:60px;">
+            <input type="number" placeholder="Price" value="${item.price}" id="itemPrice${i}" step="0.01" required style="width:80px;">
+            <button type="button" class="btn btn-danger" onclick="removeItem(${i})">Remove</button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function addItem() {
+    if (editIndex === null) return;
+    savedBills[editIndex].bill.push({ name: '', quantity: 1, price: 0 });
+    renderEditItems(savedBills[editIndex].bill);
+}
+
+function removeItem(i) {
+    if (editIndex === null) return;
+    savedBills[editIndex].bill.splice(i, 1);
+    renderEditItems(savedBills[editIndex].bill);
+}
 updateBillsTable();
 
 </script>
