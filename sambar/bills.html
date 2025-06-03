@@ -43,23 +43,6 @@
 <button onclick="navigateTo('menu.html')" class="btn">Manage Menu</button>
 <button onclick="navigateTo('billing.html')" class="btn">Create Bill</button>
 
-<h2>Saved Bills</h2>
-<table>
-    <thead>
-    <tr>
-        <th>#</th>
-        <th>Date/Time</th>
-        <th>Customer, Phone</th>
-        <th>Total</th>
-        <th>Discount</th>
-        <th>GST</th>
-        <th>Grand Total</th>
-        <th>Payment Mode</th>
-        <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody id="billsTable"></tbody>
-</table>
 <div id="editFormContainer" style="display: none; margin-top: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 10px;">
     <h3>Update Bill</h3>
     <form id="editBillForm">
@@ -77,6 +60,23 @@
         <button type="button" class="btn btn-danger" onclick="cancelEdit()">Cancel</button>
     </form>
 </div>
+<h2>Saved Bills</h2>
+<table>
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>Date/Time</th>
+        <th>Customer, Phone</th>
+        <th>Total</th>
+        <th>Discount</th>
+        <th>GST</th>
+        <th>Grand Total</th>
+        <th>Payment Mode</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody id="billsTable"></tbody>
+</table>
 
 <script>
     let savedBills = JSON.parse(localStorage.getItem('savedBills')) || [];
@@ -125,7 +125,7 @@ function printBill(index){
     let billContent = `
         <div style="width: 58mm; font-family: Arial, sans-serif; font-size: 12px; text-align: center; padding: 5px;">
             <div style="font-size: 14px; font-weight: bold; text-align: center;">
-                <p>Sambar Restaurant</p>
+                <p>Sambar House - Restaurant</p>
                 <p>Nangal Rd., Una</p>
                 <p>GST No.: 02AKVPM5957D1ZV</p>
                 <p>Phone: 9805279763</p>
