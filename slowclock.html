@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>24-Hour One-Hand Clock</title>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --ring: #1d2230;
+    --ticks: #8fa2c9;
+    --nums: #cfd8ea;
+    --hand: #6cc4ff;
+    --hand-glow: rgba(108,196,255,0.35);
+    --center: #e9f1ff;
+    --shadow: rgba(0,0,0,0.35);
+    --accent: #a9b7d6;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f7f9fc;
+      --ring: #e6ebf4;
+      --ticks: #5a6b8a;
+      --nums: #2b3446;
+      --hand: #0b6cff;
+      --hand-glow: rgba(11,108,255,0.2);
+      --center: #0b6cff;
+      --shadow: rgba(0,0,0,0.12);
+      --accent: #8596b5;
+    }
+  }
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: radial-gradient(1200px 1200px at 50% 20%, var(--ring), var(--bg));
+    color: var(--nums);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  }
+  .wrap {
+    min-height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    box-sizing: border-box;
+  }
+  .clock-panel {
+    display: grid;
+    gap: 14px;
+    justify-items: center;
+  }
+  canvas {
+    width: min(88vmin, 720px);
+    aspect-ratio: 1/1;
+    border-radius: 24px;
+    box-shadow:
+      0 18px 40px var(--shadow),
+      inset 0 0 0 1px rgba(255,255,255,0.04);
+    background: radial-gradient(100% 100% at 50% 50%, rgba(255,255,255,0.02), rgba(0,0,0,0.1));
+  }
+  .label {
+    font-size: clamp(12px, 1.6vmin, 16px);
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    user-select: none;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="clock-panel">
+      <canvas id="clock" aria-label="24-hour analog clock" role="img"></canvas>
+      <div class="label" id="readout">—</div>
+    </div>
+  </div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('clock');
+  const ctx = canvas.getContext('2d');
+  const readout = document.getElementById('readout');
+
+  // Handle high-DPI scaling and responsive sizing
+  function fitCanvas() {
+    const cssSize = canvas.getBoundingClientRect().width;
+    const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 3)); // cap DPR to keep it fast
+    canvas.width = Math.floor(cssSize * dpr);
+    canvas.height = Math.floor(cssSize * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
+    draw(); // immediate draw after resize
+  }
+  window.addEventListener('resize', fitCanvas, { passive: true });
+
+  // Convert current time to fraction of the day [0,1)
+  function fractionOfDay(date) {
+    const ms = date.getHours() * 3600000 + date.getMinutes() * 60000 + date.getSeconds() * 1000 + date.getMilliseconds();
+    return (ms / 86400000); // 24 * 60 * 60 * 1000
+  }
+
+  // Main draw function
+  function draw() {
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    const size = Math.min(w, h);
+    const cx = size / 2;
+    const cy = size / 2;
+    const r = size * 0.44; // clock radius
+    ctx.clearRect(0, 0, w, h);
+
+    // Shadowed outer ring
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.shadowColor = getComputedStyle(document.documentElement).getPropertyValue('--shadow');
+    ctx.shadowBlur = 30;
+    ctx.beginPath();
+    ctx.arc(0, 0, r + 12, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.08)';
+    ctx.fill();
+    ctx.restore();
+
+    // Face
+    ctx.save();
+    ctx.translate(cx, cy);
+    // soft vignette
+    const faceGrad = ctx.createRadialGradient(0, 0, r*0.1, 0, 0, r);
+    faceGrad.addColorStop(0, 'rgba(255,255,255,0.06)');
+    faceGrad.addColorStop(1, 'rgba(0,0,0,0.12)');
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = faceGrad;
+    ctx.fill();
+
+    // 24 hour ticks (major each hour, heavier at 0,6,12,18)
+    const tickColor = getCss('--ticks');
+    ctx.lineCap = 'round';
+    for (let hmark = 0; hmark < 24; hmark++) {
+      const angle = ((hmark / 24) * Math.PI * 2) - Math.PI / 2;
+      const isQuarter = (hmark % 6 === 0);
+      const isHalf = (hmark % 12 === 0);
+      const len = isHalf ? 18 : (isQuarter ? 14 : 10);
+      const lw = isHalf ? 3 : (isQuarter ? 2.2 : 1.6);
+
+      const x1 = Math.cos(angle) * (r - len - 10);
+      const y1 = Math.sin(angle) * (r - len - 10);
+      const x2 = Math.cos(angle) * (r - 10);
+      const y2 = Math.sin(angle) * (r - 10);
+
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.lineWidth = lw;
+      ctx.strokeStyle = tickColor;
+      ctx.stroke();
+    }
+
+    // Hour numerals 0..23
+    ctx.fillStyle = getCss('--nums');
+    ctx.font = `${Math.max(10, Math.floor(size*0.035))}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const numRadius = r - 40;
+    for (let n = 0; n < 24; n++) {
+      const angle = ((n / 24) * Math.PI * 2) - Math.PI / 2;
+      const nx = Math.cos(angle) * numRadius;
+      const ny = Math.sin(angle) * numRadius;
+      ctx.globalAlpha = 0.9;
+      ctx.fillText(String(n), nx, ny);
+    }
+
+    // Hand (single, showing fraction of day)
+    const now = new Date();
+    const frac = fractionOfDay(now); // 0..1
+    const handAngle = frac * Math.PI * 2 - Math.PI / 2;
+
+    // hand glow
+    const handLen = r - 26;
+    ctx.save();
+    ctx.rotate(handAngle);
+    const grad = ctx.createLinearGradient(0, 0, handLen, 0);
+    grad.addColorStop(0, getCss('--hand'));
+    grad.addColorStop(1, 'rgba(255,255,255,0.2)');
+
+    // glow
+    ctx.beginPath();
+    ctx.moveTo(14, -2.5);
+    ctx.lineTo(handLen, 0);
+    ctx.lineTo(14, 2.5);
+    ctx.closePath();
+    ctx.fillStyle = getCss('--hand-glow');
+    ctx.filter = 'blur(2px)';
+    ctx.fill();
+    ctx.filter = 'none';
+
+    // shaft
+    ctx.beginPath();
+    ctx.moveTo(14, -1.5);
+    ctx.lineTo(handLen, 0);
+    ctx.lineTo(14, 1.5);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // tail for balance
+    ctx.beginPath();
+    ctx.moveTo(-8, -1);
+    ctx.lineTo(14, 0);
+    ctx.lineTo(-8, 1);
+    ctx.closePath();
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = getCss('--hand');
+    ctx.fill();
+    ctx.restore();
+
+    // center cap
+    ctx.beginPath();
+    ctx.arc(0, 0, 5.5, 0, Math.PI * 2);
+    ctx.fillStyle = getCss('--center');
+    ctx.fill();
+
+    ctx.restore();
+
+    // Digital readout under the clock
+    readout.textContent = formatDigital(now) + " • local time";
+  }
+
+  function formatDigital(d) {
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    const ss = String(d.getSeconds()).padStart(2, '0');
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day} ${hh}:${mm}:${ss}`;
+  }
+
+  function getCss(varName) {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+  }
+
+  // Smooth animation (updates every frame for buttery motion)
+  let rafId = null;
+  function tick() {
+    draw();
+    rafId = requestAnimationFrame(tick);
+  }
+
+  // Initialize
+  fitCanvas();
+  tick();
+
+  // Cleanup on visibility change (save battery)
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+    } else {
+      tick();
+    }
+  });
+})();
+</script>
+</body>
+</html>
