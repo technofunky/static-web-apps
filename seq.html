@@ -9,9 +9,22 @@
       --primary-color: #4285f4;
       --secondary-color: #34a853;
       --danger-color: #ea4335;
+      --warning-color: #fbbc04;
       --light-gray: #f5f5f5;
       --border-color: #ddd;
       --text-color: #333;
+      --bg-color: #f9f9f9;
+    }
+    
+    [data-theme="dark"] {
+      --primary-color: #8ab4f8;
+      --secondary-color: #81c995;
+      --danger-color: #f28b82;
+      --warning-color: #fdd663;
+      --light-gray: #2d2d2d;
+      --border-color: #444;
+      --text-color: #e8eaed;
+      --bg-color: #1a1a1a;
     }
     
     body {
@@ -20,7 +33,8 @@
       padding: 20px;
       color: var(--text-color);
       line-height: 1.6;
-      background-color: #f9f9f9;
+      background-color: var(--bg-color);
+      transition: background-color 0.3s, color 0.3s;
     }
     
     .container {
@@ -32,14 +46,38 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     
+    [data-theme="dark"] .container {
+      background: #202124;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
     h1, h2, h3 {
       color: var(--primary-color);
+      margin-top: 0;
     }
     
     h1 {
-      margin-top: 0;
       border-bottom: 2px solid var(--primary-color);
       padding-bottom: 10px;
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .theme-toggle {
+      background: var(--light-gray);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
     }
     
     table {
@@ -65,7 +103,7 @@
     }
     
     tr:hover {
-      background-color: #f0f0f0;
+      background-color: rgba(66, 133, 244, 0.1);
     }
     
     .form-container {
@@ -73,6 +111,7 @@
       padding: 15px;
       background-color: var(--light-gray);
       border-radius: 5px;
+      border: 1px solid var(--border-color);
     }
     
     .form-group {
@@ -90,6 +129,15 @@
       border: 1px solid var(--border-color);
       border-radius: 4px;
       font-size: 14px;
+      background-color: white;
+      color: var(--text-color);
+    }
+    
+    [data-theme="dark"] input,
+    [data-theme="dark"] select,
+    [data-theme="dark"] textarea {
+      background-color: #2d2d2d;
+      color: var(--text-color);
     }
     
     input[type="text"], select {
@@ -100,6 +148,7 @@
       width: 100%;
       min-height: 120px;
       resize: vertical;
+      font-family: 'Courier New', monospace;
     }
     
     button {
@@ -107,12 +156,17 @@
       color: white;
       border: none;
       cursor: pointer;
-      transition: background-color 0.3s;
+      transition: background-color 0.3s, transform 0.1s;
       margin-right: 10px;
     }
     
     button:hover {
       background-color: #3367d6;
+      transform: translateY(-1px);
+    }
+    
+    button:active {
+      transform: translateY(0);
     }
     
     button.secondary {
@@ -131,17 +185,20 @@
       background-color: #d33426;
     }
     
-    #outputContainer {
-      margin-top: 20px;
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
     
     pre {
-      background: #f4f4f4;
+      background: var(--light-gray);
       padding: 15px;
       border: 1px solid var(--border-color);
       white-space: pre-wrap;
       border-radius: 4px;
       overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
     }
     
     canvas {
@@ -150,6 +207,14 @@
       display: block;
       background: white;
       max-width: 100%;
+      border-radius: 4px;
+    }
+    
+    .canvas-controls {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
     
     .actor-list {
@@ -158,31 +223,44 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
+      margin-top: 10px;
     }
     
     .actor-item {
       background-color: var(--primary-color);
       color: white;
-      padding: 5px 10px;
+      padding: 8px 12px;
       border-radius: 4px;
       display: flex;
       align-items: center;
+      gap: 8px;
+      transition: transform 0.2s;
+    }
+    
+    .actor-item:hover {
+      transform: scale(1.05);
     }
     
     .actor-item button {
-      background: none;
+      background: rgba(255, 255, 255, 0.2);
       border: none;
       color: white;
-      margin-left: 8px;
-      padding: 0;
+      margin: 0;
+      padding: 2px 6px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 16px;
+      border-radius: 3px;
+    }
+    
+    .actor-item button:hover {
+      background: rgba(255, 255, 255, 0.3);
     }
     
     .btn-group {
       display: flex;
       gap: 10px;
       margin-top: 10px;
+      flex-wrap: wrap;
     }
     
     .btn-group button {
@@ -190,10 +268,22 @@
     }
     
     .alert {
-      padding: 10px 15px;
+      padding: 12px 15px;
       border-radius: 4px;
       margin: 10px 0;
       display: none;
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     
     .alert.success {
@@ -206,6 +296,78 @@
       background-color: #f8d7da;
       color: #721c24;
       border: 1px solid #f5c6cb;
+    }
+    
+    .alert.warning {
+      background-color: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+    
+    .message-type-select {
+      width: 120px;
+    }
+    
+    .templates {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    
+    .template-card {
+      padding: 10px 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: white;
+    }
+    
+    [data-theme="dark"] .template-card {
+      background: #2d2d2d;
+    }
+    
+    .template-card:hover {
+      border-color: var(--primary-color);
+      box-shadow: 0 2px 8px rgba(66, 133, 244, 0.2);
+    }
+    
+    .template-card h4 {
+      margin: 0 0 5px 0;
+      color: var(--primary-color);
+    }
+    
+    .template-card p {
+      margin: 0;
+      font-size: 12px;
+      color: #666;
+    }
+    
+    [data-theme="dark"] .template-card p {
+      color: #aaa;
+    }
+    
+    .keyboard-shortcuts {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+      padding: 10px;
+      background: var(--light-gray);
+      border-radius: 4px;
+    }
+    
+    .keyboard-shortcuts kbd {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-family: monospace;
+      font-size: 11px;
+    }
+    
+    [data-theme="dark"] .keyboard-shortcuts kbd {
+      background: #2d2d2d;
     }
     
     @media (max-width: 768px) {
@@ -227,34 +389,67 @@
         flex-direction: column;
         align-items: flex-start;
       }
+      
+      .btn-group {
+        flex-direction: column;
+      }
+      
+      .btn-group button {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>Sequence Diagram Generator</h1>
+  <div class="header">
+    <h1>Sequence Diagram Generator</h1>
+    <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
+  </div>
   
   <div id="alert" class="alert"></div>
+
+  <div class="form-container">
+    <h2>Quick Start Templates</h2>
+    <div class="templates">
+      <div class="template-card" onclick="loadTemplate('login')">
+        <h4>Login Flow</h4>
+        <p>User authentication example</p>
+      </div>
+      <div class="template-card" onclick="loadTemplate('api')">
+        <h4>API Request</h4>
+        <p>REST API interaction</p>
+      </div>
+      <div class="template-card" onclick="loadTemplate('payment')">
+        <h4>Payment Process</h4>
+        <p>E-commerce checkout</p>
+      </div>
+    </div>
+  </div>
 
   <div class="form-container">
     <h2>Actors Management</h2>
     <div class="form-group">
       <label for="actor">Actor Name:</label>
-      <input type="text" id="actor" placeholder="Enter actor name">
+      <input type="text" id="actor" placeholder="Enter actor name" onkeypress="handleActorKeyPress(event)">
     </div>
     <div class="btn-group">
-      <button onclick="addActor()">Add Actor</button>
-      <button class="danger" onclick="deleteSelectedActor()">Delete Selected</button>
+      <button onclick="addActor()">➕ Add Actor</button>
+      <button class="secondary" onclick="showRenameDialog()">✏️ Rename Actor</button>
     </div>
     
     <h3>Current Actors:</h3>
     <ul id="actorList" class="actor-list"></ul>
+    
+    <div class="keyboard-shortcuts">
+      <strong>💡 Tip:</strong> Press <kbd>Enter</kbd> to quickly add actors
+    </div>
   </div>
 
   <div class="form-container">
-    <h2>Steps</h2>
-    <button onclick="addRow()" class="secondary">Add Step</button>
+    <h2>Sequence Steps</h2>
+    <button onclick="addRow()" class="secondary">➕ Add Step</button>
     
     <div style="overflow-x: auto;">
       <table id="sequenceTable">
@@ -262,9 +457,10 @@
           <tr>
             <th>From</th>
             <th>To</th>
-            <th>Step</th>
+            <th>Message</th>
+            <th>Type</th>
             <th>Actions</th>
-            <th>Reorder</th>
+            <th>Move</th>
           </tr>
         </thead>
         <tbody>
@@ -277,42 +473,86 @@
   <div class="form-container">
     <h2>Generate Diagram</h2>
     <div class="btn-group">
-      <button onclick="generatePlantUML()">Generate PlantUML</button>
-      <button onclick="copyToClipboard()">Copy to Clipboard</button>
-      <button onclick="clearAll()" class="danger">Clear All</button>
+      <button onclick="generatePlantUML()">🔄 Generate PlantUML</button>
+      <button onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+      <button onclick="exportAsPNG()">💾 Export as PNG</button>
+      <button onclick="clearAll()" class="danger">🗑️ Clear All</button>
     </div>
   </div>
 
   <div class="form-container">
     <h2>PlantUML Script</h2>
-    <pre id="plantUMLOutput">Click "Generate PlantUML Script" to see the output here.</pre>
+    <pre id="plantUMLOutput">Click "Generate PlantUML" to see the output here.</pre>
   </div>
 
   <div class="form-container">
     <h2>Import/Export</h2>
     <div class="form-group">
       <label for="plantUMLInput">Paste PlantUML Script:</label>
-      <textarea id="plantUMLInput" placeholder="Enter PlantUML script here"></textarea>
+      <textarea id="plantUMLInput" placeholder="@startuml&#10;participant User&#10;participant System&#10;User -> System : Login Request&#10;System --> User : Login Response&#10;@enduml"></textarea>
     </div>
     <div class="btn-group">
-      <button onclick="parsePlantUML()">Import from Script</button>
-      <button onclick="exportAsJSON()">Export as JSON</button>
-      <button onclick="importFromJSON()">Import from JSON</button>
+      <button onclick="parsePlantUML()">📥 Import from Script</button>
+      <button onclick="exportAsJSON()">💾 Export as JSON</button>
+      <button onclick="importFromJSON()">📂 Import from JSON</button>
     </div>
   </div>
 
   <div class="form-container">
     <h2>Diagram Preview</h2>
+    <div class="canvas-controls">
+      <button onclick="zoomCanvas(1.2)">🔍 Zoom In</button>
+      <button onclick="zoomCanvas(0.8)">🔍 Zoom Out</button>
+      <button onclick="resetZoom()">↻ Reset Zoom</button>
+    </div>
     <canvas id="sequenceCanvas" width="800" height="400"></canvas>
   </div>
 </div>
 
 <script>
-  // State management
+  // State management (in-memory only)
   const state = {
-    actors: JSON.parse(localStorage.getItem('actors')) || [],
-    tableData: JSON.parse(localStorage.getItem('tableData')) || [],
-    plantUMLInput: localStorage.getItem('plantUMLInput') || ''
+    actors: [],
+    tableData: [],
+    canvasZoom: 1,
+    theme: 'light'
+  };
+
+  // Templates
+  const templates = {
+    login: {
+      actors: ['User', 'Frontend', 'Backend', 'Database'],
+      messages: [
+        { actor1: 'User', actor2: 'Frontend', message: 'Enter credentials', type: 'sync' },
+        { actor1: 'Frontend', actor2: 'Backend', message: 'POST /login', type: 'sync' },
+        { actor1: 'Backend', actor2: 'Database', message: 'Validate user', type: 'sync' },
+        { actor1: 'Database', actor2: 'Backend', message: 'User data', type: 'return' },
+        { actor1: 'Backend', actor2: 'Frontend', message: 'Auth token', type: 'return' },
+        { actor1: 'Frontend', actor2: 'User', message: 'Login successful', type: 'return' }
+      ]
+    },
+    api: {
+      actors: ['Client', 'API Gateway', 'Service', 'Database'],
+      messages: [
+        { actor1: 'Client', actor2: 'API Gateway', message: 'GET /api/data', type: 'sync' },
+        { actor1: 'API Gateway', actor2: 'Service', message: 'Process request', type: 'sync' },
+        { actor1: 'Service', actor2: 'Database', message: 'Query data', type: 'sync' },
+        { actor1: 'Database', actor2: 'Service', message: 'Result set', type: 'return' },
+        { actor1: 'Service', actor2: 'API Gateway', message: 'Formatted response', type: 'return' },
+        { actor1: 'API Gateway', actor2: 'Client', message: '200 OK + Data', type: 'return' }
+      ]
+    },
+    payment: {
+      actors: ['Customer', 'Store', 'Payment Gateway', 'Bank'],
+      messages: [
+        { actor1: 'Customer', actor2: 'Store', message: 'Checkout', type: 'sync' },
+        { actor1: 'Store', actor2: 'Payment Gateway', message: 'Process payment', type: 'sync' },
+        { actor1: 'Payment Gateway', actor2: 'Bank', message: 'Authorize transaction', type: 'sync' },
+        { actor1: 'Bank', actor2: 'Payment Gateway', message: 'Approved', type: 'return' },
+        { actor1: 'Payment Gateway', actor2: 'Store', message: 'Payment confirmed', type: 'return' },
+        { actor1: 'Store', actor2: 'Customer', message: 'Order confirmed', type: 'return' }
+      ]
+    }
   };
 
   // DOM elements
@@ -328,10 +568,30 @@
 
   // Initialize the app
   window.onload = () => {
-    elements.plantUMLInput.value = state.plantUMLInput;
-    renderActorList();
-    state.tableData.forEach(row => addRow(row.actor1, row.actor2, row.message));
+    loadTheme();
   };
+
+  // Theme management
+  function toggleTheme() {
+    state.theme = state.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', state.theme);
+    try {
+      localStorage.setItem('theme', state.theme);
+    } catch(e) {
+      console.warn('Could not save theme preference');
+    }
+    regenerateDiagram();
+  }
+
+  function loadTheme() {
+    try {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      state.theme = savedTheme;
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    } catch(e) {
+      state.theme = 'light';
+    }
+  }
 
   // Helper functions
   function showAlert(message, type = 'success') {
@@ -342,24 +602,37 @@
     
     setTimeout(() => {
       alert.style.display = 'none';
-    }, 3000);
+    }, 4000);
   }
 
-  function saveToLocalStorage() {
-    // Update state with current table data
-    state.tableData = [];
+  function validateDiagram() {
+    if (state.actors.length === 0) {
+      showAlert('Please add at least one actor', 'warning');
+      return false;
+    }
+    
     const rows = elements.sequenceTable.querySelectorAll('tr');
+    if (rows.length === 0) {
+      showAlert('Please add at least one step', 'warning');
+      return false;
+    }
+    
+    let hasValidStep = false;
     rows.forEach(row => {
       const actor1 = row.cells[0].querySelector('select').value;
       const actor2 = row.cells[1].querySelector('select').value;
       const message = row.cells[2].querySelector('input').value.trim();
-      state.tableData.push({ actor1, actor2, message });
+      if (actor1 && actor2 && message) {
+        hasValidStep = true;
+      }
     });
-
-    // Save to localStorage
-    localStorage.setItem('actors', JSON.stringify(state.actors));
-    localStorage.setItem('tableData', JSON.stringify(state.tableData));
-    localStorage.setItem('plantUMLInput', elements.plantUMLInput.value);
+    
+    if (!hasValidStep) {
+      showAlert('Please add at least one complete step (with actors and message)', 'warning');
+      return false;
+    }
+    
+    return true;
   }
 
   // Actor management
@@ -379,79 +652,110 @@
     state.actors.push(actorName);
     elements.actorInput.value = '';
     renderActorList();
-    saveToLocalStorage();
     showAlert(`Actor "${actorName}" added successfully`);
   }
 
-  function deleteSelectedActor() {
-    const select = document.querySelector('#actorList select');
-    if (!select) {
-      showAlert('No actor selected', 'error');
-      return;
+  function handleActorKeyPress(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      addActor();
     }
-    
-    const index = select.selectedIndex;
-    if (index === -1) {
-      showAlert('Please select an actor to delete', 'error');
-      return;
-    }
-    
-    deleteActor(index);
   }
 
   function deleteActor(index) {
-    const removedActor = state.actors.splice(index, 1)[0];
+    const removedActor = state.actors[index];
     
-    // Remove rows that contain this actor
+    // Check if actor is used in any steps
     const rows = elements.sequenceTable.querySelectorAll('tr');
+    let usageCount = 0;
     rows.forEach(row => {
       const actor1 = row.cells[0].querySelector('select').value;
       const actor2 = row.cells[1].querySelector('select').value;
       if (actor1 === removedActor || actor2 === removedActor) {
-        row.remove();
+        usageCount++;
       }
     });
-
+    
+    if (usageCount > 0) {
+      if (!confirm(`Actor "${removedActor}" is used in ${usageCount} step(s). Delete anyway?`)) {
+        return;
+      }
+      
+      // Remove rows that contain this actor
+      rows.forEach(row => {
+        const actor1 = row.cells[0].querySelector('select').value;
+        const actor2 = row.cells[1].querySelector('select').value;
+        if (actor1 === removedActor || actor2 === removedActor) {
+          row.remove();
+        }
+      });
+    }
+    
+    state.actors.splice(index, 1);
     renderActorList();
-    saveToLocalStorage();
     showAlert(`Actor "${removedActor}" deleted`);
+  }
+
+  function showRenameDialog() {
+    if (state.actors.length === 0) {
+      showAlert('No actors to rename', 'error');
+      return;
+    }
+    
+    const oldName = prompt('Enter the actor name to rename:', state.actors[0]);
+    if (!oldName) return;
+    
+    const index = state.actors.indexOf(oldName);
+    if (index === -1) {
+      showAlert(`Actor "${oldName}" not found`, 'error');
+      return;
+    }
+    
+    const newName = prompt(`Enter new name for "${oldName}":`, oldName);
+    if (!newName || newName === oldName) return;
+    
+    if (state.actors.includes(newName)) {
+      showAlert(`Actor "${newName}" already exists`, 'error');
+      return;
+    }
+    
+    // Update actor name
+    state.actors[index] = newName;
+    
+    // Update all references in table
+    const rows = elements.sequenceTable.querySelectorAll('tr');
+    rows.forEach(row => {
+      const select1 = row.cells[0].querySelector('select');
+      const select2 = row.cells[1].querySelector('select');
+      if (select1.value === oldName) select1.value = newName;
+      if (select2.value === oldName) select2.value = newName;
+    });
+    
+    renderActorList();
+    showAlert(`Actor renamed from "${oldName}" to "${newName}"`);
   }
 
   function renderActorList() {
     elements.actorList.innerHTML = '';
     
     if (state.actors.length === 0) {
-      elements.actorList.innerHTML = '<li>No actors added yet</li>';
+      const li = document.createElement('li');
+      li.textContent = 'No actors added yet';
+      li.style.color = '#666';
+      elements.actorList.appendChild(li);
       return;
     }
-    
-    // Create a dropdown for actor selection
-    const select = document.createElement('select');
-    state.actors.forEach(actor => {
-      const option = document.createElement('option');
-      option.value = actor;
-      option.textContent = actor;
-      select.appendChild(option);
-    });
-    
-    const container = document.createElement('div');
-    container.appendChild(select);
-    elements.actorList.appendChild(container);
-    
-    // Also display actors as tags
-    const tagsContainer = document.createElement('div');
-    tagsContainer.style.display = 'flex';
-    tagsContainer.style.flexWrap = 'wrap';
-    tagsContainer.style.gap = '8px';
-    tagsContainer.style.marginTop = '10px';
     
     state.actors.forEach((actor, index) => {
       const tag = document.createElement('div');
       tag.className = 'actor-item';
-      tag.textContent = actor;
+      
+      const name = document.createElement('span');
+      name.textContent = actor;
+      tag.appendChild(name);
       
       const deleteBtn = document.createElement('button');
-      deleteBtn.textContent = '×';
+      deleteBtn.innerHTML = '×';
       deleteBtn.title = 'Delete this actor';
       deleteBtn.onclick = (e) => {
         e.stopPropagation();
@@ -459,10 +763,9 @@
       };
       
       tag.appendChild(deleteBtn);
-      tagsContainer.appendChild(tag);
+      elements.actorList.appendChild(tag);
     });
     
-    elements.actorList.appendChild(tagsContainer);
     refreshDropdowns();
   }
 
@@ -473,7 +776,6 @@
         const cell = row.cells[i];
         const currentValue = cell.querySelector('select')?.value || '';
         
-        // Recreate dropdown
         const newSelect = createActorDropdown(currentValue);
         cell.innerHTML = '';
         cell.appendChild(newSelect);
@@ -484,7 +786,6 @@
   function createActorDropdown(selectedValue = '') {
     const select = document.createElement('select');
     
-    // Add empty option if no selection
     if (!selectedValue) {
       const emptyOption = document.createElement('option');
       emptyOption.value = '';
@@ -503,22 +804,20 @@
       select.appendChild(option);
     });
     
-    select.onchange = saveToLocalStorage;
     return select;
   }
 
   // Table row management
-  function addRow(actor1 = '', actor2 = '', message = '') {
+  function addRow(actor1 = '', actor2 = '', message = '', type = 'sync') {
     const row = document.createElement('tr');
     
-    // Create cells
     const actor1Cell = document.createElement('td');
     const actor2Cell = document.createElement('td');
     const messageCell = document.createElement('td');
+    const typeCell = document.createElement('td');
     const actionCell = document.createElement('td');
     const reorderCell = document.createElement('td');
     
-    // Create form elements
     const actor1Select = createActorDropdown(actor1);
     const actor2Select = createActorDropdown(actor2);
     
@@ -527,16 +826,24 @@
     messageInput.value = message;
     messageInput.placeholder = 'Enter message';
     messageInput.style.width = '100%';
-    messageInput.onchange = saveToLocalStorage;
-    messageInput.onkeyup = saveToLocalStorage;
+    
+    const typeSelect = document.createElement('select');
+    typeSelect.className = 'message-type-select';
+    ['sync', 'return', 'async'].forEach(t => {
+      const option = document.createElement('option');
+      option.value = t;
+      option.textContent = t === 'sync' ? 'Request' : t === 'return' ? 'Response' : 'Async';
+      if (t === type) option.selected = true;
+      typeSelect.appendChild(option);
+    });
     
     const deleteButton = document.createElement('button');
     deleteButton.className = 'danger';
-    deleteButton.textContent = 'Delete';
+    deleteButton.textContent = '🗑️';
     deleteButton.onclick = () => {
       row.remove();
-      saveToLocalStorage();
-      showAlert('Row deleted');
+      showAlert('Step deleted');
+      regenerateDiagram();
     };
     
     const upButton = document.createElement('button');
@@ -549,24 +856,22 @@
     downButton.title = 'Move down';
     downButton.onclick = () => moveRow(row, 'down');
     
-    // Assemble cells
     actor1Cell.appendChild(actor1Select);
     actor2Cell.appendChild(actor2Select);
     messageCell.appendChild(messageInput);
+    typeCell.appendChild(typeSelect);
     actionCell.appendChild(deleteButton);
     reorderCell.appendChild(upButton);
     reorderCell.appendChild(downButton);
     
-    // Assemble row
     row.appendChild(actor1Cell);
     row.appendChild(actor2Cell);
     row.appendChild(messageCell);
+    row.appendChild(typeCell);
     row.appendChild(actionCell);
     row.appendChild(reorderCell);
     
-    // Add to table
     elements.sequenceTable.appendChild(row);
-    saveToLocalStorage();
   }
 
   function moveRow(row, direction) {
@@ -575,51 +880,62 @@
     
     if (direction === 'up' && index > 0) {
       elements.sequenceTable.insertBefore(row, rows[index - 1]);
+      regenerateDiagram();
     } else if (direction === 'down' && index < rows.length - 1) {
       elements.sequenceTable.insertBefore(rows[index + 1], row);
+      regenerateDiagram();
     }
-    
-    saveToLocalStorage();
-    generatePlantUML();
+  }
+
+  function regenerateDiagram() {
+    if (state.actors.length > 0) {
+      generatePlantUML();
+    }
   }
 
   // PlantUML generation
   function generatePlantUML() {
+    if (!validateDiagram()) return;
+    
     const rows = elements.sequenceTable.querySelectorAll('tr');
     let plantUMLScript = '@startuml\n';
+    plantUMLScript += `title Sequence Diagram\n\n`;
     
-    // Add title if we have actors
-    if (state.actors.length > 0) {
-      plantUMLScript += `title Sequence Diagram\n\n`;
-    }
-    
-    // Declare participants (using 'participant' instead of 'actor' for better compatibility)
     state.actors.forEach(actor => {
       plantUMLScript += `participant "${actor}" as ${actor.replace(/\s+/g, '_')}\n`;
     });
     
-    // Add interactions
+    plantUMLScript += '\n';
+    
     rows.forEach(row => {
       const actor1 = row.cells[0].querySelector('select').value;
       const actor2 = row.cells[1].querySelector('select').value;
       const message = row.cells[2].querySelector('input').value.trim();
+      const type = row.cells[3].querySelector('select').value;
       
       if (actor1 && actor2 && message) {
-        plantUMLScript += `${actor1.replace(/\s+/g, '_')} -> ${actor2.replace(/\s+/g, '_')} : ${message}\n`;
+        const a1 = actor1.replace(/\s+/g, '_');
+        const a2 = actor2.replace(/\s+/g, '_');
+        
+        if (type === 'return') {
+          plantUMLScript += `${a2} --> ${a1} : ${message}\n`;
+        } else if (type === 'async') {
+          plantUMLScript += `${a1} ->> ${a2} : ${message}\n`;
+        } else {
+          plantUMLScript += `${a1} -> ${a2} : ${message}\n`;
+        }
       }
     });
     
     plantUMLScript += '@enduml';
     
-    // Display the script
     elements.plantUMLOutput.textContent = plantUMLScript;
     renderCanvas(plantUMLScript);
-    saveToLocalStorage();
   }
 
   function copyToClipboard() {
     const plantUMLScript = elements.plantUMLOutput.textContent;
-    if (!plantUMLScript || plantUMLScript === 'Click "Generate PlantUML Script" to see the output here.') {
+    if (!plantUMLScript || plantUMLScript === 'Click "Generate PlantUML" to see the output here.') {
       showAlert('Nothing to copy. Generate a script first.', 'error');
       return;
     }
@@ -638,10 +954,8 @@
       return;
     }
     
-    // Clear current data
     elements.sequenceTable.innerHTML = '';
     state.actors = [];
-    state.tableData = [];
     
     const lines = input.split('\n');
     const newRows = [];
@@ -649,45 +963,94 @@
     lines.forEach(line => {
       line = line.trim();
       
-      // Skip comments and empty lines
-      if (!line || line.startsWith("'") || line.startsWith('@')) {
+      if (!line || line.startsWith("'") || line.startsWith('@') || line.startsWith('title')) {
         return;
       }
       
-      // Handle participant/actor declarations
       if (line.startsWith('participant') || line.startsWith('actor')) {
-        const parts = line.split(/\s+/);
-        const actorName = parts[1].replace(/"/g, '').replace(/_/g, ' ');
-        if (!state.actors.includes(actorName)) {
-          state.actors.push(actorName);
+        const match = line.match(/(?:participant|actor)\s+"([^"]+)"|(?:participant|actor)\s+(\S+)/);
+        if (match) {
+          const actorName = (match[1] || match[2]).replace(/_/g, ' ');
+          if (!state.actors.includes(actorName)) {
+            state.actors.push(actorName);
+          }
         }
       }
-      // Handle messages
-      else if (line.includes('->') || line.includes('<-')) {
-        const [left, right] = line.split(/->|<-/);
-        const actor1 = left.trim().replace(/_/g, ' ');
-        const [actor2Part, messagePart] = right.split(':').map(s => s.trim());
-        const actor2 = actor2Part.trim().replace(/_/g, ' ');
-        const message = messagePart ? messagePart.trim() : '';
+      else if (line.includes('->') || line.includes('-->') || line.includes('->>')) {
+        let type = 'sync';
+        let separator = '->';
         
-        if (actor1 && actor2) {
-          newRows.push({ actor1, actor2, message });
+        if (line.includes('-->')) {
+          type = 'return';
+          separator = '-->';
+        } else if (line.includes('->>')) {
+          type = 'async';
+          separator = '->>';
+        }
+        
+        const parts = line.split(separator);
+        if (parts.length === 2) {
+          const actor1 = parts[0].trim().replace(/_/g, ' ');
+          const rightPart = parts[1].split(':');
+          const actor2 = rightPart[0].trim().replace(/_/g, ' ');
+          const message = rightPart[1] ? rightPart[1].trim() : '';
+          
+          if (actor1 && actor2) {
+            if (!state.actors.includes(actor1)) state.actors.push(actor1);
+            if (!state.actors.includes(actor2)) state.actors.push(actor2);
+            newRows.push({ actor1, actor2, message, type });
+          }
         }
       }
     });
     
-    // Update UI
     renderActorList();
-    newRows.forEach(row => addRow(row.actor1, row.actor2, row.message));
-    saveToLocalStorage();
+    newRows.forEach(row => addRow(row.actor1, row.actor2, row.message, row.type));
     showAlert('Diagram imported from PlantUML script!');
+    generatePlantUML();
+  }
+
+  // Template loading
+  function loadTemplate(templateName) {
+    const template = templates[templateName];
+    if (!template) return;
+    
+    if (state.actors.length > 0 || elements.sequenceTable.querySelectorAll('tr').length > 0) {
+      if (!confirm('Loading a template will replace your current diagram. Continue?')) {
+        return;
+      }
+    }
+    
+    elements.sequenceTable.innerHTML = '';
+    state.actors = [...template.actors];
+    
+    renderActorList();
+    template.messages.forEach(msg => {
+      addRow(msg.actor1, msg.actor2, msg.message, msg.type || 'sync');
+    });
+    
+    showAlert(`Template "${templateName}" loaded successfully!`);
+    generatePlantUML();
   }
 
   // Import/Export functionality
   function exportAsJSON() {
+    const rows = elements.sequenceTable.querySelectorAll('tr');
+    const messages = [];
+    
+    rows.forEach(row => {
+      const actor1 = row.cells[0].querySelector('select').value;
+      const actor2 = row.cells[1].querySelector('select').value;
+      const message = row.cells[2].querySelector('input').value.trim();
+      const type = row.cells[3].querySelector('select').value;
+      if (actor1 && actor2 && message) {
+        messages.push({ actor1, actor2, message, type });
+      }
+    });
+    
     const data = {
       actors: state.actors,
-      messages: state.tableData,
+      messages: messages,
       plantUML: elements.plantUMLOutput.textContent
     };
     
@@ -719,21 +1082,19 @@
         try {
           const data = JSON.parse(event.target.result);
           
-          // Clear current data
           elements.sequenceTable.innerHTML = '';
           state.actors = data.actors || [];
-          state.tableData = data.messages || [];
           
-          // Update UI
           renderActorList();
-          state.tableData.forEach(row => addRow(row.actor1, row.actor2, row.message));
+          (data.messages || []).forEach(row => {
+            addRow(row.actor1, row.actor2, row.message, row.type || 'sync');
+          });
           
           if (data.plantUML) {
             elements.plantUMLOutput.textContent = data.plantUML;
             renderCanvas(data.plantUML);
           }
           
-          saveToLocalStorage();
           showAlert('Diagram imported from JSON file');
         } catch (err) {
           showAlert('Error parsing JSON file: ' + err.message, 'error');
@@ -751,18 +1112,15 @@
     }
     
     state.actors = [];
-    state.tableData = [];
-    state.plantUMLInput = '';
     
     elements.sequenceTable.innerHTML = '';
     elements.plantUMLInput.value = '';
-    elements.plantUMLOutput.textContent = 'Click "Generate PlantUML Script" to see the output here.';
+    elements.plantUMLOutput.textContent = 'Click "Generate PlantUML" to see the output here.';
     
     const ctx = elements.sequenceCanvas.getContext('2d');
     ctx.clearRect(0, 0, elements.sequenceCanvas.width, elements.sequenceCanvas.height);
     
     renderActorList();
-    saveToLocalStorage();
     showAlert('All data cleared');
   }
 
@@ -772,18 +1130,34 @@
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Set canvas dimensions based on content
-    const lineCount = plantUMLScript.split('\n').length;
-    canvas.height = Math.max(400, 100 + lineCount * 40);
-    
     const lines = plantUMLScript.split('\n');
     const actorPositions = {};
     const actorY = 50;
     const lifelineYStart = actorY + 30;
-    const lifelineYEnd = canvas.height - 50;
+    let lifelineYEnd = 400;
     let messageY = lifelineYStart + 20;
     
-    // Draw actors and their lifelines
+    // Count messages to calculate canvas height
+    let messageCount = 0;
+    lines.forEach(line => {
+      if (line.includes('->') || line.includes('-->') || line.includes('->>')) {
+        messageCount++;
+      }
+    });
+    
+    canvas.height = Math.max(400, 150 + messageCount * 50);
+    lifelineYEnd = canvas.height - 50;
+    
+    // Apply zoom
+    ctx.save();
+    ctx.scale(state.canvasZoom, state.canvasZoom);
+    
+    // Set background based on theme
+    const isDark = state.theme === 'dark';
+    ctx.fillStyle = isDark ? '#202124' : 'white';
+    ctx.fillRect(0, 0, canvas.width / state.canvasZoom, canvas.height / state.canvasZoom);
+    
+    // Draw actors and lifelines
     let actorIndex = 0;
     const actorSpacing = Math.min(150, (canvas.width - 200) / Math.max(1, state.actors.length - 1));
     
@@ -791,108 +1165,134 @@
       line = line.trim();
       
       if (line.startsWith('participant') || line.startsWith('actor')) {
-        const parts = line.split(/\s+/);
-        const actor = parts[1].replace(/"/g, '');
-        const x = 100 + actorIndex * actorSpacing;
-        actorPositions[actor.replace(/_/g, ' ')] = x;
-        
-        // Draw actor label
-        ctx.font = '14px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(actor.replace(/_/g, ' '), x, actorY);
-        
-        // Draw actor lifeline (vertical dashed line)
-        ctx.setLineDash([5, 5]);
-        ctx.beginPath();
-        ctx.moveTo(x, lifelineYStart);
-        ctx.lineTo(x, lifelineYEnd);
-        ctx.strokeStyle = '#888';
-        ctx.stroke();
-        ctx.closePath();
-        ctx.setLineDash([]);
-        
-        actorIndex++;
+        const match = line.match(/(?:participant|actor)\s+"([^"]+)"|(?:participant|actor)\s+(\S+)/);
+        if (match) {
+          const actor = (match[1] || match[2]).replace(/_/g, ' ');
+          const x = 100 + actorIndex * actorSpacing;
+          actorPositions[actor] = x;
+          
+          // Draw actor box
+          ctx.fillStyle = isDark ? '#8ab4f8' : '#4285f4';
+          ctx.fillRect(x - 40, actorY - 15, 80, 30);
+          
+          // Draw actor label
+          ctx.font = 'bold 12px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillStyle = 'white';
+          ctx.fillText(actor, x, actorY + 5);
+          
+          // Draw lifeline
+          ctx.setLineDash([5, 5]);
+          ctx.beginPath();
+          ctx.moveTo(x, lifelineYStart);
+          ctx.lineTo(x, lifelineYEnd);
+          ctx.strokeStyle = isDark ? '#666' : '#888';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.closePath();
+          ctx.setLineDash([]);
+          
+          actorIndex++;
+        }
       }
     });
     
-    // Draw interactions
-    ctx.strokeStyle = '#333';
-    ctx.fillStyle = '#333';
+    // Draw messages
+    ctx.strokeStyle = isDark ? '#e8eaed' : '#333';
+    ctx.fillStyle = isDark ? '#e8eaed' : '#333';
+    ctx.lineWidth = 2;
     
     lines.forEach(line => {
-      if (line.includes('->') || line.includes('<-')) {
-        const isResponse = line.includes('<-');
-        const arrowParts = line.split(isResponse ? '<-' : '->');
-        const from = arrowParts[0].trim().replace(/_/g, ' ');
-        const toPart = arrowParts[1].split(':');
-        const to = toPart[0].trim().replace(/_/g, ' ');
-        const message = toPart[1] ? toPart[1].trim() : '';
+      if (line.includes('->') || line.includes('-->') || line.includes('->>')) {
+        const isReturn = line.includes('-->');
+        const isAsync = line.includes('->>');
+        const separator = isReturn ? '-->' : isAsync ? '->>' : '->';
         
-        const x1 = actorPositions[isResponse ? to : from];
-        const x2 = actorPositions[isResponse ? from : to];
-        
-        if (x1 && x2) {
-          // Draw arrow line
-          ctx.beginPath();
-          ctx.moveTo(x1, messageY);
-          ctx.lineTo(x2, messageY);
-          ctx.stroke();
+        const parts = line.split(separator);
+        if (parts.length === 2) {
+          const from = parts[0].trim().replace(/_/g, ' ');
+          const rightPart = parts[1].split(':');
+          const to = rightPart[0].trim().replace(/_/g, ' ');
+          const message = rightPart[1] ? rightPart[1].trim() : '';
           
-          // Draw arrowhead
-          const arrowHeadSize = 8;
-          const angle = Math.atan2(0, x2 - x1);
+          const x1 = actorPositions[from];
+          const x2 = actorPositions[to];
           
-          if (isResponse) {
-            // Draw response arrow (dashed line with open arrowhead)
-            ctx.setLineDash([3, 3]);
+          if (x1 !== undefined && x2 !== undefined) {
+            // Draw line
+            if (isReturn) {
+              ctx.setLineDash([5, 5]);
+            }
+            
             ctx.beginPath();
             ctx.moveTo(x1, messageY);
             ctx.lineTo(x2, messageY);
             ctx.stroke();
             ctx.setLineDash([]);
             
-            // Open arrowhead for response
-            ctx.beginPath();
-            ctx.moveTo(x1, messageY);
-            ctx.lineTo(
-              x1 + arrowHeadSize * Math.cos(angle - Math.PI / 6),
-              messageY - arrowHeadSize * Math.sin(angle - Math.PI / 6)
-            );
-            ctx.moveTo(x1, messageY);
-            ctx.lineTo(
-              x1 + arrowHeadSize * Math.cos(angle + Math.PI / 6),
-              messageY - arrowHeadSize * Math.sin(angle + Math.PI / 6)
-            );
-            ctx.stroke();
-          } else {
-            // Solid arrowhead for request
+            // Draw arrowhead
+            const arrowSize = 8;
+            const direction = x2 > x1 ? 1 : -1;
+            
             ctx.beginPath();
             ctx.moveTo(x2, messageY);
-            ctx.lineTo(
-              x2 - arrowHeadSize * Math.cos(angle - Math.PI / 6),
-              messageY - arrowHeadSize * Math.sin(angle - Math.PI / 6)
-            );
-            ctx.lineTo(
-              x2 - arrowHeadSize * Math.cos(angle + Math.PI / 6),
-              messageY - arrowHeadSize * Math.sin(angle + Math.PI / 6)
-            );
+            ctx.lineTo(x2 - direction * arrowSize, messageY - arrowSize / 2);
+            ctx.lineTo(x2 - direction * arrowSize, messageY + arrowSize / 2);
             ctx.closePath();
             ctx.fill();
+            
+            // Draw message text
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(message, (x1 + x2) / 2, messageY - 10);
+            
+            messageY += 50;
           }
-          
-          // Add message text
-          ctx.font = '12px Arial';
-          ctx.textAlign = 'center';
-          ctx.fillText(message, (x1 + x2) / 2, messageY - 8);
-          
-          messageY += 40;
         }
       }
     });
+    
+    ctx.restore();
   }
+
+  // Canvas zoom controls
+  function zoomCanvas(factor) {
+    state.canvasZoom *= factor;
+    state.canvasZoom = Math.max(0.5, Math.min(3, state.canvasZoom));
+    regenerateDiagram();
+  }
+
+  function resetZoom() {
+    state.canvasZoom = 1;
+    regenerateDiagram();
+  }
+
+  // Export canvas as PNG
+  function exportAsPNG() {
+    if (!validateDiagram()) return;
+    
+    const canvas = elements.sequenceCanvas;
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'sequence-diagram.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showAlert('Diagram exported as PNG');
+    });
+  }
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    // Ctrl/Cmd + S to export JSON
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      exportAsJSON();
+    }
+  });
 </script>
-<a href="https://www.htmlhobbyist.com/">
-  <img src="html-hobbyist-badge.svg" height="250" width="250" alt="I am an HTML Hobbyist" />
-</a>
 </body>
 </html>
