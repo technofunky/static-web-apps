@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -92,6 +91,106 @@
 
         .theme-toggle:hover {
             background: rgba(255, 255, 255, 0.3);
+        }
+
+        .lock-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .lock-container {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .lock-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .lock-container h2 {
+            color: var(--text-color);
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+
+        .lock-container p {
+            color: var(--muted-text);
+            margin-bottom: 30px;
+        }
+
+        .pin-input-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .pin-digit {
+            width: 60px;
+            height: 70px;
+            font-size: 2em;
+            text-align: center;
+            border: 3px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .pin-digit:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .setup-form {
+            text-align: left;
+        }
+
+        .form-group-setup {
+            margin-bottom: 25px;
+        }
+
+        .form-group-setup label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 1em;
+        }
+
+        .form-group-setup input,
+        .form-group-setup select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1em;
+            background: var(--input-bg);
+            color: var(--text-color);
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group-setup input:focus,
+        .form-group-setup select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-group-setup small {
+            display: block;
+            margin-top: 5px;
+            color: var(--muted-text);
+            font-size: 0.85em;
         }
 
         .tabs {
@@ -236,6 +335,14 @@
         .btn-secondary {
             background: var(--muted-text);
             margin-top: 10px;
+        }
+
+        .btn-link {
+            background: none;
+            color: var(--primary-color);
+            text-decoration: underline;
+            padding: 10px;
+            margin-top: 15px;
         }
 
         .btn-group {
@@ -563,6 +670,51 @@
             justify-content: center;
         }
 
+        .error-message {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success-message {
+            color: #155724;
+            background: #d4edda;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            border: 1px solid #c3e6cb;
+        }
+
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--secondary-bg);
+            padding: 8px 15px;
+            border-radius: 20px;
+            color: var(--text-color);
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 1.8em;
@@ -584,15 +736,115 @@
             .calendar-day {
                 font-size: 0.8em;
             }
+
+            .pin-digit {
+                width: 50px;
+                height: 60px;
+                font-size: 1.5em;
+            }
+
+            .logout-btn, .theme-toggle {
+                position: static;
+                margin: 10px auto;
+                display: block;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Lock Screen -->
+    <div class="lock-screen" id="lockScreen">
+        <div class="lock-container">
+            <div class="lock-icon">🔒</div>
+            <div id="setupSection" style="display: none;">
+                <h2>Secure Your Journal</h2>
+                <p>Create a 4-digit PIN to protect your entries</p>
+                
+                <form id="setupForm" class="setup-form">
+                    <div class="form-group-setup">
+                        <label>Create Your PIN</label>
+                        <input type="password" id="setupPin" maxlength="4" pattern="\d{4}" 
+                               placeholder="Enter 4-digit PIN" required>
+                        <small>Choose a 4-digit PIN you'll remember</small>
+                    </div>
+
+                    <div class="form-group-setup">
+                        <label>Confirm PIN</label>
+                        <input type="password" id="confirmPin" maxlength="4" pattern="\d{4}" 
+                               placeholder="Re-enter PIN" required>
+                    </div>
+
+                    <div class="form-group-setup">
+                        <label>Security Question</label>
+                        <select id="securityQuestion" required>
+                            <option value="">Select a question...</option>
+                            <option value="pet">What was the name of your first pet?</option>
+                            <option value="city">In what city were you born?</option>
+                            <option value="school">What was the name of your elementary school?</option>
+                            <option value="book">What is your favorite book?</option>
+                            <option value="food">What is your favorite food?</option>
+                            <option value="teacher">What was your favorite teacher's name?</option>
+                        </select>
+                        <small>This will help you recover your PIN if forgotten</small>
+                    </div>
+
+                    <div class="form-group-setup">
+                        <label>Your Answer</label>
+                        <input type="text" id="securityAnswer" placeholder="Enter your answer" required>
+                        <small>Make sure to remember this answer</small>
+                    </div>
+
+                    <div id="setupError" class="error-message" style="display: none;"></div>
+                    
+                    <button type="submit" class="btn">Create PIN & Start Journaling</button>
+                </form>
+            </div>
+
+            <div id="loginSection" style="display: none;">
+                <h2>Welcome Back</h2>
+                <p>Enter your PIN to unlock your journal</p>
+                
+                <div id="loginError" class="error-message" style="display: none;"></div>
+                
+                <div class="pin-input-group">
+                    <input type="password" class="pin-digit" maxlength="1" pattern="\d" id="pin1">
+                    <input type="password" class="pin-digit" maxlength="1" pattern="\d" id="pin2">
+                    <input type="password" class="pin-digit" maxlength="1" pattern="\d" id="pin3">
+                    <input type="password" class="pin-digit" maxlength="1" pattern="\d" id="pin4">
+                </div>
+
+                <button class="btn" id="unlockBtn">Unlock Journal</button>
+                <button class="btn btn-link" id="forgotPinBtn">Forgot PIN?</button>
+            </div>
+
+            <div id="recoverySection" style="display: none;">
+                <h2>Recover Your PIN</h2>
+                <p id="recoveryQuestion"></p>
+                
+                <div id="recoveryError" class="error-message" style="display: none;"></div>
+                <div id="recoverySuccess" class="success-message" style="display: none;"></div>
+                
+                <div class="form-group-setup">
+                    <input type="text" id="recoveryAnswer" placeholder="Enter your answer">
+                </div>
+
+                <button class="btn" id="recoverBtn">Verify Answer</button>
+                <button class="btn btn-link" id="backToLoginBtn">Back to Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="container" id="mainApp" style="display: none;">
         <div class="header">
+            <button class="logout-btn" id="logoutBtn">🔒 Lock</button>
             <button class="theme-toggle" id="themeToggle">🌙</button>
             <h1>📔 My Personal Journal</h1>
             <p>Track your mood and thoughts every day</p>
+            <div class="security-badge">
+                <span>🔐</span>
+                <span>Secured with PIN</span>
+            </div>
         </div>
 
         <div class="tabs">
@@ -703,9 +955,18 @@
             <h2 style="color: var(--text-color); margin-bottom: 20px;">⚙️ Settings & Data Management</h2>
             
             <div class="entry-form">
+                <h3 style="color: var(--text-color); margin-bottom: 15px;">🔐 Security</h3>
+                <p style="color: var(--muted-text); margin-bottom: 20px;">
+                    Your journal is protected with a 4-digit PIN and encryption.
+                </p>
+                <button class="btn btn-small" id="changePinBtn">Change PIN</button>
+                <button class="btn btn-small" id="changeSecurityBtn" style="margin-top: 10px;">Change Security Question</button>
+                
+                <hr style="margin: 30px 0; border: 1px solid var(--border-color);">
+                
                 <h3 style="color: var(--text-color); margin-bottom: 15px;">📦 Backup & Restore</h3>
                 <p style="color: var(--muted-text); margin-bottom: 20px;">
-                    Export your journal entries to keep a backup, or import previously exported data.
+                    Export your encrypted journal entries to keep a backup, or import previously exported data.
                 </p>
                 
                 <div class="btn-group">
@@ -725,7 +986,18 @@
         </div>
     </div>
 
-    <!-- Edit Modal -->
+    <!-- Modal for changing security -->
+    <div class="modal" id="securityModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="securityModalTitle">Change PIN</h2>
+                <button class="modal-close" id="closeSecurityModal">×</button>
+            </div>
+            <div id="securityModalContent"></div>
+        </div>
+    </div>
+
+    <!-- Modal for calendar entries -->
     <div class="modal" id="editModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -737,19 +1009,424 @@
     </div>
 
     <script>
+        // Simple encryption functions (using base64 for demonstration - in production, use proper encryption)
+        function simpleEncrypt(text, pin) {
+            // XOR cipher with PIN as key (simple but better than nothing)
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                result += String.fromCharCode(text.charCodeAt(i) ^ pin.charCodeAt(i % pin.length));
+            }
+            return btoa(result);
+        }
+
+        function simpleDecrypt(encrypted, pin) {
+            try {
+                const text = atob(encrypted);
+                let result = '';
+                for (let i = 0; i < text.length; i++) {
+                    result += String.fromCharCode(text.charCodeAt(i) ^ pin.charCodeAt(i % pin.length));
+                }
+                return result;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Hash function for storing PIN and answer
+        function hashString(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash.toString();
+        }
+
+        // Security state
+        let currentPin = null;
+        let isUnlocked = false;
+
+        // App state
         let selectedMood = null;
         let currentFilter = 'all';
         let searchQuery = '';
         let currentMonth = new Date();
         let editingIndex = null;
 
+        // Initialize app
+        function initApp() {
+            initTheme();
+            const security = getSecurity();
+            
+            if (security) {
+                showLoginScreen();
+            } else {
+                showSetupScreen();
+            }
+        }
+
+        // Security management
+        function getSecurity() {
+            const security = localStorage.getItem('journalSecurity');
+            return security ? JSON.parse(security) : null;
+        }
+
+        function setSecurity(pinHash, questionId, answerHash) {
+            const security = {
+                pinHash: pinHash,
+                questionId: questionId,
+                answerHash: answerHash
+            };
+            localStorage.setItem('journalSecurity', JSON.stringify(security));
+        }
+
+        function showSetupScreen() {
+            document.getElementById('lockScreen').style.display = 'flex';
+            document.getElementById('setupSection').style.display = 'block';
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('recoverySection').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'none';
+        }
+
+        function showLoginScreen() {
+            document.getElementById('lockScreen').style.display = 'flex';
+            document.getElementById('setupSection').style.display = 'none';
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('recoverySection').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'none';
+            clearPinInputs();
+        }
+
+        function showRecoveryScreen() {
+            const security = getSecurity();
+            const questions = {
+                'pet': 'What was the name of your first pet?',
+                'city': 'In what city were you born?',
+                'school': 'What was the name of your elementary school?',
+                'book': 'What is your favorite book?',
+                'food': 'What is your favorite food?',
+                'teacher': 'What was your favorite teacher\'s name?'
+            };
+            
+            document.getElementById('lockScreen').style.display = 'flex';
+            document.getElementById('setupSection').style.display = 'none';
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('recoverySection').style.display = 'block';
+            document.getElementById('mainApp').style.display = 'none';
+            
+            document.getElementById('recoveryQuestion').textContent = questions[security.questionId];
+            document.getElementById('recoveryAnswer').value = '';
+            document.getElementById('recoveryError').style.display = 'none';
+            document.getElementById('recoverySuccess').style.display = 'none';
+        }
+
+        function unlockApp(pin) {
+            currentPin = pin;
+            isUnlocked = true;
+            document.getElementById('lockScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            displayEntries();
+            updateStats();
+        }
+
+        function lockApp() {
+            currentPin = null;
+            isUnlocked = false;
+            showLoginScreen();
+        }
+
+        // Setup form
+        document.getElementById('setupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const pin = document.getElementById('setupPin').value;
+            const confirmPin = document.getElementById('confirmPin').value;
+            const question = document.getElementById('securityQuestion').value;
+            const answer = document.getElementById('securityAnswer').value.toLowerCase().trim();
+            
+            const errorDiv = document.getElementById('setupError');
+            
+            if (!/^\d{4}$/.test(pin)) {
+                errorDiv.textContent = 'PIN must be exactly 4 digits';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (pin !== confirmPin) {
+                errorDiv.textContent = 'PINs do not match';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!question) {
+                errorDiv.textContent = 'Please select a security question';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (answer.length < 2) {
+                errorDiv.textContent = 'Please provide a valid answer';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            setSecurity(hashString(pin), question, hashString(answer));
+            unlockApp(pin);
+        });
+
+        // PIN input handling
+        function clearPinInputs() {
+            for (let i = 1; i <= 4; i++) {
+                const input = document.getElementById(`pin${i}`);
+                if (input) input.value = '';
+            }
+            if (document.getElementById('pin1')) {
+                document.getElementById('pin1').focus();
+            }
+        }
+
+        // Auto-focus next PIN digit
+        for (let i = 1; i <= 4; i++) {
+            const input = document.getElementById(`pin${i}`);
+            if (input) {
+                input.addEventListener('input', function() {
+                    if (this.value.length === 1 && i < 4) {
+                        document.getElementById(`pin${i + 1}`).focus();
+                    }
+                });
+                
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && this.value === '' && i > 1) {
+                        document.getElementById(`pin${i - 1}`).focus();
+                    }
+                });
+            }
+        }
+
+        // Unlock button
+        document.getElementById('unlockBtn').addEventListener('click', function() {
+            const pin = document.getElementById('pin1').value +
+                       document.getElementById('pin2').value +
+                       document.getElementById('pin3').value +
+                       document.getElementById('pin4').value;
+            
+            const security = getSecurity();
+            const errorDiv = document.getElementById('loginError');
+            
+            if (pin.length !== 4) {
+                errorDiv.textContent = 'Please enter all 4 digits';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (hashString(pin) === security.pinHash) {
+                unlockApp(pin);
+            } else {
+                errorDiv.textContent = 'Incorrect PIN. Please try again.';
+                errorDiv.style.display = 'block';
+                clearPinInputs();
+            }
+        });
+
+        // Forgot PIN
+        document.getElementById('forgotPinBtn').addEventListener('click', function() {
+            showRecoveryScreen();
+        });
+
+        // Back to login
+        document.getElementById('backToLoginBtn').addEventListener('click', function() {
+            showLoginScreen();
+        });
+
+        // Recover PIN
+        document.getElementById('recoverBtn').addEventListener('click', function() {
+            const answer = document.getElementById('recoveryAnswer').value.toLowerCase().trim();
+            const security = getSecurity();
+            const errorDiv = document.getElementById('recoveryError');
+            const successDiv = document.getElementById('recoverySuccess');
+            
+            if (hashString(answer) === security.answerHash) {
+                successDiv.textContent = 'Answer correct! You can now create a new PIN.';
+                successDiv.style.display = 'block';
+                errorDiv.style.display = 'none';
+                
+                setTimeout(() => {
+                    // Allow user to create new PIN
+                    const newPin = prompt('Enter your new 4-digit PIN:');
+                    if (newPin && /^\d{4}$/.test(newPin)) {
+                        const confirmNewPin = prompt('Confirm your new PIN:');
+                        if (newPin === confirmNewPin) {
+                            setSecurity(hashString(newPin), security.questionId, security.answerHash);
+                            alert('PIN successfully reset!');
+                            showLoginScreen();
+                        } else {
+                            alert('PINs do not match. Please try again.');
+                            showRecoveryScreen();
+                        }
+                    } else {
+                        alert('Invalid PIN. Must be 4 digits.');
+                        showRecoveryScreen();
+                    }
+                }, 1500);
+            } else {
+                errorDiv.textContent = 'Incorrect answer. Please try again.';
+                errorDiv.style.display = 'block';
+                successDiv.style.display = 'none';
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to lock your journal?')) {
+                lockApp();
+            }
+        });
+
+        // Change PIN
+        document.getElementById('changePinBtn').addEventListener('click', function() {
+            const modal = document.getElementById('securityModal');
+            document.getElementById('securityModalTitle').textContent = 'Change PIN';
+            document.getElementById('securityModalContent').innerHTML = `
+                <div class="form-group-setup">
+                    <label>Current PIN</label>
+                    <input type="password" id="currentPinChange" maxlength="4" pattern="\\d{4}">
+                </div>
+                <div class="form-group-setup">
+                    <label>New PIN</label>
+                    <input type="password" id="newPin" maxlength="4" pattern="\\d{4}">
+                </div>
+                <div class="form-group-setup">
+                    <label>Confirm New PIN</label>
+                    <input type="password" id="confirmNewPin" maxlength="4" pattern="\\d{4}">
+                </div>
+                <div id="changePinError" class="error-message" style="display: none;"></div>
+                <button class="btn" onclick="submitPinChange()">Change PIN</button>
+            `;
+            modal.classList.add('active');
+        });
+
+        function submitPinChange() {
+            const currentPinInput = document.getElementById('currentPinChange').value;
+            const newPin = document.getElementById('newPin').value;
+            const confirmNewPin = document.getElementById('confirmNewPin').value;
+            const errorDiv = document.getElementById('changePinError');
+            const security = getSecurity();
+            
+            if (hashString(currentPinInput) !== security.pinHash) {
+                errorDiv.textContent = 'Current PIN is incorrect';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!/^\d{4}$/.test(newPin)) {
+                errorDiv.textContent = 'New PIN must be 4 digits';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (newPin !== confirmNewPin) {
+                errorDiv.textContent = 'New PINs do not match';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Re-encrypt all entries with new PIN
+            const entries = loadEntries();
+            const decryptedEntries = entries.map(entry => ({
+                ...entry,
+                text: simpleDecrypt(entry.text, currentPinInput)
+            }));
+            
+            const reencryptedEntries = decryptedEntries.map(entry => ({
+                ...entry,
+                text: simpleEncrypt(entry.text, newPin)
+            }));
+            
+            saveEntries(reencryptedEntries);
+            setSecurity(hashString(newPin), security.questionId, security.answerHash);
+            currentPin = newPin;
+            
+            alert('PIN changed successfully!');
+            document.getElementById('securityModal').classList.remove('active');
+        }
+
+        // Change security question
+        document.getElementById('changeSecurityBtn').addEventListener('click', function() {
+            const modal = document.getElementById('securityModal');
+            const security = getSecurity();
+            document.getElementById('securityModalTitle').textContent = 'Change Security Question';
+            document.getElementById('securityModalContent').innerHTML = `
+                <div class="form-group-setup">
+                    <label>Current PIN (for verification)</label>
+                    <input type="password" id="verifyPin" maxlength="4" pattern="\\d{4}">
+                </div>
+                <div class="form-group-setup">
+                    <label>New Security Question</label>
+                    <select id="newSecurityQuestion">
+                        <option value="">Select a question...</option>
+                        <option value="pet">What was the name of your first pet?</option>
+                        <option value="city">In what city were you born?</option>
+                        <option value="school">What was the name of your elementary school?</option>
+                        <option value="book">What is your favorite book?</option>
+                        <option value="food">What is your favorite food?</option>
+                        <option value="teacher">What was your favorite teacher's name?</option>
+                    </select>
+                </div>
+                <div class="form-group-setup">
+                    <label>Your Answer</label>
+                    <input type="text" id="newSecurityAnswer">
+                </div>
+                <div id="changeSecurityError" class="error-message" style="display: none;"></div>
+                <button class="btn" onclick="submitSecurityChange()">Change Security Question</button>
+            `;
+            modal.classList.add('active');
+        });
+
+        function submitSecurityChange() {
+            const verifyPin = document.getElementById('verifyPin').value;
+            const newQuestion = document.getElementById('newSecurityQuestion').value;
+            const newAnswer = document.getElementById('newSecurityAnswer').value.toLowerCase().trim();
+            const errorDiv = document.getElementById('changeSecurityError');
+            const security = getSecurity();
+            
+            if (hashString(verifyPin) !== security.pinHash) {
+                errorDiv.textContent = 'PIN is incorrect';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!newQuestion) {
+                errorDiv.textContent = 'Please select a security question';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (newAnswer.length < 2) {
+                errorDiv.textContent = 'Please provide a valid answer';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            setSecurity(security.pinHash, newQuestion, hashString(newAnswer));
+            alert('Security question changed successfully!');
+            document.getElementById('securityModal').classList.remove('active');
+        }
+
+        // Close modals
+        document.getElementById('closeSecurityModal').addEventListener('click', function() {
+            document.getElementById('securityModal').classList.remove('active');
+        });
+
         // Theme management
         function initTheme() {
             const savedTheme = localStorage.getItem('journalTheme') || 'light';
             if (savedTheme === 'dark') {
                 document.body.classList.add('dark-mode');
-                document.getElementById('themeToggle').textContent = '☀️';
-                document.getElementById('currentTheme').textContent = 'Dark';
+                const toggle = document.getElementById('themeToggle');
+                if (toggle) toggle.textContent = '☀️';
+                const theme = document.getElementById('currentTheme');
+                if (theme) theme.textContent = 'Dark';
             }
         }
 
@@ -757,8 +1434,10 @@
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
             localStorage.setItem('journalTheme', isDark ? 'dark' : 'light');
-            document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
-            document.getElementById('currentTheme').textContent = isDark ? 'Dark' : 'Light';
+            const toggle = document.getElementById('themeToggle');
+            if (toggle) toggle.textContent = isDark ? '☀️' : '🌙';
+            const theme = document.getElementById('currentTheme');
+            if (theme) theme.textContent = isDark ? 'Dark' : 'Light';
         }
 
         document.getElementById('themeToggle').addEventListener('click', toggleTheme);
@@ -790,13 +1469,13 @@
             });
         });
 
-        // Load entries from localStorage
+        // Load entries from localStorage (encrypted)
         function loadEntries() {
             const entries = JSON.parse(localStorage.getItem('journalEntries')) || [];
             return entries;
         }
 
-        // Save entries to localStorage
+        // Save entries to localStorage (encrypted)
         function saveEntries(entries) {
             localStorage.setItem('journalEntries', JSON.stringify(entries));
         }
@@ -869,6 +1548,12 @@
             const entries = loadEntries();
             let filtered = entries;
 
+            // Decrypt entries for display
+            filtered = filtered.map(entry => ({
+                ...entry,
+                text: simpleDecrypt(entry.text, currentPin)
+            }));
+
             // Filter by mood
             if (currentFilter !== 'all') {
                 filtered = filtered.filter(entry => entry.mood === currentFilter);
@@ -877,7 +1562,7 @@
             // Filter by search query
             if (searchQuery) {
                 filtered = filtered.filter(entry => 
-                    entry.text.toLowerCase().includes(searchQuery.toLowerCase())
+                    entry.text && entry.text.toLowerCase().includes(searchQuery.toLowerCase())
                 );
             }
 
@@ -886,6 +1571,8 @@
 
         // Display entries
         function displayEntries() {
+            if (!isUnlocked) return;
+            
             const entries = filterEntries();
             const entriesList = document.getElementById('entriesList');
             
@@ -895,8 +1582,9 @@
             }
 
             entriesList.innerHTML = entries.map((entry) => {
-                const originalIndex = loadEntries().findIndex(e => 
-                    e.timestamp === entry.timestamp && e.text === entry.text
+                const allEntries = loadEntries();
+                const originalIndex = allEntries.findIndex(e => 
+                    e.timestamp === entry.timestamp
                 );
                 return `
                     <div class="entry-item">
@@ -906,7 +1594,7 @@
                             </div>
                             <div class="entry-date">${formatDate(entry.timestamp)}</div>
                         </div>
-                        <div class="entry-text">${entry.text.replace(/\n/g, '<br>')}</div>
+                        <div class="entry-text">${entry.text ? entry.text.replace(/\n/g, '<br>') : '[Encrypted]'}</div>
                         <div class="entry-actions">
                             <button class="edit-entry" onclick="editEntry(${originalIndex})">✏️ Edit</button>
                             <button class="delete-entry" onclick="deleteEntry(${originalIndex})">🗑️ Delete</button>
@@ -920,6 +1608,7 @@
         function editEntry(index) {
             const entries = loadEntries();
             const entry = entries[index];
+            const decryptedText = simpleDecrypt(entry.text, currentPin);
             
             editingIndex = index;
             document.getElementById('editingIndex').value = index;
@@ -934,7 +1623,7 @@
             });
             
             // Set text
-            document.getElementById('journalText').value = entry.text;
+            document.getElementById('journalText').value = decryptedText;
             
             // Update button
             document.getElementById('submitBtn').textContent = 'Update Entry';
@@ -981,17 +1670,18 @@
             }
 
             const entries = loadEntries();
+            const encryptedText = simpleEncrypt(text, currentPin);
             
             if (editingIndex !== null) {
                 // Update existing entry
                 entries[editingIndex].mood = selectedMood;
-                entries[editingIndex].text = text;
+                entries[editingIndex].text = encryptedText;
                 entries[editingIndex].edited = Date.now();
             } else {
                 // Add new entry
                 entries.push({
                     mood: selectedMood,
-                    text: text,
+                    text: encryptedText,
                     timestamp: Date.now()
                 });
             }
@@ -1057,7 +1747,7 @@
             link.download = `journal-backup-${new Date().toISOString().split('T')[0]}.json`;
             link.click();
             URL.revokeObjectURL(url);
-            alert('Journal exported successfully!');
+            alert('Journal exported successfully! Your data is encrypted.');
         });
 
         // Import functionality
@@ -1105,6 +1795,8 @@
 
         // Calendar functionality
         function renderCalendar() {
+            if (!isUnlocked) return;
+            
             const year = currentMonth.getFullYear();
             const month = currentMonth.getMonth();
             
@@ -1157,7 +1849,6 @@
                 
                 if (dayEntries.length > 0) {
                     dayEl.classList.add('has-entry');
-                    const moods = dayEntries.map(e => e.mood).join('');
                     dayEl.innerHTML = `
                         <div class="calendar-day-number">${day}</div>
                         <div class="calendar-day-mood">${dayEntries[0].mood}</div>
@@ -1199,17 +1890,18 @@
             const modal = document.getElementById('editModal');
             const modalContent = document.getElementById('modalEntryContent');
             
-            modalContent.innerHTML = dayEntries.map((entry, idx) => {
+            modalContent.innerHTML = dayEntries.map((entry) => {
                 const originalIndex = entries.findIndex(e => 
-                    e.timestamp === entry.timestamp && e.text === entry.text
+                    e.timestamp === entry.timestamp
                 );
+                const decryptedText = simpleDecrypt(entry.text, currentPin);
                 return `
                     <div class="entry-item">
                         <div class="entry-header">
                             <span class="entry-mood">${entry.mood}</span>
                             <span class="entry-date">${formatDate(entry.timestamp)}</span>
                         </div>
-                        <div class="entry-text">${entry.text.replace(/\n/g, '<br>')}</div>
+                        <div class="entry-text">${decryptedText ? decryptedText.replace(/\n/g, '<br>') : '[Encrypted]'}</div>
                         <div class="entry-actions">
                             <button class="edit-entry" onclick="editEntry(${originalIndex}); document.getElementById('editModal').classList.remove('active');">✏️ Edit</button>
                             <button class="delete-entry" onclick="deleteEntry(${originalIndex}); document.getElementById('editModal').classList.remove('active'); renderCalendar();">🗑️ Delete</button>
@@ -1242,9 +1934,7 @@
         });
 
         // Initialize on load
-        initTheme();
-        displayEntries();
-        updateStats();
+        initApp();
     </script>
 </body>
 </html>
