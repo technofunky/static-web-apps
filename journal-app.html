@@ -1,0 +1,1250 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Journal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --bg-color: #ffffff;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --hover-shadow: rgba(0, 0, 0, 0.1);
+            --input-bg: #ffffff;
+            --secondary-bg: #f8f9fa;
+            --muted-text: #666;
+        }
+
+        body.dark-mode {
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --bg-color: #0f0f1e;
+            --text-color: #e0e0e0;
+            --card-bg: #1a1a2e;
+            --border-color: #2d2d44;
+            --hover-shadow: rgba(255, 255, 255, 0.1);
+            --input-bg: #252538;
+            --secondary-bg: #252538;
+            --muted-text: #a0a0a0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: background 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--secondary-bg);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab:hover {
+            background: var(--hover-shadow);
+        }
+
+        .tab.active {
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .entry-form {
+            background: var(--secondary-bg);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 1.1em;
+        }
+
+        .mood-selector {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .mood-option {
+            cursor: pointer;
+            padding: 15px 20px;
+            border: 3px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--card-bg);
+            transition: all 0.3s ease;
+            font-size: 2em;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .mood-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px var(--hover-shadow);
+        }
+
+        .mood-option.selected {
+            border-color: var(--primary-color);
+            background: var(--secondary-bg);
+            transform: scale(1.1);
+        }
+
+        .mood-option .mood-label {
+            display: block;
+            font-size: 0.4em;
+            margin-top: 5px;
+            color: var(--muted-text);
+        }
+
+        textarea, input[type="text"], input[type="date"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s ease;
+            background: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        input[type="text"], input[type="date"] {
+            min-height: auto;
+        }
+
+        textarea:focus, input[type="text"]:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--muted-text);
+            margin-top: 10px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-small {
+            padding: 10px 20px;
+            font-size: 0.9em;
+            width: auto;
+        }
+
+        .entries-section {
+            margin-top: 30px;
+        }
+
+        .search-bar {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .search-bar input {
+            padding-left: 45px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted-text);
+            font-size: 1.2em;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary-color);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .entries-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .entries-header h2 {
+            color: var(--text-color);
+        }
+
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.3s ease;
+        }
+
+        .clear-btn:hover {
+            background: #c82333;
+        }
+
+        .entry-item {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .entry-item:hover {
+            box-shadow: 0 5px 15px var(--hover-shadow);
+            border-color: var(--primary-color);
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .entry-mood {
+            font-size: 2em;
+        }
+
+        .entry-date {
+            color: var(--muted-text);
+            font-size: 0.9em;
+        }
+
+        .entry-text {
+            color: var(--text-color);
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+
+        .entry-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .edit-entry, .delete-entry {
+            border: none;
+            padding: 6px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s ease;
+        }
+
+        .edit-entry {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .edit-entry:hover {
+            background: var(--secondary-color);
+        }
+
+        .delete-entry {
+            background: #dc3545;
+            color: white;
+        }
+
+        .delete-entry:hover {
+            background: #c82333;
+        }
+
+        .no-entries {
+            text-align: center;
+            color: var(--muted-text);
+            padding: 40px;
+            font-size: 1.1em;
+        }
+
+        .stats {
+            background: var(--secondary-bg);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stats h3 {
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
+
+        .stats-content {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-item {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            color: var(--muted-text);
+            font-size: 0.9em;
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .calendar-header {
+            text-align: center;
+            font-weight: 600;
+            color: var(--text-color);
+            padding: 10px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--card-bg);
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .calendar-day.has-entry {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3;
+        }
+
+        .calendar-day-number {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .calendar-day-mood {
+            font-size: 1.5em;
+            margin-top: 5px;
+        }
+
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-controls button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .calendar-controls h3 {
+            color: var(--text-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: var(--text-color);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: var(--text-color);
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+
+            .tab {
+                font-size: 0.9em;
+                padding: 12px;
+            }
+
+            .calendar {
+                gap: 5px;
+            }
+
+            .calendar-day {
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="theme-toggle" id="themeToggle">🌙</button>
+            <h1>📔 My Personal Journal</h1>
+            <p>Track your mood and thoughts every day</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="new-entry">✍️ New Entry</button>
+            <button class="tab" data-tab="entries">📝 Entries</button>
+            <button class="tab" data-tab="calendar">📅 Calendar</button>
+            <button class="tab" data-tab="settings">⚙️ Settings</button>
+        </div>
+
+        <div class="tab-content active" id="new-entry">
+            <div class="entry-form">
+                <form id="journalForm">
+                    <input type="hidden" id="editingIndex" value="">
+                    
+                    <div class="form-group">
+                        <label>How are you feeling today?</label>
+                        <div class="mood-selector">
+                            <div class="mood-option" data-mood="😄">
+                                😄
+                                <span class="mood-label">Great</span>
+                            </div>
+                            <div class="mood-option" data-mood="🙂">
+                                🙂
+                                <span class="mood-label">Good</span>
+                            </div>
+                            <div class="mood-option" data-mood="😐">
+                                😐
+                                <span class="mood-label">Okay</span>
+                            </div>
+                            <div class="mood-option" data-mood="😔">
+                                😔
+                                <span class="mood-label">Sad</span>
+                            </div>
+                            <div class="mood-option" data-mood="😢">
+                                😢
+                                <span class="mood-label">Bad</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="journalText">What's on your mind?</label>
+                        <textarea 
+                            id="journalText" 
+                            placeholder="Write your thoughts here..."
+                            required
+                        ></textarea>
+                    </div>
+
+                    <button type="submit" class="btn" id="submitBtn">Save Entry</button>
+                    <button type="button" class="btn btn-secondary" id="cancelEdit" style="display: none;">Cancel Edit</button>
+                </form>
+            </div>
+
+            <div class="stats" id="stats">
+                <h3>📊 Journal Statistics</h3>
+                <div class="stats-content">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalEntries">0</div>
+                        <div class="stat-label">Total Entries</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="thisWeek">0</div>
+                        <div class="stat-label">This Week</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="currentStreak">0</div>
+                        <div class="stat-label">Day Streak</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="entries">
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Search your entries...">
+            </div>
+
+            <div class="filter-bar">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="😄">😄 Great</button>
+                <button class="filter-btn" data-filter="🙂">🙂 Good</button>
+                <button class="filter-btn" data-filter="😐">😐 Okay</button>
+                <button class="filter-btn" data-filter="😔">😔 Sad</button>
+                <button class="filter-btn" data-filter="😢">😢 Bad</button>
+            </div>
+
+            <div class="entries-section">
+                <div class="entries-header">
+                    <h2>📝 Your Entries</h2>
+                    <button class="clear-btn" id="clearAll">Clear All</button>
+                </div>
+                <div id="entriesList"></div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="calendar">
+            <div class="calendar-controls">
+                <button id="prevMonth">← Previous</button>
+                <h3 id="currentMonth"></h3>
+                <button id="nextMonth">Next →</button>
+            </div>
+            <div class="calendar" id="calendarGrid"></div>
+        </div>
+
+        <div class="tab-content" id="settings">
+            <h2 style="color: var(--text-color); margin-bottom: 20px;">⚙️ Settings & Data Management</h2>
+            
+            <div class="entry-form">
+                <h3 style="color: var(--text-color); margin-bottom: 15px;">📦 Backup & Restore</h3>
+                <p style="color: var(--muted-text); margin-bottom: 20px;">
+                    Export your journal entries to keep a backup, or import previously exported data.
+                </p>
+                
+                <div class="btn-group">
+                    <button class="btn btn-small" id="exportBtn">📥 Export Data</button>
+                    <button class="btn btn-small" id="importBtn">📤 Import Data</button>
+                </div>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
+                
+                <hr style="margin: 30px 0; border: 1px solid var(--border-color);">
+                
+                <h3 style="color: var(--text-color); margin-bottom: 15px;">🎨 Appearance</h3>
+                <p style="color: var(--muted-text); margin-bottom: 20px;">
+                    Current theme: <strong id="currentTheme">Light</strong>
+                </p>
+                <button class="btn btn-small" id="toggleThemeSettings">Toggle Dark Mode</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Entry</h2>
+                <button class="modal-close" id="closeModal">×</button>
+            </div>
+            <div id="modalEntryContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedMood = null;
+        let currentFilter = 'all';
+        let searchQuery = '';
+        let currentMonth = new Date();
+        let editingIndex = null;
+
+        // Theme management
+        function initTheme() {
+            const savedTheme = localStorage.getItem('journalTheme') || 'light';
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeToggle').textContent = '☀️';
+                document.getElementById('currentTheme').textContent = 'Dark';
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('journalTheme', isDark ? 'dark' : 'light');
+            document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+            document.getElementById('currentTheme').textContent = isDark ? 'Dark' : 'Light';
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        document.getElementById('toggleThemeSettings').addEventListener('click', toggleTheme);
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                this.classList.add('active');
+                document.getElementById(this.dataset.tab).classList.add('active');
+                
+                if (this.dataset.tab === 'calendar') {
+                    renderCalendar();
+                }
+            });
+        });
+
+        // Mood selection
+        document.querySelectorAll('.mood-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.mood-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                this.classList.add('selected');
+                selectedMood = this.dataset.mood;
+            });
+        });
+
+        // Load entries from localStorage
+        function loadEntries() {
+            const entries = JSON.parse(localStorage.getItem('journalEntries')) || [];
+            return entries;
+        }
+
+        // Save entries to localStorage
+        function saveEntries(entries) {
+            localStorage.setItem('journalEntries', JSON.stringify(entries));
+        }
+
+        // Format date
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        // Calculate streak
+        function calculateStreak() {
+            const entries = loadEntries();
+            if (entries.length === 0) return 0;
+
+            const sortedDates = entries
+                .map(e => new Date(e.timestamp).toDateString())
+                .filter((date, index, self) => self.indexOf(date) === index)
+                .sort((a, b) => new Date(b) - new Date(a));
+
+            let streak = 0;
+            const today = new Date().toDateString();
+            const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+            if (sortedDates[0] !== today && sortedDates[0] !== yesterday) {
+                return 0;
+            }
+
+            let currentDate = new Date();
+            for (let i = 0; i < sortedDates.length; i++) {
+                const checkDate = new Date(currentDate);
+                checkDate.setHours(0, 0, 0, 0);
+                
+                if (sortedDates[i] === checkDate.toDateString()) {
+                    streak++;
+                    currentDate.setDate(currentDate.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+
+            return streak;
+        }
+
+        // Calculate statistics
+        function updateStats() {
+            const entries = loadEntries();
+            const now = new Date();
+            const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            
+            const thisWeekEntries = entries.filter(entry => 
+                new Date(entry.timestamp) > oneWeekAgo
+            );
+
+            document.getElementById('totalEntries').textContent = entries.length;
+            document.getElementById('thisWeek').textContent = thisWeekEntries.length;
+            document.getElementById('currentStreak').textContent = calculateStreak();
+        }
+
+        // Filter entries
+        function filterEntries() {
+            const entries = loadEntries();
+            let filtered = entries;
+
+            // Filter by mood
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(entry => entry.mood === currentFilter);
+            }
+
+            // Filter by search query
+            if (searchQuery) {
+                filtered = filtered.filter(entry => 
+                    entry.text.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+            }
+
+            return filtered.sort((a, b) => b.timestamp - a.timestamp);
+        }
+
+        // Display entries
+        function displayEntries() {
+            const entries = filterEntries();
+            const entriesList = document.getElementById('entriesList');
+            
+            if (entries.length === 0) {
+                entriesList.innerHTML = '<div class="no-entries">No entries found.</div>';
+                return;
+            }
+
+            entriesList.innerHTML = entries.map((entry) => {
+                const originalIndex = loadEntries().findIndex(e => 
+                    e.timestamp === entry.timestamp && e.text === entry.text
+                );
+                return `
+                    <div class="entry-item">
+                        <div class="entry-header">
+                            <div>
+                                <span class="entry-mood">${entry.mood}</span>
+                            </div>
+                            <div class="entry-date">${formatDate(entry.timestamp)}</div>
+                        </div>
+                        <div class="entry-text">${entry.text.replace(/\n/g, '<br>')}</div>
+                        <div class="entry-actions">
+                            <button class="edit-entry" onclick="editEntry(${originalIndex})">✏️ Edit</button>
+                            <button class="delete-entry" onclick="deleteEntry(${originalIndex})">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Edit entry
+        function editEntry(index) {
+            const entries = loadEntries();
+            const entry = entries[index];
+            
+            editingIndex = index;
+            document.getElementById('editingIndex').value = index;
+            
+            // Set mood
+            selectedMood = entry.mood;
+            document.querySelectorAll('.mood-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.mood === entry.mood) {
+                    opt.classList.add('selected');
+                }
+            });
+            
+            // Set text
+            document.getElementById('journalText').value = entry.text;
+            
+            // Update button
+            document.getElementById('submitBtn').textContent = 'Update Entry';
+            document.getElementById('cancelEdit').style.display = 'block';
+            
+            // Switch to new entry tab
+            document.querySelector('.tab[data-tab="new-entry"]').click();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Cancel edit
+        document.getElementById('cancelEdit').addEventListener('click', function() {
+            resetForm();
+        });
+
+        function resetForm() {
+            editingIndex = null;
+            document.getElementById('editingIndex').value = '';
+            document.getElementById('journalText').value = '';
+            document.querySelectorAll('.mood-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            selectedMood = null;
+            document.getElementById('submitBtn').textContent = 'Save Entry';
+            document.getElementById('cancelEdit').style.display = 'none';
+        }
+
+        // Add/Update entry
+        document.getElementById('journalForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!selectedMood) {
+                alert('Please select your mood!');
+                return;
+            }
+
+            const text = document.getElementById('journalText').value.trim();
+            
+            if (!text) {
+                alert('Please write something!');
+                return;
+            }
+
+            const entries = loadEntries();
+            
+            if (editingIndex !== null) {
+                // Update existing entry
+                entries[editingIndex].mood = selectedMood;
+                entries[editingIndex].text = text;
+                entries[editingIndex].edited = Date.now();
+            } else {
+                // Add new entry
+                entries.push({
+                    mood: selectedMood,
+                    text: text,
+                    timestamp: Date.now()
+                });
+            }
+
+            saveEntries(entries);
+            resetForm();
+            displayEntries();
+            updateStats();
+            
+            if (document.querySelector('.tab[data-tab="calendar"]').classList.contains('active')) {
+                renderCalendar();
+            }
+        });
+
+        // Delete entry
+        function deleteEntry(index) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                const entries = loadEntries();
+                entries.splice(index, 1);
+                saveEntries(entries);
+                displayEntries();
+                updateStats();
+                if (document.querySelector('.tab[data-tab="calendar"]').classList.contains('active')) {
+                    renderCalendar();
+                }
+            }
+        }
+
+        // Clear all entries
+        document.getElementById('clearAll').addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete ALL entries? This cannot be undone!')) {
+                localStorage.removeItem('journalEntries');
+                displayEntries();
+                updateStats();
+                renderCalendar();
+            }
+        });
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            searchQuery = e.target.value;
+            displayEntries();
+        });
+
+        // Filter functionality
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = this.dataset.filter;
+                displayEntries();
+            });
+        });
+
+        // Export functionality
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            const entries = loadEntries();
+            const dataStr = JSON.stringify(entries, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `journal-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            alert('Journal exported successfully!');
+        });
+
+        // Import functionality
+        document.getElementById('importBtn').addEventListener('click', function() {
+            document.getElementById('importFile').click();
+        });
+
+        document.getElementById('importFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const importedEntries = JSON.parse(event.target.result);
+                    
+                    if (!Array.isArray(importedEntries)) {
+                        throw new Error('Invalid format');
+                    }
+
+                    const existingEntries = loadEntries();
+                    
+                    if (existingEntries.length > 0) {
+                        if (confirm('You have existing entries. Do you want to merge with imported data? (Cancel will replace all data)')) {
+                            const merged = [...existingEntries, ...importedEntries];
+                            saveEntries(merged);
+                        } else {
+                            saveEntries(importedEntries);
+                        }
+                    } else {
+                        saveEntries(importedEntries);
+                    }
+
+                    alert('Journal imported successfully!');
+                    displayEntries();
+                    updateStats();
+                    renderCalendar();
+                } catch (error) {
+                    alert('Error importing file. Please make sure it\'s a valid journal backup file.');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+
+        // Calendar functionality
+        function renderCalendar() {
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            
+            document.getElementById('currentMonth').textContent = 
+                new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+            const entries = loadEntries();
+            const entryMap = {};
+            
+            entries.forEach(entry => {
+                const date = new Date(entry.timestamp);
+                const dateStr = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+                if (!entryMap[dateStr]) {
+                    entryMap[dateStr] = [];
+                }
+                entryMap[dateStr].push(entry);
+            });
+
+            const calendarGrid = document.getElementById('calendarGrid');
+            calendarGrid.innerHTML = '';
+
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayNames.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-header';
+                header.textContent = day;
+                calendarGrid.appendChild(header);
+            });
+
+            // Previous month days
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const day = daysInPrevMonth - i;
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day other-month';
+                dayEl.innerHTML = `<div class="calendar-day-number">${day}</div>`;
+                calendarGrid.appendChild(dayEl);
+            }
+
+            // Current month days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${month}-${day}`;
+                const dayEntries = entryMap[dateStr] || [];
+                
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day';
+                
+                if (dayEntries.length > 0) {
+                    dayEl.classList.add('has-entry');
+                    const moods = dayEntries.map(e => e.mood).join('');
+                    dayEl.innerHTML = `
+                        <div class="calendar-day-number">${day}</div>
+                        <div class="calendar-day-mood">${dayEntries[0].mood}</div>
+                    `;
+                } else {
+                    dayEl.innerHTML = `<div class="calendar-day-number">${day}</div>`;
+                }
+                
+                dayEl.addEventListener('click', () => showDayEntries(year, month, day));
+                calendarGrid.appendChild(dayEl);
+            }
+
+            // Next month days
+            const totalCells = calendarGrid.children.length - 7;
+            const remainingCells = 35 - totalCells;
+            for (let day = 1; day <= remainingCells; day++) {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day other-month';
+                dayEl.innerHTML = `<div class="calendar-day-number">${day}</div>`;
+                calendarGrid.appendChild(dayEl);
+            }
+        }
+
+        function showDayEntries(year, month, day) {
+            const entries = loadEntries();
+            const dateStr = `${year}-${month}-${day}`;
+            const dayEntries = entries.filter(entry => {
+                const entryDate = new Date(entry.timestamp);
+                return entryDate.getFullYear() === year &&
+                       entryDate.getMonth() === month &&
+                       entryDate.getDate() === day;
+            });
+
+            if (dayEntries.length === 0) {
+                alert('No entries for this day.');
+                return;
+            }
+
+            const modal = document.getElementById('editModal');
+            const modalContent = document.getElementById('modalEntryContent');
+            
+            modalContent.innerHTML = dayEntries.map((entry, idx) => {
+                const originalIndex = entries.findIndex(e => 
+                    e.timestamp === entry.timestamp && e.text === entry.text
+                );
+                return `
+                    <div class="entry-item">
+                        <div class="entry-header">
+                            <span class="entry-mood">${entry.mood}</span>
+                            <span class="entry-date">${formatDate(entry.timestamp)}</span>
+                        </div>
+                        <div class="entry-text">${entry.text.replace(/\n/g, '<br>')}</div>
+                        <div class="entry-actions">
+                            <button class="edit-entry" onclick="editEntry(${originalIndex}); document.getElementById('editModal').classList.remove('active');">✏️ Edit</button>
+                            <button class="delete-entry" onclick="deleteEntry(${originalIndex}); document.getElementById('editModal').classList.remove('active'); renderCalendar();">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            modal.classList.add('active');
+        }
+
+        document.getElementById('closeModal').addEventListener('click', function() {
+            document.getElementById('editModal').classList.remove('active');
+        });
+
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+
+        document.getElementById('prevMonth').addEventListener('click', function() {
+            currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1);
+            renderCalendar();
+        });
+
+        document.getElementById('nextMonth').addEventListener('click', function() {
+            currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
+            renderCalendar();
+        });
+
+        // Initialize on load
+        initTheme();
+        displayEntries();
+        updateStats();
+    </script>
+</body>
+</html>
