@@ -438,7 +438,8 @@
   /* ------------------ GAME VARIABLES -------------------- */
   let speed = 6;
   let score = 0;
-  let running = true;
+  let running = false; // Don't start immediately
+  let gameStarted = false; // Track if game has been started
   let obstacles = [];
   let clouds = [];
   let rockets = [];
@@ -463,9 +464,20 @@
     panda.y = H-62; panda.vy = 0; panda.onGround = true;
     rocketPower = 1;
     running = true;
+    gameStarted = true; // Mark game as started
     scoreRecorded = false; // Reset the flag for new game
     lastRocketMilestone = 0; // Reset rocket milestone
     updateHUD();
+  }
+  
+  function startGame(){
+    if(!currentUser){
+      alert('Please select a user first!');
+      return;
+    }
+    gameStarted = true;
+    running = true;
+    reset();
   }
 
   function updateHUD(){ document.getElementById('score').textContent = Math.floor(score); }
@@ -849,13 +861,55 @@
       ctx.font='16px system-ui'; ctx.fillText('Press Restart or Space',W/2,H/2+20);
       ctx.textAlign='start';
     }
+    
+    // Start screen
+    if(!gameStarted){
+      ctx.fillStyle='rgba(20,40,80,0.85)'; ctx.fillRect(0,0,W,H);
+      
+      // Title
+      ctx.fillStyle='#fff'; 
+      ctx.font='bold 48px system-ui'; 
+      ctx.textAlign='center';
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = 10;
+      ctx.fillText('🐼 PANDA RUNNER 🚀',W/2,H/2-60);
+      ctx.shadowBlur = 0;
+      
+      // Instructions
+      ctx.font='20px system-ui';
+      ctx.fillStyle='#ffd700';
+      if(currentUser){
+        ctx.fillText('Press SPACE or Click to Start',W/2,H/2+10);
+      } else {
+        ctx.fillStyle='#ff6b6b';
+        ctx.fillText('⚠️ Please Select a User First ⚠️',W/2,H/2+10);
+      }
+      
+      // Controls
+      ctx.font='14px system-ui';
+      ctx.fillStyle='#ccc';
+      ctx.fillText('Jump: SPACE/↑  •  Duck: ↓  •  Shoot: R',W/2,H/2+50);
+      ctx.fillText('Earn 1 🚀 every 100 points!',W/2,H/2+75);
+      
+      ctx.textAlign='start';
+    }
   }
 
   function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
   function jump(){
-    if(!running){ reset(); return; }
-    if(panda.onGround){ panda.vy=panda.jumpForce; panda.onGround=false; }
+    if(!gameStarted){ 
+      startGame(); 
+      return; 
+    }
+    if(!running){ 
+      reset(); 
+      return; 
+    }
+    if(panda.onGround){ 
+      panda.vy=panda.jumpForce; 
+      panda.onGround=false; 
+    }
   }
   function duckStart(){ panda.duck=true; panda.h=34; }
   function duckEnd(){ panda.duck=false; panda.h=48; }
@@ -869,11 +923,37 @@
 
   window.addEventListener('keyup',e=>{
     if(e.code==='ArrowDown') duckEnd();
-    if(e.code==='Space' && !running) reset();
+    if(e.code==='Space' && !running && gameStarted) reset();
   });
 
-  document.getElementById('restart').onclick = reset;
-  document.getElementById('pause').onclick = ()=>{ running=!running; document.getElementById('pause').textContent = running?'Pause':'Resume'; };
+  document.getElementById('restart').onclick = () => {
+    if(!gameStarted){
+      startGame();
+    } else {
+      reset();
+    }
+  };
+  document.getElementById('pause').onclick = ()=>{ 
+    if(!gameStarted) return; // Can't pause if not started
+    running=!running; 
+    document.getElementById('pause').textContent = running?'Pause':'Resume'; 
+  };
+  
+  // Update restart button text based on game state
+  function updateRestartButton(){
+    const btn = document.getElementById('restart');
+    btn.textContent = gameStarted ? 'Restart' : 'Start Game';
+  }
+  
+  // Call in loop to keep button updated
+  setInterval(updateRestartButton, 100);
+  
+  // Canvas click to start
+  canvas.addEventListener('click', () => {
+    if(!gameStarted){
+      startGame();
+    }
+  });
 
   /* ------------------ MOBILE DETECTION & CONTROLS -------------------- */
   // Detect mobile/touch device
@@ -898,7 +978,11 @@
     // Jump button
     touchJump.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      jump();
+      if(!gameStarted){
+        startGame();
+      } else {
+        jump();
+      }
       touchJump.style.transform = 'scale(0.95)';
     });
     
@@ -942,7 +1026,14 @@
     });
     
     // Also support mouse clicks on mobile buttons for testing
-    touchJump.onclick = (e) => { e.preventDefault(); jump(); };
+    touchJump.onclick = (e) => { 
+      e.preventDefault(); 
+      if(!gameStarted){
+        startGame();
+      } else {
+        jump();
+      }
+    };
     touchDuck.onmousedown = (e) => { e.preventDefault(); duckStart(); touchDuck.style.background = '#1976D2'; };
     touchDuck.onmouseup = (e) => { e.preventDefault(); duckEnd(); touchDuck.style.background = '#2196F3'; };
     touchDuck.onmouseleave = (e) => { e.preventDefault(); duckEnd(); touchDuck.style.background = '#2196F3'; };
