@@ -14,6 +14,7 @@
     .input{width:100%;padding:6px 8px;border-radius:6px;border:1px solid #cdd5e0;margin-bottom:8px}
     h3{margin:8px 0}
     .score-item{font-size:14px;padding:4px 0;border-bottom:1px solid #eee}
+    .rocket-display{background:#e8f4ff;border:1px solid #b8d9f5;padding:8px;border-radius:6px;margin-bottom:12px;font-weight:600;color:#1a5f8a}
   </style>
 </head>
 <body>
@@ -25,6 +26,7 @@
       <input id="username" class="input" placeholder="Enter username" />
       <button id="addUser" class="btn" style="width:100%; margin-bottom:10px;">Select / Add User</button>
       <div id="currentUserBox" style="margin-bottom:12px; font-weight:600;"></div>
+      <div id="rocketDisplay" class="rocket-display" style="display:none;">🚀 Rockets: <span id="rocketCount">0</span></div>
 
       <h3>Scoreboard</h3>
       <div id="scoreList"></div>
@@ -35,11 +37,12 @@
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
         <button id="restart" class="btn">Restart</button>
         <button id="pause" class="btn">Pause</button>
-        <button id="shoot" class="btn">Shoot Rocket</button>
+        <button id="shoot" class="btn">Shoot Rocket 🚀</button>
         <div>Score: <span id="score">0</span></div>
       </div>
       <canvas id="game" width="900" height="260" tabindex="0"></canvas>
-      <div style="font-size:13px;color:#6b7280;margin-top:6px;">Jump: Space/↑ • Duck: ↓ • Shoot Rocket: R or button • Pause: P</div>
+      <div style="font-size:13px;color:#6b7280;margin-top:6px;">Jump: Space/↑ • Duck: ↓ • Shoot Rocket: R or button • Pause: P<br>
+      <em>Earn 1 rocket for every 100 points! New users start with 3 rockets.</em></div>
     </div>
   </div>
 
@@ -57,16 +60,30 @@
   const addUserBtn = document.getElementById('addUser');
   const scoreList = document.getElementById('scoreList');
   const currentUserBox = document.getElementById('currentUserBox');
+  const rocketDisplay = document.getElementById('rocketDisplay');
+  const rocketCountSpan = document.getElementById('rocketCount');
 
   function saveUsers(){ localStorage.setItem('panda_users', JSON.stringify(users)); }
+
+  function updateRocketDisplay(){
+    if(currentUser){
+      rocketDisplay.style.display = 'block';
+      rocketCountSpan.textContent = users[currentUser].rockets || 0;
+    } else {
+      rocketDisplay.style.display = 'none';
+    }
+  }
 
   function selectUser(){
     const name = userInput.value.trim();
     if(!name) return;
-    if(!users[name]) users[name] = { scores: [], avg: 0 };
+    if(!users[name]) users[name] = { scores: [], avg: 0, rockets: 3 };
+    // Ensure existing users have rockets property
+    if(users[name].rockets === undefined) users[name].rockets = 3;
     currentUser = name;
     currentUserBox.textContent = "Current User: " + name;
     updateScoreboard();
+    updateRocketDisplay();
     saveUsers();
   }
 
@@ -75,8 +92,27 @@
     users[currentUser].scores.push(score);
     const arr = users[currentUser].scores;
     users[currentUser].avg = arr.reduce((a,b)=>a+b,0) / arr.length;
+    
+    // Award rockets: 1 rocket per 100 points
+    const rocketsEarned = Math.floor(score / 100);
+    if(rocketsEarned > 0){
+      users[currentUser].rockets += rocketsEarned;
+    }
+    
     saveUsers();
     updateScoreboard();
+    updateRocketDisplay();
+  }
+
+  function useRocket(){
+    if(!currentUser) return false;
+    if(users[currentUser].rockets > 0){
+      users[currentUser].rockets--;
+      saveUsers();
+      updateRocketDisplay();
+      return true;
+    }
+    return false;
   }
 
   function updateScoreboard(){
@@ -84,7 +120,8 @@
     for(const [name, data] of Object.entries(users)){
       const div = document.createElement('div');
       div.className = 'score-item';
-      div.textContent = `${name}: Avg ${data.avg.toFixed(1)} (Games: ${data.scores.length})`;
+      const rockets = data.rockets || 0;
+      div.textContent = `${name}: Avg ${data.avg.toFixed(1)} (Games: ${data.scores.length}, 🚀: ${rockets})`;
       scoreList.appendChild(div);
     }
   }
@@ -100,7 +137,6 @@
   let rockets = [];
   let frame = 0;
 
-  let jumpCount = 0; // Track jumps → unlock rocket
   let rocketPower = 1; // Obstacles get tougher
 
   const panda = { x:80, y:H-62, w:48, h:48, vy:0, gravity:0.9, jumpForce:-14, onGround:true, duck:false };
@@ -110,7 +146,6 @@
     speed = 6; score = 0; frame = 0;
     obstacles = []; clouds = []; rockets = [];
     panda.y = H-62; panda.vy = 0; panda.onGround = true;
-    jumpCount = 0;
     rocketPower = 1;
     running = true;
     updateHUD();
@@ -122,7 +157,7 @@
   function spawnObstacle(){
     const h = 30 + Math.random()*60;
     const w = 20 + Math.random()*40;
-    const toughness = rocketPower; // Higher → harder to destroy
+    const toughness = Math.ceil(rocketPower); // Higher → harder to destroy
     obstacles.push({x:W+20, y:H-40-(h-24), w, h, hp: toughness});
   }
 
@@ -130,7 +165,14 @@
 
   /* ------------------ ROCKETS -------------------- */
   function shootRocket(){
-    if(jumpCount < 2) return; // Must earn ability
+    if(!currentUser){
+      alert('Please select a user first!');
+      return;
+    }
+    if(!useRocket()){
+      // No rockets left - could add visual feedback here
+      return;
+    }
     rockets.push({x:panda.x + panda.w, y:panda.y + panda.h/2 - 4, w:16, h:6, speed:10});
   }
 
@@ -187,15 +229,22 @@
     if(panda.y >= H-62){ panda.y=H-62; panda.vy=0; panda.onGround=true; }
     else panda.onGround=false;
 
-    for(const r of rockets){
-      for(const o of obstacles){
+    // Rocket-obstacle collision
+    for(let i = rockets.length - 1; i >= 0; i--){
+      const r = rockets[i];
+      for(let j = obstacles.length - 1; j >= 0; j--){
+        const o = obstacles[j];
         if(rectsCollide(r,o)){
           o.hp -= 1;
-          r.x = W+100;
+          // Remove the rocket immediately after hit
+          rockets.splice(i, 1);
+          break; // Rocket can only hit one obstacle
         }
       }
     }
-    obstacles = obstacles.filter(o => o.hp>0);
+    
+    // Remove destroyed obstacles
+    obstacles = obstacles.filter(o => o.hp > 0);
 
     const pRect = {x:panda.x, y:panda.y, w:panda.w, h:panda.h*(panda.duck?0.6:1)};
     for(const ob of obstacles){ if(rectsCollide(pRect,ob)){ running=false; recordScore(Math.floor(score)); break; }}
@@ -221,10 +270,23 @@
     obstacles.forEach(o=>{
       ctx.fillStyle = o.hp>2?'#1f6d29':'#2d8a36';
       ctx.fillRect(o.x,o.y,o.w,o.h);
+      // Draw HP indicator on tough obstacles
+      if(o.hp > 1){
+        ctx.fillStyle='#fff';
+        ctx.font='10px system-ui';
+        ctx.fillText(o.hp, o.x+o.w/2-4, o.y+o.h/2+4);
+      }
     });
 
-    ctx.fillStyle='#444';
-    rockets.forEach(r=> ctx.fillRect(r.x,r.y,r.w,r.h));
+    // Draw rockets with flame effect
+    ctx.fillStyle='#ff4444';
+    rockets.forEach(r=> {
+      ctx.fillRect(r.x,r.y,r.w,r.h);
+      // Flame trail
+      ctx.fillStyle='#ffaa44';
+      ctx.fillRect(r.x-6, r.y+1, 6, 4);
+      ctx.fillStyle='#ff4444';
+    });
 
     drawPanda(panda.x,panda.y,panda.w,panda.h,panda.duck);
 
@@ -241,7 +303,7 @@
 
   function jump(){
     if(!running){ reset(); return; }
-    if(panda.onGround){ panda.vy=panda.jumpForce; panda.onGround=false; jumpCount++; }
+    if(panda.onGround){ panda.vy=panda.jumpForce; panda.onGround=false; }
   }
   function duckStart(){ panda.duck=true; panda.h=34; }
   function duckEnd(){ panda.duck=false; panda.h=48; }
@@ -262,6 +324,10 @@
 
   document.getElementById('restart').onclick = reset;
   document.getElementById('pause').onclick = ()=>{ running=!running; document.getElementById('pause').textContent = running?'Pause':'Resume'; };
+
+  // Initialize display
+  updateScoreboard();
+  updateRocketDisplay();
 
   for(let i=0;i<3;i++) spawnCloud();
   loop();
