@@ -412,6 +412,9 @@
   let scoreRecorded = false; // Track if we've recorded the score for this game
 
   let rocketPower = 1; // Obstacles get tougher
+  
+  // Animation for out-of-rockets notification
+  let outOfRocketsAnim = { active: false, frame: 0, duration: 60 }; // 1 second at 60fps
 
   const panda = { x:80, y:H-62, w:48, h:48, vy:0, gravity:0.9, jumpForce:-14, onGround:true, duck:false };
 
@@ -439,13 +442,40 @@
   function spawnCloud(){ clouds.push({x:W+10, y:20+Math.random()*60, w:60+Math.random()*80}); }
 
   /* ------------------ ROCKETS -------------------- */
+  function playNoRocketSound(){
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Buzz sound
+      oscillator.type = 'sawtooth';
+      oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.1);
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.15);
+    } catch(e) {
+      // Ignore audio errors
+    }
+  }
+  
   function shootRocket(){
     if(!currentUser){
       alert('Please select a user first!');
       return;
     }
     if(!useRocket()){
-      // No rockets left - could add visual feedback here
+      // No rockets left - trigger animation and sound
+      outOfRocketsAnim.active = true;
+      outOfRocketsAnim.frame = 0;
+      playNoRocketSound();
       return;
     }
     rockets.push({x:panda.x + panda.w, y:panda.y + panda.h/2 - 4, w:16, h:6, speed:10});
@@ -535,6 +565,15 @@
 
     score += 0.1 * speed;
     updateHUD();
+    
+    // Update out-of-rockets animation
+    if(outOfRocketsAnim.active){
+      outOfRocketsAnim.frame++;
+      if(outOfRocketsAnim.frame >= outOfRocketsAnim.duration){
+        outOfRocketsAnim.active = false;
+        outOfRocketsAnim.frame = 0;
+      }
+    }
   }
 
   function draw(){
@@ -577,14 +616,86 @@
     // Draw in-game rocket count
     if(currentUser){
       const rocketCount = users[currentUser].rockets || 0;
-      ctx.fillStyle='rgba(255,255,255,0.9)';
-      ctx.fillRect(W-120, 10, 110, 36);
-      ctx.strokeStyle='#ff5722';
+      
+      // Shake effect when out of rockets animation is active
+      let counterX = W-120;
+      let counterY = 10;
+      if(outOfRocketsAnim.active){
+        const progress = outOfRocketsAnim.frame / outOfRocketsAnim.duration;
+        const shakeAmount = 4 * (1 - progress);
+        counterX += (Math.random() - 0.5) * shakeAmount;
+        counterY += (Math.random() - 0.5) * shakeAmount;
+      }
+      
+      // Background color changes if no rockets
+      if(rocketCount === 0){
+        ctx.fillStyle='rgba(255,220,220,0.95)';
+      } else {
+        ctx.fillStyle='rgba(255,255,255,0.9)';
+      }
+      ctx.fillRect(counterX, counterY, 110, 36);
+      
+      // Border color
+      if(rocketCount === 0){
+        ctx.strokeStyle='#dc2626';
+      } else {
+        ctx.strokeStyle='#ff5722';
+      }
       ctx.lineWidth=2;
-      ctx.strokeRect(W-120, 10, 110, 36);
-      ctx.fillStyle='#ff5722';
+      ctx.strokeRect(counterX, counterY, 110, 36);
+      
+      // Text
+      ctx.fillStyle = rocketCount === 0 ? '#dc2626' : '#ff5722';
       ctx.font='bold 18px system-ui';
-      ctx.fillText(`🚀 ${rocketCount}`, W-110, 34);
+      ctx.fillText(`🚀 ${rocketCount}`, counterX + 10, counterY + 24);
+    }
+
+    // Draw out-of-rockets animation
+    if(outOfRocketsAnim.active){
+      const progress = outOfRocketsAnim.frame / outOfRocketsAnim.duration;
+      const opacity = 1 - progress; // Fade out
+      
+      // Shake effect
+      const shakeAmount = 8 * (1 - progress);
+      const shakeX = (Math.random() - 0.5) * shakeAmount;
+      const shakeY = (Math.random() - 0.5) * shakeAmount;
+      
+      // Pulse/scale effect
+      const scale = 1 + Math.sin(progress * Math.PI) * 0.3;
+      
+      ctx.save();
+      ctx.translate(W/2 + shakeX, H/2 - 60 + shakeY);
+      ctx.scale(scale, scale);
+      
+      // Shadow/glow effect
+      ctx.shadowColor = 'rgba(220, 38, 38, ' + (opacity * 0.8) + ')';
+      ctx.shadowBlur = 20;
+      
+      // Background box
+      ctx.fillStyle = 'rgba(220, 38, 38, ' + (opacity * 0.9) + ')';
+      ctx.fillRect(-140, -35, 280, 70);
+      
+      // Border
+      ctx.strokeStyle = 'rgba(255, 255, 255, ' + opacity + ')';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(-140, -35, 280, 70);
+      
+      // Text
+      ctx.fillStyle = 'rgba(255, 255, 255, ' + opacity + ')';
+      ctx.font = 'bold 32px system-ui';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('OUT OF ROCKETS!', 0, -5);
+      
+      // Subtext
+      ctx.font = '16px system-ui';
+      ctx.fillStyle = 'rgba(255, 255, 255, ' + (opacity * 0.8) + ')';
+      ctx.fillText('Earn more by scoring points', 0, 20);
+      
+      ctx.restore();
+      ctx.shadowBlur = 0;
+      ctx.textAlign = 'start';
+      ctx.textBaseline = 'alphabetic';
     }
 
     if(!running){
