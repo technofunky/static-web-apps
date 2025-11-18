@@ -3,29 +3,44 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Panda Runner — Offline Game</title>
+  <title>Panda Runner — Offline Game with Users & Rockets</title>
   <style>
     :root{--bg:#f4f8ff;--ground:#dfe7f3;--text:#222}
     html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
-    .wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px}
+    .layout{display:flex;flex-direction:row;gap:14px;padding:18px}
+    .sidebar{width:260px;background:#fff;border:1px solid #d0d7e6;padding:12px;border-radius:8px;height:fit-content;box-shadow:0 4px 16px rgba(30,40,60,.08)}
     canvas{background:linear-gradient(#dff1ff, #f4f8ff);border-radius:8px;box-shadow:0 6px 22px rgba(20,30,60,.08)}
-    .hud{display:flex;gap:10px;align-items:center}
     .btn{background:#fff;border:1px solid #d0d7e6;padding:6px 10px;border-radius:8px;cursor:pointer}
-    .muted{color:#6b7280;font-size:13px}
-    footer{margin-top:8px;font-size:13px;color:#6b7280}
+    .input{width:100%;padding:6px 8px;border-radius:6px;border:1px solid #cdd5e0;margin-bottom:8px}
+    h3{margin:8px 0}
+    .score-item{font-size:14px;padding:4px 0;border-bottom:1px solid #eee}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h2>Panda Runner — Offline</h2>
-    <div class="hud">
-      <button id="restart" class="btn">Restart</button>
-      <button id="pause" class="btn">Pause</button>
-      <div class="muted">Score: <span id="score">0</span> • High: <span id="high">0</span></div>
+  <div class="layout">
+
+    <!-- SIDEBAR FOR USER SCORES -->
+    <div class="sidebar">
+      <h3>Players</h3>
+      <input id="username" class="input" placeholder="Enter username" />
+      <button id="addUser" class="btn" style="width:100%; margin-bottom:10px;">Select / Add User</button>
+      <div id="currentUserBox" style="margin-bottom:12px; font-weight:600;"></div>
+
+      <h3>Scoreboard</h3>
+      <div id="scoreList"></div>
     </div>
-    <canvas id="game" width="900" height="260" tabindex="0"></canvas>
-    <div class="muted">Controls: Space / ↑ to jump, ↓ to duck, P to pause. Tap canvas on mobile to jump.</div>
-    <footer>Made to run entirely offline — save this file and open in your browser.</footer>
+
+    <!-- GAME AREA -->
+    <div style="flex:1">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+        <button id="restart" class="btn">Restart</button>
+        <button id="pause" class="btn">Pause</button>
+        <button id="shoot" class="btn">Shoot Rocket</button>
+        <div>Score: <span id="score">0</span></div>
+      </div>
+      <canvas id="game" width="900" height="260" tabindex="0"></canvas>
+      <div style="font-size:13px;color:#6b7280;margin-top:6px;">Jump: Space/↑ • Duck: ↓ • Shoot Rocket: R or button • Pause: P</div>
+    </div>
   </div>
 
 <script>
@@ -34,186 +49,220 @@
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
 
-  // Game state
-  let speed = 6; // base speed
+  /* ------------------ USERS & SCOREBOARD -------------------- */
+  let users = JSON.parse(localStorage.getItem('panda_users') || '{}');
+  let currentUser = null;
+
+  const userInput = document.getElementById('username');
+  const addUserBtn = document.getElementById('addUser');
+  const scoreList = document.getElementById('scoreList');
+  const currentUserBox = document.getElementById('currentUserBox');
+
+  function saveUsers(){ localStorage.setItem('panda_users', JSON.stringify(users)); }
+
+  function selectUser(){
+    const name = userInput.value.trim();
+    if(!name) return;
+    if(!users[name]) users[name] = { scores: [], avg: 0 };
+    currentUser = name;
+    currentUserBox.textContent = "Current User: " + name;
+    updateScoreboard();
+    saveUsers();
+  }
+
+  function recordScore(score){
+    if(!currentUser) return;
+    users[currentUser].scores.push(score);
+    const arr = users[currentUser].scores;
+    users[currentUser].avg = arr.reduce((a,b)=>a+b,0) / arr.length;
+    saveUsers();
+    updateScoreboard();
+  }
+
+  function updateScoreboard(){
+    scoreList.innerHTML = '';
+    for(const [name, data] of Object.entries(users)){
+      const div = document.createElement('div');
+      div.className = 'score-item';
+      div.textContent = `${name}: Avg ${data.avg.toFixed(1)} (Games: ${data.scores.length})`;
+      scoreList.appendChild(div);
+    }
+  }
+
+  addUserBtn.onclick = selectUser;
+
+  /* ------------------ GAME VARIABLES -------------------- */
+  let speed = 6;
   let score = 0;
-  let high = parseInt(localStorage.getItem('panda_high')||0,10);
-  document.getElementById('high').textContent = high;
   let running = true;
   let obstacles = [];
   let clouds = [];
+  let rockets = [];
   let frame = 0;
 
-  // Panda player
-  const panda = {
-    x: 80, y: H-62, w: 48, h: 48, vy:0, gravity:0.9, jumpForce:-14, onGround:true, duck:false
-  };
+  let jumpCount = 0; // Track jumps → unlock rocket
+  let rocketPower = 1; // Obstacles get tougher
+
+  const panda = { x:80, y:H-62, w:48, h:48, vy:0, gravity:0.9, jumpForce:-14, onGround:true, duck:false };
 
   function reset(){
-    speed = 6; score = 0; obstacles = []; clouds = []; frame = 0; panda.y = H-62; panda.vy = 0; panda.onGround = true; running = true; updateHUD();
+    if(currentUser) recordScore(Math.floor(score));
+    speed = 6; score = 0; frame = 0;
+    obstacles = []; clouds = []; rockets = [];
+    panda.y = H-62; panda.vy = 0; panda.onGround = true;
+    jumpCount = 0;
+    rocketPower = 1;
+    running = true;
+    updateHUD();
   }
 
-  function updateHUD(){
-    document.getElementById('score').textContent = Math.floor(score);
-    document.getElementById('high').textContent = high;
-  }
+  function updateHUD(){ document.getElementById('score').textContent = Math.floor(score); }
 
+  /* ------------------ OBSTACLES -------------------- */
   function spawnObstacle(){
-    // Randomize size
-    const h = 24 + Math.random()*48;
-    const w = 18 + Math.random()*30;
-    obstacles.push({x:W + 20, y: H-40 - (h-24), w, h});
+    const h = 30 + Math.random()*60;
+    const w = 20 + Math.random()*40;
+    const toughness = rocketPower; // Higher → harder to destroy
+    obstacles.push({x:W+20, y:H-40-(h-24), w, h, hp: toughness});
   }
 
-  function spawnCloud(){
-    clouds.push({x:W + 10, y: 30 + Math.random()*60, w:60 + Math.random()*80});
+  function spawnCloud(){ clouds.push({x:W+10, y:20+Math.random()*60, w:60+Math.random()*80}); }
+
+  /* ------------------ ROCKETS -------------------- */
+  function shootRocket(){
+    if(jumpCount < 2) return; // Must earn ability
+    rockets.push({x:panda.x + panda.w, y:panda.y + panda.h/2 - 4, w:16, h:6, speed:10});
   }
 
+  document.getElementById('shoot').onclick = shootRocket;
+
+  /* ------------------ COLLISON -------------------- */
   function rectsCollide(a,b){
     return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
   }
 
-  function drawPanda(x,y,w,h, duck=false){
-    // Draw a simple stylized panda using circles and rectangles
+  /* ------------------ DRAW PANDA -------------------- */
+  function drawPanda(x,y,w,h,duck){
     const headR = w*0.45;
-    const bodyW = w*0.9, bodyH = h*0.9;
-    // shadow
     ctx.fillStyle = 'rgba(0,0,0,0.06)';
-    ctx.beginPath(); ctx.ellipse(x + w*0.45, y + h + 8, w*0.48, 8, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x+w*0.45, y+h+8, w*0.48, 8, 0, 0, Math.PI*2); ctx.fill();
 
-    // body
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(x + (w - bodyW)/2, y + headR*0.6, bodyW, bodyH*0.9);
-    // black patches
+    ctx.fillStyle = '#fff'; ctx.fillRect(x+(w*0.05), y+headR*0.6, w*0.9, h*0.6);
     ctx.fillStyle = '#111';
-    // ears
-    ctx.beginPath(); ctx.arc(x + headR*0.45, y + headR*0.12, headR*0.18, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + w - headR*0.45, y + headR*0.12, headR*0.18, 0, Math.PI*2); ctx.fill();
-    // eye patches
-    ctx.beginPath(); ctx.ellipse(x + headR*0.45 - 6, y + headR*0.45, headR*0.16, headR*0.12, -0.2, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(x + w - headR*0.45 + 6, y + headR*0.45, headR*0.16, headR*0.12, 0.2, 0, Math.PI*2); ctx.fill();
-    // head
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(x + w*0.45, y + headR*0.45, headR*0.6, 0, Math.PI*2); ctx.fill();
-    // eyes
-    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(x + headR*0.45 - 6, y + headR*0.45, 3, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + w - headR*0.45 + 6, y + headR*0.45, 3, 0, Math.PI*2); ctx.fill();
-    // nose
-    ctx.beginPath(); ctx.arc(x + w*0.45, y + headR*0.6, 4, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+headR*0.45, y+headR*0.12, headR*0.18,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+w-headR*0.45, y+headR*0.12, headR*0.18,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x+headR*0.45-6, y+headR*0.45, headR*0.16, headR*0.12,-0.2,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x+w-headR*0.45+6, y+headR*0.45, headR*0.16, headR*0.12,0.2,0,Math.PI*2); ctx.fill();
 
-    // legs (duck smaller)
-    ctx.fillStyle = '#111';
-    if(!duck){
-      ctx.fillRect(x + 6, y + h - 6, 12, 8);
-      ctx.fillRect(x + w - 18, y + h - 6, 12, 8);
-    } else {
-      ctx.fillRect(x + 8, y + h - 4, 10, 6);
-    }
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x+w*0.45,y+headR*0.45,headR*0.6,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(x+headR*0.45-6,y+headR*0.45,3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+w-headR*0.45+6,y+headR*0.45,3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+w*0.45,y+headR*0.6,4,0,Math.PI*2); ctx.fill();
+
+    ctx.fillStyle='#111';
+    if(!duck){ ctx.fillRect(x+6,y+h-6,12,8); ctx.fillRect(x+w-18,y+h-6,12,8); }
+    else ctx.fillRect(x+8,y+h-4,10,6);
   }
 
+  /* ------------------ GAME LOOP -------------------- */
   function update(){
     if(!running) return;
     frame++;
-    // increase difficulty slowly
-    if(frame % 300 === 0) speed += 0.6;
 
-    // clouds
-    if(frame % 120 === 0) spawnCloud();
+    if(frame % 300 === 0){ speed += 0.6; rocketPower += 0.4; }
+
+    if(frame % 140 === 0) spawnCloud();
     clouds.forEach(c => c.x -= speed*0.3);
     clouds = clouds.filter(c => c.x + c.w > -50);
 
-    // obstacles
-    if(frame % Math.max(40, 140 - Math.floor(score/10)) === 0) spawnObstacle();
+    if(frame % Math.max(40,120-Math.floor(score/8)) === 0) spawnObstacle();
     obstacles.forEach(o => o.x -= speed);
     obstacles = obstacles.filter(o => o.x + o.w > -20);
 
-    // physics for panda
+    rockets.forEach(r => r.x += r.speed);
+    rockets = rockets.filter(r => r.x < W+50);
+
     panda.vy += panda.gravity;
     panda.y += panda.vy;
-    if(panda.y >= H - 62){ panda.y = H - 62; panda.vy = 0; panda.onGround = true; }
-    else panda.onGround = false;
+    if(panda.y >= H-62){ panda.y=H-62; panda.vy=0; panda.onGround=true; }
+    else panda.onGround=false;
 
-    // collision
-    const playerRect = {x: panda.x, y: panda.y, w: panda.w, h: panda.h * (panda.duck ? 0.6 : 1)};
-    for(const ob of obstacles){
-      if(rectsCollide(playerRect, ob)){
-        // crash
-        running = false;
-        if(Math.floor(score) > high){ high = Math.floor(score); localStorage.setItem('panda_high', high); }
-        break;
+    for(const r of rockets){
+      for(const o of obstacles){
+        if(rectsCollide(r,o)){
+          o.hp -= 1;
+          r.x = W+100;
+        }
       }
     }
+    obstacles = obstacles.filter(o => o.hp>0);
 
-    // scoring
-    score += 0.1 * speed; updateHUD();
+    const pRect = {x:panda.x, y:panda.y, w:panda.w, h:panda.h*(panda.duck?0.6:1)};
+    for(const ob of obstacles){ if(rectsCollide(pRect,ob)){ running=false; recordScore(Math.floor(score)); break; }}
+
+    score += 0.1 * speed;
+    updateHUD();
   }
 
   function draw(){
-    // background
     ctx.clearRect(0,0,W,H);
-    // sky gradient
     const g = ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,'#eaf6ff'); g.addColorStop(1,'#f4f8ff'); ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+    g.addColorStop(0,'#eaf6ff'); g.addColorStop(1,'#f4f8ff');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
 
-    // clouds
-    ctx.fillStyle = 'rgba(255,255,255,0.95)';
-    clouds.forEach(c => {
-      ctx.beginPath(); ctx.ellipse(c.x, c.y, c.w*0.7, 20, 0, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(c.x + 20, c.y+6, c.w*0.5, 14, 0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.95)';
+    clouds.forEach(c=>{
+      ctx.beginPath(); ctx.ellipse(c.x,c.y,c.w*0.7,20,0,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(c.x+20,c.y+6,c.w*0.5,14,0,0,Math.PI*2); ctx.fill();
     });
 
-    // ground
-    ctx.fillStyle = '#e6eef9'; ctx.fillRect(0, H-36, W, 36);
-    // dashed line
-    ctx.strokeStyle = '#d0d7e6'; ctx.lineWidth = 2; ctx.beginPath();
-    for(let i=0;i<W;i+=28){ ctx.moveTo(i, H-18); ctx.lineTo(i+12,H-18); }
-    ctx.stroke();
+    ctx.fillStyle='#e6eef9'; ctx.fillRect(0,H-36,W,36);
 
-    // obstacles
-    obstacles.forEach(o => {
-      // bamboo-like obstacle
-      const bx = o.x, by = o.y, bw = o.w, bh = o.h;
-      ctx.fillStyle = '#2d8a36'; ctx.fillRect(bx, by, bw, bh);
-      ctx.fillStyle = '#1f6d29'; ctx.fillRect(bx, by + bh*0.4, bw, 4);
+    obstacles.forEach(o=>{
+      ctx.fillStyle = o.hp>2?'#1f6d29':'#2d8a36';
+      ctx.fillRect(o.x,o.y,o.w,o.h);
     });
 
-    // draw panda
-    drawPanda(panda.x, panda.y, panda.w, panda.h, panda.duck);
+    ctx.fillStyle='#444';
+    rockets.forEach(r=> ctx.fillRect(r.x,r.y,r.w,r.h));
 
-    // score
-    ctx.fillStyle = '#2b3748'; ctx.font = '14px system-ui, Arial'; ctx.fillText('Score: '+Math.floor(score), W-130, 28);
+    drawPanda(panda.x,panda.y,panda.w,panda.h,panda.duck);
 
     if(!running){
-      ctx.fillStyle = 'rgba(20,30,40,0.7)'; ctx.fillRect(0,0,W,H);
-      ctx.fillStyle = '#fff'; ctx.font = '28px system-ui'; ctx.textAlign = 'center';
-      ctx.fillText('Game Over', W/2, H/2 - 6);
-      ctx.font = '16px system-ui'; ctx.fillText('Press Restart or Space to play again', W/2, H/2 + 20);
-      ctx.textAlign = 'start';
+      ctx.fillStyle='rgba(20,30,40,0.7)'; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='#fff'; ctx.font='28px system-ui'; ctx.textAlign='center';
+      ctx.fillText('Game Over',W/2,H/2-6);
+      ctx.font='16px system-ui'; ctx.fillText('Press Restart or Space',W/2,H/2+20);
+      ctx.textAlign='start';
     }
   }
 
   function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
-  // controls
-  function jump(){ if(!running){ reset(); } else if(panda.onGround){ panda.vy = panda.jumpForce; panda.onGround = false; panda.duck=false; }}
-  function duckStart(){ panda.duck = true; panda.h = 34; }
-  function duckEnd(){ panda.duck = false; panda.h = 48; }
+  function jump(){
+    if(!running){ reset(); return; }
+    if(panda.onGround){ panda.vy=panda.jumpForce; panda.onGround=false; jumpCount++; }
+  }
+  function duckStart(){ panda.duck=true; panda.h=34; }
+  function duckEnd(){ panda.duck=false; panda.h=48; }
 
-  window.addEventListener('keydown', e => {
-    if(e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); jump(); }
-    if(e.code === 'ArrowDown') { e.preventDefault(); duckStart(); }
-    if(e.key === 'p' || e.key === 'P') { running = !running; document.getElementById('pause').textContent = running ? 'Pause' : 'Resume'; }
+  window.addEventListener('keydown',e=>{
+    if(e.code==='Space'||e.code==='ArrowUp'){ e.preventDefault(); jump(); }
+    if(e.code==='ArrowDown'){ e.preventDefault(); duckStart(); }
+    if(e.key==='r'||e.key==='R') shootRocket();
+    if(e.key==='p'||e.key==='P'){ running=!running; document.getElementById('pause').textContent = running?'Pause':'Resume'; }
   });
-  window.addEventListener('keyup', e => { if(e.code === 'ArrowDown') duckEnd(); if(e.code==='Space' && !running){ reset(); } });
 
-  // touch support
-  canvas.addEventListener('touchstart', e => { e.preventDefault(); if(!running){ reset(); } else { jump(); } });
-  canvas.addEventListener('mousedown', e => { if(!running) reset(); else jump(); });
+  window.addEventListener('keyup',e=>{
+    if(e.code==='ArrowDown') duckEnd();
+    if(e.code==='Space' && !running) reset();
+  });
 
-  document.getElementById('restart').addEventListener('click', reset);
-  document.getElementById('pause').addEventListener('click', () => { running = !running; document.getElementById('pause').textContent = running ? 'Pause' : 'Resume'; });
+  canvas.addEventListener('touchstart',e=>{ e.preventDefault(); jump(); });
 
-  // start with some clouds
+  document.getElementById('restart').onclick = reset;
+  document.getElementById('pause').onclick = ()=>{ running=!running; document.getElementById('pause').textContent = running?'Pause':'Resume'; };
+
   for(let i=0;i<3;i++) spawnCloud();
   loop();
 })();
