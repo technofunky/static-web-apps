@@ -128,15 +128,49 @@
     const arr = users[currentUser].scores;
     users[currentUser].avg = arr.reduce((a,b)=>a+b,0) / arr.length;
     
-    // Award rockets: 1 rocket per 100 points
-    const rocketsEarned = Math.floor(score / 100);
-    if(rocketsEarned > 0){
-      users[currentUser].rockets += rocketsEarned;
-    }
+    // Rockets are now awarded during gameplay in real-time, not at the end
     
     saveUsers();
     updateScoreboard();
     updateRocketDisplay();
+  }
+
+  function awardRocket(){
+    if(!currentUser) return;
+    users[currentUser].rockets++;
+    saveUsers();
+    updateRocketDisplay();
+    
+    // Trigger rocket earned animation
+    rocketEarnedAnim.active = true;
+    rocketEarnedAnim.frame = 0;
+    
+    // Play reward sound
+    playRocketEarnedSound();
+  }
+
+  function playRocketEarnedSound(){
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Happy ascending sound
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.2);
+      
+      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.25);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.25);
+    } catch(e) {
+      // Ignore audio errors
+    }
   }
 
   function useRocket(){
@@ -410,11 +444,15 @@
   let rockets = [];
   let frame = 0;
   let scoreRecorded = false; // Track if we've recorded the score for this game
+  let lastRocketMilestone = 0; // Track last score milestone for rocket awards
 
   let rocketPower = 1; // Obstacles get tougher
   
   // Animation for out-of-rockets notification
   let outOfRocketsAnim = { active: false, frame: 0, duration: 60 }; // 1 second at 60fps
+  
+  // Animation for rocket earned notification
+  let rocketEarnedAnim = { active: false, frame: 0, duration: 90 }; // 1.5 seconds
 
   const panda = { x:80, y:H-62, w:48, h:48, vy:0, gravity:0.9, jumpForce:-14, onGround:true, duck:false };
 
@@ -426,6 +464,7 @@
     rocketPower = 1;
     running = true;
     scoreRecorded = false; // Reset the flag for new game
+    lastRocketMilestone = 0; // Reset rocket milestone
     updateHUD();
   }
 
@@ -566,12 +605,33 @@
     score += 0.1 * speed;
     updateHUD();
     
+    // Award rockets in real-time when crossing 100-point milestones
+    if(currentUser){
+      const currentMilestone = Math.floor(score / 100);
+      
+      // Check if we've crossed into a new milestone
+      if(currentMilestone > lastRocketMilestone){
+        // Player crossed a 100-point milestone, award a rocket!
+        awardRocket();
+        lastRocketMilestone = currentMilestone; // Store the milestone number (0, 1, 2, 3...)
+      }
+    }
+    
     // Update out-of-rockets animation
     if(outOfRocketsAnim.active){
       outOfRocketsAnim.frame++;
       if(outOfRocketsAnim.frame >= outOfRocketsAnim.duration){
         outOfRocketsAnim.active = false;
         outOfRocketsAnim.frame = 0;
+      }
+    }
+    
+    // Update rocket earned animation
+    if(rocketEarnedAnim.active){
+      rocketEarnedAnim.frame++;
+      if(rocketEarnedAnim.frame >= rocketEarnedAnim.duration){
+        rocketEarnedAnim.active = false;
+        rocketEarnedAnim.frame = 0;
       }
     }
   }
@@ -648,6 +708,28 @@
       ctx.fillStyle = rocketCount === 0 ? '#dc2626' : '#ff5722';
       ctx.font='bold 18px system-ui';
       ctx.fillText(`🚀 ${rocketCount}`, counterX + 10, counterY + 24);
+      
+      // Progress bar to next rocket (below the counter)
+      const progressToNext = (score % 100) / 100;
+      const nextMilestone = (Math.floor(score / 100) + 1) * 100;
+      
+      // Progress bar background
+      ctx.fillStyle='rgba(200,200,200,0.5)';
+      ctx.fillRect(counterX, counterY + 40, 110, 8);
+      
+      // Progress bar fill
+      ctx.fillStyle='#4CAF50';
+      ctx.fillRect(counterX, counterY + 40, 110 * progressToNext, 8);
+      
+      // Border
+      ctx.strokeStyle='rgba(100,100,100,0.3)';
+      ctx.lineWidth=1;
+      ctx.strokeRect(counterX, counterY + 40, 110, 8);
+      
+      // Text showing next milestone
+      ctx.fillStyle='#555';
+      ctx.font='10px system-ui';
+      ctx.fillText(`Next: ${nextMilestone}`, counterX + 2, counterY + 58);
     }
 
     // Draw out-of-rockets animation
@@ -691,6 +773,68 @@
       ctx.font = '16px system-ui';
       ctx.fillStyle = 'rgba(255, 255, 255, ' + (opacity * 0.8) + ')';
       ctx.fillText('Earn more by scoring points', 0, 20);
+      
+      ctx.restore();
+      ctx.shadowBlur = 0;
+      ctx.textAlign = 'start';
+      ctx.textBaseline = 'alphabetic';
+    }
+
+    // Draw rocket earned animation
+    if(rocketEarnedAnim.active){
+      const progress = rocketEarnedAnim.frame / rocketEarnedAnim.duration;
+      const opacity = 1 - progress; // Fade out
+      
+      // Float up effect
+      const floatY = -progress * 50; // Float upward
+      
+      // Bounce/scale effect - starts big, settles down
+      const bounceScale = 1 + Math.max(0, 0.5 - progress) * 2;
+      
+      ctx.save();
+      ctx.translate(W/2, H/2 - 40 + floatY);
+      ctx.scale(bounceScale, bounceScale);
+      
+      // Glow effect
+      ctx.shadowColor = 'rgba(255, 152, 0, ' + (opacity * 0.8) + ')';
+      ctx.shadowBlur = 30;
+      
+      // Background box with green theme
+      ctx.fillStyle = 'rgba(34, 197, 94, ' + (opacity * 0.95) + ')';
+      ctx.fillRect(-140, -35, 280, 70);
+      
+      // Gold border
+      ctx.strokeStyle = 'rgba(255, 215, 0, ' + opacity + ')';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(-140, -35, 280, 70);
+      
+      // Text
+      ctx.fillStyle = 'rgba(255, 255, 255, ' + opacity + ')';
+      ctx.font = 'bold 36px system-ui';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🚀 +1 ROCKET!', 0, -5);
+      
+      // Subtext
+      ctx.font = '16px system-ui';
+      ctx.fillStyle = 'rgba(255, 255, 255, ' + (opacity * 0.9) + ')';
+      ctx.fillText('100 points milestone!', 0, 20);
+      
+      // Sparkle effects
+      if(progress < 0.5){
+        for(let i = 0; i < 8; i++){
+          const angle = (i / 8) * Math.PI * 2 + progress * Math.PI * 4;
+          const dist = 80 + progress * 40;
+          const sparkleX = Math.cos(angle) * dist;
+          const sparkleY = Math.sin(angle) * dist;
+          const sparkleOpacity = (1 - progress * 2) * opacity;
+          
+          ctx.fillStyle = 'rgba(255, 215, 0, ' + sparkleOpacity + ')';
+          ctx.beginPath();
+          ctx.arc(sparkleX, sparkleY, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
       
       ctx.restore();
       ctx.shadowBlur = 0;
