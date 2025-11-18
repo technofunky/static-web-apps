@@ -38,7 +38,18 @@
       <div id="rocketDisplay" class="rocket-display" style="display:none;">🚀 Rockets: <span id="rocketCount">0</span></div>
 
       <h3>Scoreboard</h3>
+      <div style="font-size:11px;color:#6b7280;margin-bottom:6px;font-style:italic;">Click a player to select them</div>
       <div id="scoreList"></div>
+      
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
+        <button id="viewHistory" class="btn" style="font-size:12px;background:#d4edda;border-color:#28a745;">📊 View History</button>
+        <button id="editUser" class="btn" style="font-size:12px;background:#fff3cd;border-color:#ffc107;">✏️ Edit User</button>
+        <button id="deleteUser" class="btn" style="font-size:12px;background:#f8d7da;border-color:#dc3545;">🗑️ Delete User</button>
+        <button id="resetScores" class="btn" style="font-size:12px;background:#d1ecf1;border-color:#17a2b8;">🔄 Reset All Scores</button>
+        <hr style="margin:8px 0;border:none;border-top:1px solid #e0e0e0;">
+        <button id="exportData" class="btn" style="font-size:12px;background:#e8f5e9;border-color:#4caf50;">💾 Export Data</button>
+        <button id="importData" class="btn" style="font-size:12px;background:#fff9c4;border-color:#ffc107;">📥 Import Data</button>
+      </div>
     </div>
 
     <!-- GAME AREA -->
@@ -142,11 +153,249 @@
       div.className = 'score-item';
       const rockets = data.rockets || 0;
       div.textContent = `${name}: Avg ${data.avg.toFixed(1)} (Games: ${data.scores.length}, 🚀: ${rockets})`;
+      
+      // Highlight current user
+      if(name === currentUser){
+        div.style.background = '#e3f2fd';
+        div.style.fontWeight = '600';
+      }
+      
+      // Make clickable to select user
+      div.style.cursor = 'pointer';
+      div.onclick = () => {
+        currentUser = name;
+        currentUserBox.textContent = "Current User: " + name;
+        userInput.value = name;
+        updateScoreboard();
+        updateRocketDisplay();
+        saveUsers();
+      };
+      
+      // Hover effect
+      div.onmouseenter = () => {
+        if(name !== currentUser) div.style.background = '#f5f5f5';
+      };
+      div.onmouseleave = () => {
+        if(name !== currentUser) div.style.background = 'transparent';
+      };
+      
       scoreList.appendChild(div);
     }
   }
 
   addUserBtn.onclick = selectUser;
+
+  function editUser(){
+    if(!currentUser){
+      alert('Please select a user first!');
+      return;
+    }
+    
+    const newName = prompt(`Edit username for "${currentUser}":`, currentUser);
+    if(!newName || !newName.trim()) return;
+    
+    const trimmedName = newName.trim();
+    
+    // Check if new name already exists
+    if(trimmedName !== currentUser && users[trimmedName]){
+      alert('A user with that name already exists!');
+      return;
+    }
+    
+    // Rename the user
+    if(trimmedName !== currentUser){
+      users[trimmedName] = users[currentUser];
+      delete users[currentUser];
+      currentUser = trimmedName;
+      currentUserBox.textContent = "Current User: " + trimmedName;
+      userInput.value = trimmedName;
+      saveUsers();
+      updateScoreboard();
+      updateRocketDisplay();
+    }
+  }
+
+  function deleteUser(){
+    if(!currentUser){
+      alert('Please select a user first!');
+      return;
+    }
+    
+    const confirmDelete = confirm(`Are you sure you want to delete user "${currentUser}"?\n\nThis will remove:\n• All their scores (${users[currentUser].scores.length} games)\n• Their ${users[currentUser].rockets} rockets\n\nThis cannot be undone!`);
+    
+    if(confirmDelete){
+      delete users[currentUser];
+      currentUser = null;
+      currentUserBox.textContent = "";
+      userInput.value = "";
+      saveUsers();
+      updateScoreboard();
+      updateRocketDisplay();
+    }
+  }
+
+  function resetAllScores(){
+    const userCount = Object.keys(users).length;
+    if(userCount === 0){
+      alert('No users to reset!');
+      return;
+    }
+    
+    let totalGames = 0;
+    for(const user in users){
+      totalGames += users[user].scores.length;
+    }
+    
+    const confirmReset = confirm(`Reset all scores for ${userCount} user(s)?\n\nThis will:\n• Clear all ${totalGames} game scores\n• Reset all averages to 0\n• Keep all users and their rockets\n\nThis cannot be undone!`);
+    
+    if(confirmReset){
+      for(const user in users){
+        users[user].scores = [];
+        users[user].avg = 0;
+        // Keep rockets - they earned them!
+      }
+      saveUsers();
+      updateScoreboard();
+      alert('All scores have been reset!');
+    }
+  }
+
+  function viewHistory(){
+    if(!currentUser){
+      alert('Please select a user first!');
+      return;
+    }
+    
+    const userData = users[currentUser];
+    const scores = userData.scores;
+    
+    if(scores.length === 0){
+      alert(`${currentUser} has no game history yet!`);
+      return;
+    }
+    
+    // Calculate statistics
+    const sortedScores = [...scores].sort((a, b) => b - a);
+    const highest = sortedScores[0];
+    const lowest = sortedScores[sortedScores.length - 1];
+    const avg = userData.avg;
+    const total = scores.reduce((sum, s) => sum + s, 0);
+    
+    // Format the last 10 games (most recent)
+    const recentGames = scores.slice(-10).reverse();
+    const gamesText = recentGames.map((score, i) => 
+      `Game ${scores.length - i}: ${score}`
+    ).join('\n');
+    
+    const message = `📊 ${currentUser}'s Game History\n\n` +
+                    `Total Games: ${scores.length}\n` +
+                    `Average Score: ${avg.toFixed(1)}\n` +
+                    `Highest Score: ${highest}\n` +
+                    `Lowest Score: ${lowest}\n` +
+                    `Total Points: ${total}\n` +
+                    `Rockets: ${userData.rockets}\n\n` +
+                    `Last ${Math.min(10, scores.length)} Games:\n` +
+                    `${gamesText}`;
+    
+    alert(message);
+  }
+
+  function exportData(){
+    const userCount = Object.keys(users).length;
+    if(userCount === 0){
+      alert('No data to export! Add some users and play games first.');
+      return;
+    }
+    
+    const dataStr = JSON.stringify(users, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `panda-runner-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    alert(`Exported data for ${userCount} user(s)!`);
+  }
+
+  function importData(){
+    const confirmImport = confirm('Import data from a backup file?\n\nWarning: This will REPLACE all current data!\n\nMake sure to export your current data first if you want to keep it.');
+    
+    if(!confirmImport) return;
+    
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const importedData = JSON.parse(event.target.result);
+          
+          // Validate the data structure
+          if(typeof importedData !== 'object' || importedData === null){
+            throw new Error('Invalid data format');
+          }
+          
+          // Basic validation - check if it looks like user data
+          let validData = true;
+          for(const [name, data] of Object.entries(importedData)){
+            if(!data.scores || !Array.isArray(data.scores)){
+              validData = false;
+              break;
+            }
+          }
+          
+          if(!validData){
+            throw new Error('Data does not appear to be valid Panda Runner user data');
+          }
+          
+          // Import the data
+          users = importedData;
+          
+          // Ensure all users have rockets property
+          for(const name in users){
+            if(users[name].rockets === undefined){
+              users[name].rockets = 3;
+            }
+          }
+          
+          currentUser = null;
+          currentUserBox.textContent = "";
+          userInput.value = "";
+          
+          saveUsers();
+          updateScoreboard();
+          updateRocketDisplay();
+          
+          const userCount = Object.keys(users).length;
+          alert(`Successfully imported data for ${userCount} user(s)!`);
+          
+        } catch(error) {
+          alert('Error importing data: ' + error.message + '\n\nPlease make sure you selected a valid Panda Runner backup file.');
+        }
+      };
+      
+      reader.readAsText(file);
+    };
+    
+    input.click();
+  }
+
+  document.getElementById('viewHistory').onclick = viewHistory;
+  document.getElementById('editUser').onclick = editUser;
+  document.getElementById('deleteUser').onclick = deleteUser;
+  document.getElementById('resetScores').onclick = resetAllScores;
+  document.getElementById('exportData').onclick = exportData;
+  document.getElementById('importData').onclick = importData;
 
   /* ------------------ GAME VARIABLES -------------------- */
   let speed = 6;
