@@ -9,12 +9,21 @@
     html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
     .layout{display:flex;flex-direction:row;gap:14px;padding:18px}
     .sidebar{width:260px;background:#fff;border:1px solid #d0d7e6;padding:12px;border-radius:8px;height:fit-content;box-shadow:0 4px 16px rgba(30,40,60,.08)}
-    canvas{background:linear-gradient(#dff1ff, #f4f8ff);border-radius:8px;box-shadow:0 6px 22px rgba(20,30,60,.08)}
-    .btn{background:#fff;border:1px solid #d0d7e6;padding:6px 10px;border-radius:8px;cursor:pointer}
+    canvas{background:linear-gradient(#dff1ff, #f4f8ff);border-radius:8px;box-shadow:0 6px 22px rgba(20,30,60,.08);max-width:100%;height:auto;}
+    .btn{background:#fff;border:1px solid #d0d7e6;padding:6px 10px;border-radius:8px;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation;transition:transform 0.1s ease, background 0.2s ease;}
+    .btn:active{transform:scale(0.95);}
     .input{width:100%;padding:6px 8px;border-radius:6px;border:1px solid #cdd5e0;margin-bottom:8px}
     h3{margin:8px 0}
     .score-item{font-size:14px;padding:4px 0;border-bottom:1px solid #eee}
     .rocket-display{background:#e8f4ff;border:1px solid #b8d9f5;padding:8px;border-radius:6px;margin-bottom:12px;font-weight:600;color:#1a5f8a}
+    
+    /* Mobile responsive styles */
+    @media (max-width: 768px) {
+      .layout{flex-direction:column;padding:10px;}
+      .sidebar{width:100%;margin-bottom:12px;}
+      canvas{width:100%;height:auto;}
+      .btn{padding:10px 14px;font-size:14px;}
+    }
   </style>
 </head>
 <body>
@@ -41,8 +50,19 @@
         <div>Score: <span id="score">0</span></div>
       </div>
       <canvas id="game" width="900" height="260" tabindex="0"></canvas>
-      <div style="font-size:13px;color:#6b7280;margin-top:6px;">Jump: Space/↑ • Duck: ↓ • Shoot Rocket: R or button • Pause: P<br>
-      <em>Earn 1 rocket for every 100 points! New users start with 3 rockets.</em></div>
+      
+      <!-- MOBILE TOUCH CONTROLS -->
+      <div id="mobileControls" style="display:none;margin-top:12px;gap:10px;justify-content:center;">
+        <button id="touchJump" class="btn" style="font-size:20px;padding:12px 24px;background:#4CAF50;color:#fff;border:2px solid #45a049;">⬆️ JUMP</button>
+        <button id="touchDuck" class="btn" style="font-size:20px;padding:12px 24px;background:#2196F3;color:#fff;border:2px solid #0b7dda;">⬇️ DUCK</button>
+        <button id="touchShoot" class="btn" style="font-size:20px;padding:12px 24px;background:#ff5722;color:#fff;border:2px solid #e64a19;">🚀 ROCKET</button>
+      </div>
+      
+      <div style="font-size:13px;color:#6b7280;margin-top:6px;">
+        <strong>Desktop:</strong> Jump: Space/↑ • Duck: ↓ • Shoot Rocket: R or button • Pause: P<br>
+        <strong>Mobile:</strong> Use touch buttons below the game<br>
+        <em>Earn 1 rocket for every 100 points! New users start with 3 rockets.</em>
+      </div>
     </div>
   </div>
 
@@ -320,10 +340,82 @@
     if(e.code==='Space' && !running) reset();
   });
 
-  canvas.addEventListener('touchstart',e=>{ e.preventDefault(); jump(); });
-
   document.getElementById('restart').onclick = reset;
   document.getElementById('pause').onclick = ()=>{ running=!running; document.getElementById('pause').textContent = running?'Pause':'Resume'; };
+
+  /* ------------------ MOBILE DETECTION & CONTROLS -------------------- */
+  // Detect mobile/touch device
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   ('ontouchstart' in window) || 
+                   (navigator.maxTouchPoints > 0);
+  
+  // Canvas touch - only enable on desktop for quick tap-to-jump
+  if(!isMobile){
+    canvas.addEventListener('touchstart',e=>{ e.preventDefault(); jump(); });
+  }
+  
+  // Show mobile control buttons
+  if(isMobile){
+    const mobileControls = document.getElementById('mobileControls');
+    mobileControls.style.display = 'flex';
+    
+    const touchJump = document.getElementById('touchJump');
+    const touchDuck = document.getElementById('touchDuck');
+    const touchShoot = document.getElementById('touchShoot');
+    
+    // Jump button
+    touchJump.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      jump();
+      touchJump.style.transform = 'scale(0.95)';
+    });
+    
+    touchJump.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      touchJump.style.transform = 'scale(1)';
+    });
+    
+    // Duck button - hold to duck
+    touchDuck.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      duckStart();
+      touchDuck.style.transform = 'scale(0.95)';
+      touchDuck.style.background = '#1976D2';
+    });
+    
+    touchDuck.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      duckEnd();
+      touchDuck.style.transform = 'scale(1)';
+      touchDuck.style.background = '#2196F3';
+    });
+    
+    touchDuck.addEventListener('touchcancel', (e) => {
+      e.preventDefault();
+      duckEnd();
+      touchDuck.style.transform = 'scale(1)';
+      touchDuck.style.background = '#2196F3';
+    });
+    
+    // Shoot button
+    touchShoot.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      shootRocket();
+      touchShoot.style.transform = 'scale(0.95)';
+    });
+    
+    touchShoot.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      touchShoot.style.transform = 'scale(1)';
+    });
+    
+    // Also support mouse clicks on mobile buttons for testing
+    touchJump.onclick = (e) => { e.preventDefault(); jump(); };
+    touchDuck.onmousedown = (e) => { e.preventDefault(); duckStart(); touchDuck.style.background = '#1976D2'; };
+    touchDuck.onmouseup = (e) => { e.preventDefault(); duckEnd(); touchDuck.style.background = '#2196F3'; };
+    touchDuck.onmouseleave = (e) => { e.preventDefault(); duckEnd(); touchDuck.style.background = '#2196F3'; };
+    touchShoot.onclick = (e) => { e.preventDefault(); shootRocket(); };
+  }
 
   // Initialize display
   updateScoreboard();
