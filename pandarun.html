@@ -59,6 +59,7 @@
         <button id="pause" class="btn">Pause</button>
         <button id="shoot" class="btn">Shoot Rocket 🚀</button>
         <div>Score: <span id="score">0</span></div>
+        <div style="color:#ff5722;font-weight:600;">🚀 Rockets: <span id="rocketCountGame">0</span></div>
       </div>
       <canvas id="game" width="900" height="260" tabindex="0"></canvas>
       
@@ -72,7 +73,7 @@
       <div style="font-size:13px;color:#6b7280;margin-top:6px;">
         <strong>Desktop:</strong> Jump: Space/↑ • Duck: ↓ • Shoot Rocket: R or button • Pause: P<br>
         <strong>Mobile:</strong> Use touch buttons below the game<br>
-        <em>Earn 1 rocket for every 100 points! New users start with 3 rockets.</em>
+        <em>Earn 1 rocket for every 100 points! New users start with 5 rockets.</em>
       </div>
     </div>
   </div>
@@ -99,18 +100,21 @@
   function updateRocketDisplay(){
     if(currentUser){
       rocketDisplay.style.display = 'block';
-      rocketCountSpan.textContent = users[currentUser].rockets || 0;
+      const rocketCount = users[currentUser].rockets || 0;
+      rocketCountSpan.textContent = rocketCount;
+      document.getElementById('rocketCountGame').textContent = rocketCount;
     } else {
       rocketDisplay.style.display = 'none';
+      document.getElementById('rocketCountGame').textContent = '0';
     }
   }
 
   function selectUser(){
     const name = userInput.value.trim();
     if(!name) return;
-    if(!users[name]) users[name] = { scores: [], avg: 0, rockets: 3 };
+    if(!users[name]) users[name] = { scores: [], avg: 0, rockets: 5 };
     // Ensure existing users have rockets property
-    if(users[name].rockets === undefined) users[name].rockets = 3;
+    if(users[name].rockets === undefined) users[name].rockets = 5;
     currentUser = name;
     currentUserBox.textContent = "Current User: " + name;
     updateScoreboard();
@@ -364,7 +368,7 @@
           // Ensure all users have rockets property
           for(const name in users){
             if(users[name].rockets === undefined){
-              users[name].rockets = 3;
+              users[name].rockets = 5;
             }
           }
           
@@ -405,18 +409,20 @@
   let clouds = [];
   let rockets = [];
   let frame = 0;
+  let scoreRecorded = false; // Track if we've recorded the score for this game
 
   let rocketPower = 1; // Obstacles get tougher
 
   const panda = { x:80, y:H-62, w:48, h:48, vy:0, gravity:0.9, jumpForce:-14, onGround:true, duck:false };
 
   function reset(){
-    if(currentUser) recordScore(Math.floor(score));
+    // Don't record score again if already recorded
     speed = 6; score = 0; frame = 0;
     obstacles = []; clouds = []; rockets = [];
     panda.y = H-62; panda.vy = 0; panda.onGround = true;
     rocketPower = 1;
     running = true;
+    scoreRecorded = false; // Reset the flag for new game
     updateHUD();
   }
 
@@ -516,7 +522,16 @@
     obstacles = obstacles.filter(o => o.hp > 0);
 
     const pRect = {x:panda.x, y:panda.y, w:panda.w, h:panda.h*(panda.duck?0.6:1)};
-    for(const ob of obstacles){ if(rectsCollide(pRect,ob)){ running=false; recordScore(Math.floor(score)); break; }}
+    for(const ob of obstacles){ 
+      if(rectsCollide(pRect,ob)){ 
+        running=false; 
+        if(!scoreRecorded && currentUser){
+          recordScore(Math.floor(score));
+          scoreRecorded = true;
+        }
+        break; 
+      }
+    }
 
     score += 0.1 * speed;
     updateHUD();
@@ -558,6 +573,19 @@
     });
 
     drawPanda(panda.x,panda.y,panda.w,panda.h,panda.duck);
+
+    // Draw in-game rocket count
+    if(currentUser){
+      const rocketCount = users[currentUser].rockets || 0;
+      ctx.fillStyle='rgba(255,255,255,0.9)';
+      ctx.fillRect(W-120, 10, 110, 36);
+      ctx.strokeStyle='#ff5722';
+      ctx.lineWidth=2;
+      ctx.strokeRect(W-120, 10, 110, 36);
+      ctx.fillStyle='#ff5722';
+      ctx.font='bold 18px system-ui';
+      ctx.fillText(`🚀 ${rocketCount}`, W-110, 34);
+    }
 
     if(!running){
       ctx.fillStyle='rgba(20,30,40,0.7)'; ctx.fillRect(0,0,W,H);
