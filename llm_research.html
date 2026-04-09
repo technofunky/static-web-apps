@@ -3,59 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>LLM Post-Training & Agentic RL | Interactive Visual Guide</title>
+    <title>LLM Post-Training & Agentic RL | Clear Flowcharts</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
-            font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-            background: #f8fafc;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f1f5f9;
             color: #0f172a;
             line-height: 1.5;
             padding: 1rem;
         }
-
         .container {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 0 auto;
         }
-
-        /* header */
         .header {
             text-align: center;
             margin-bottom: 1.5rem;
         }
-
         .header h1 {
-            font-size: clamp(1.5rem, 6vw, 2.2rem);
+            font-size: clamp(1.4rem, 6vw, 2.2rem);
             background: linear-gradient(135deg, #0f2b3d, #1e4a76);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            letter-spacing: -0.01em;
         }
-
         .header p {
-            font-size: clamp(0.8rem, 3vw, 0.95rem);
+            font-size: clamp(0.75rem, 3vw, 0.9rem);
             color: #334155;
-            margin-top: 0.3rem;
         }
-
-        /* tabs - horizontal scroll friendly */
+        /* tabs */
         .tabs {
             display: flex;
             flex-wrap: wrap;
             gap: 0.6rem;
-            margin-bottom: 1.8rem;
             justify-content: center;
-            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 1.8rem;
+            border-bottom: 1px solid #cbd5e1;
             padding-bottom: 0.6rem;
         }
-
         .tab-btn {
             background: #eef2ff;
             border: none;
@@ -64,122 +54,84 @@
             font-weight: 600;
             border-radius: 40px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: 0.2s;
             color: #1e293b;
             flex-shrink: 0;
         }
-
-        .tab-btn:hover {
-            background: #cbd5e1;
-            transform: translateY(-2px);
-        }
-
         .tab-btn.active {
             background: #1e4a76;
             color: white;
-            box-shadow: 0 6px 12px rgba(30, 74, 118, 0.2);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
-
-        /* tab content */
         .tab-content {
             display: none;
-            animation: fadeIn 0.25s ease;
+            animation: fade 0.2s ease;
         }
-
         .tab-content.active {
             display: block;
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(6px);}
+            to { opacity: 1; transform: translateY(0);}
         }
-
-        /* flowchart containers — fully responsive */
         .flowchart-container {
             background: white;
             border-radius: 28px;
             padding: 1rem;
             margin-bottom: 2rem;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.04);
             overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
         }
-
         .flowchart-title {
             font-size: 1.2rem;
             font-weight: 700;
             margin-bottom: 1rem;
             padding-left: 0.7rem;
-            border-left: 4px solid #1e4a76;
-            color: #0c4a6e;
+            border-left: 5px solid #1e4a76;
         }
-
         .flow-svg {
             display: block;
             margin: 0 auto;
-            background: #ffffff;
+            background: #fff;
             border-radius: 20px;
             width: 100%;
             height: auto;
-            min-width: 280px;
         }
-
-        /* summary cards grid — mobile first */
+        /* cards */
         .summary-grid {
             display: grid;
             grid-template-columns: 1fr;
             gap: 1rem;
             margin-top: 1.5rem;
         }
-
         @media (min-width: 640px) {
-            .summary-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .summary-grid { grid-template-columns: repeat(2,1fr); }
         }
-
         @media (min-width: 1024px) {
-            .summary-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
+            .summary-grid { grid-template-columns: repeat(3,1fr); }
         }
-
         .summary-card {
             background: white;
             border-radius: 20px;
-            padding: 1.1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-            transition: all 0.2s;
+            padding: 1rem;
             border-left: 4px solid #1e4a76;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
         }
-
-        .summary-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.06);
-        }
-
         .summary-card h3 {
             font-size: 1rem;
             font-weight: 700;
             color: #0f3b5c;
-            margin-bottom: 0.3rem;
         }
-
         .section-ref {
             font-size: 0.65rem;
             color: #5b7a9a;
             font-family: monospace;
-            margin-bottom: 0.5rem;
+            margin: 0.2rem 0 0.4rem;
         }
-
         .summary-card p {
             font-size: 0.85rem;
             color: #1e2f3f;
-            line-height: 1.4;
         }
-
-        /* tables responsive */
         .ref-table {
             background: white;
             border-radius: 20px;
@@ -187,52 +139,39 @@
             margin-top: 1.5rem;
             overflow-x: auto;
         }
-
         .ref-table table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.75rem;
             min-width: 480px;
         }
-
         .ref-table th, .ref-table td {
             border: 1px solid #e2e8f0;
-            padding: 0.5rem 0.6rem;
+            padding: 0.5rem;
             text-align: left;
-            vertical-align: top;
         }
-
         .ref-table th {
             background: #eef2ff;
-            font-weight: 600;
         }
-
         .badge {
             background: #dbeafe;
             color: #1e3a8a;
-            font-size: 0.65rem;
             padding: 0.2rem 0.6rem;
             border-radius: 30px;
+            font-size: 0.7rem;
             font-weight: 600;
-            display: inline-block;
         }
-
         footer {
-            margin-top: 2.5rem;
+            margin-top: 2rem;
             text-align: center;
             font-size: 0.7rem;
             color: #5b6e8c;
             border-top: 1px solid #e2e8f0;
-            padding-top: 1.2rem;
+            padding-top: 1rem;
         }
-
-        /* svg text responsiveness: small adjustments */
         @media (max-width: 680px) {
             .flow-svg text {
                 font-size: 8px !important;
-            }
-            .flowchart-container {
-                padding: 0.8rem;
             }
         }
     </style>
@@ -241,73 +180,97 @@
 <div class="container">
     <div class="header">
         <h1>📘 LLM Post‑Training & Agentic RL</h1>
-        <p>Decision flows + capability maps | based on 2025–2026 surveys</p>
+        <p>Visual decision flows | RL alignment + Agentic POMDP</p>
     </div>
-
     <div class="tabs">
         <button class="tab-btn active" data-tab="post">🧩 Post‑Training (RLHF/DPO/GRPO)</button>
-        <button class="tab-btn" data-tab="agentic">🤖 Agentic RL (POMDP)</button>
+        <button class="tab-btn" data-tab="agentic">🤖 Agentic RL</button>
         <button class="tab-btn" data-tab="combined">🔁 Full Pipeline</button>
     </div>
 
-    <!-- ========= TAB 1: POST-TRAINING ========= -->
+    <!-- ========= TAB 1: POST-TRAINING (with all arrows fixed) ========= -->
     <div id="post" class="tab-content active">
         <div class="flowchart-container">
-            <div class="flowchart-title">📌 Post‑training decision flowchart</div>
-            <svg viewBox="0 0 1000 760" xmlns="http://www.w3.org/2000/svg" class="flow-svg" style="max-width:100%; height:auto">
+            <div class="flowchart-title">📌 Post‑training decision flowchart (all arrows visible)</div>
+            <svg viewBox="0 0 1000 800" xmlns="http://www.w3.org/2000/svg" class="flow-svg">
                 <defs>
-                    <marker id="arrowP" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
-                        <polygon points="0 0, 9 3.5, 0 7" fill="#2c3e66" />
+                    <marker id="arrowP" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+                        <polygon points="0 0, 10 5, 0 10" fill="#2c3e66" />
                     </marker>
                     <linearGradient id="startGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stop-color="#eef2ff"/>
                         <stop offset="100%" stop-color="#e0e7ff"/>
                     </linearGradient>
                 </defs>
+
+                <!-- START -->
                 <rect x="370" y="15" width="260" height="48" rx="24" fill="url(#startGrad)" stroke="#4f46e5" stroke-width="2"/>
                 <text x="500" y="45" text-anchor="middle" font-weight="bold" fill="#1e1b4b" font-size="12">🧠 Base pre-trained LLM</text>
-                <line x1="500" y1="63" x2="500" y2="95" stroke="#2c3e66" stroke-width="2" marker-end="url(#arrowP)"/>
-                <rect x="330" y="100" width="340" height="56" rx="12" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
-                <text x="500" y="124" text-anchor="middle" font-weight="bold" fill="#854d0e" font-size="11">🔍 Q1: Highly specialized domain?</text>
-                <text x="500" y="142" text-anchor="middle" font-size="10" fill="#854d0e">(medical, legal, finance, low‑resource)</text>
-                <line x1="500" y1="156" x2="500" y2="188" stroke="#2c3e66" stroke-width="2" marker-end="url(#arrowP)"/>
-                <!-- branches -->
-                <rect x="100" y="195" width="280" height="62" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
-                <text x="240" y="218" text-anchor="middle" font-weight="bold" fill="#065f46" font-size="11">✅ YES → Domain SFT</text>
-                <text x="240" y="236" text-anchor="middle" font-size="10" fill="#065f46">instruction / dialogue / CoT (Sec 4.4)</text>
-                <rect x="620" y="195" width="280" height="62" rx="10" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
-                <text x="760" y="218" text-anchor="middle" font-weight="bold" fill="#991b1b" font-size="11">❌ NO → skip to Q2</text>
-                <text x="760" y="236" text-anchor="middle" font-size="10" fill="#991b1b">general capabilities exist</text>
-                <line x1="240" y1="257" x2="240" y2="295" stroke="#2c3e66" stroke-width="2" marker-end="url(#arrowP)"/>
-                <line x1="760" y1="257" x2="760" y2="295" stroke="#2c3e66" stroke-width="2" marker-end="url(#arrowP)"/>
-                <line x1="240" y1="295" x2="760" y2="295" stroke="#2c3e66" stroke-width="2"/>
-                <line x1="500" y1="295" x2="500" y2="325" stroke="#2c3e66" stroke-width="2" marker-end="url(#arrowP)"/>
-                <!-- Q2 -->
-                <rect x="330" y="330" width="340" height="56" rx="12" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
-                <text x="500" y="354" text-anchor="middle" font-weight="bold" fill="#854d0e" font-size="11">⚙️ Q2: Verifiable correctness?</text>
-                <text x="500" y="372" text-anchor="middle" font-size="10" fill="#854d0e">(math, code, SQL – outcome/process)</text>
-                <line x1="500" y1="386" x2="500" y2="418" stroke="#2c3e66" stroke-width="2" marker-end="url(#arrowP)"/>
-                <!-- GRPO vs DPO -->
-                <rect x="70" y="425" width="280" height="74" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
-                <text x="210" y="448" text-anchor="middle" font-weight="bold" fill="#1e3a8a" font-size="11">✅ Verifiable → GRPO</text>
-                <text x="210" y="466" text-anchor="middle" font-size="10" fill="#1e3a8a">Group‑relative advantage, no critic</text>
-                <text x="210" y="484" text-anchor="middle" font-size="9" fill="#1e3a8a">(Sec 3.2.8) DeepSeek‑R1 style</text>
-                <rect x="630" y="425" width="300" height="74" rx="12" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
-                <text x="780" y="448" text-anchor="middle" font-weight="bold" fill="#9d174d" font-size="11">❌ Subjective → DPO / PPO</text>
-                <text x="780" y="466" text-anchor="middle" font-size="10" fill="#9d174d">DPO: direct preference (no reward model)</text>
-                <text x="780" y="484" text-anchor="middle" font-size="9" fill="#9d174d">PPO: critic + KL penalty for quality</text>
-                <line x1="210" y1="499" x2="210" y2="540" stroke="#2c3e66" stroke-width="2" marker-end="url(#arrowP)"/>
-                <line x1="780" y1="499" x2="780" y2="540" stroke="#2c3e66" stroke-width="2" marker-end="url(#arrowP)"/>
-                <line x1="210" y1="540" x2="780" y2="540" stroke="#2c3e66" stroke-width="2"/>
-                <line x1="500" y1="540" x2="500" y2="575" stroke="#2c3e66" stroke-width="2" marker-end="url(#arrowP)"/>
-                <rect x="320" y="580" width="360" height="65" rx="12" fill="#e6f7f0" stroke="#0e7c5c" stroke-width="2"/>
-                <text x="500" y="604" text-anchor="middle" font-weight="bold" fill="#0b4f3a" font-size="11">⏱️ Test‑Time Scaling (optional)</text>
-                <text x="500" y="622" text-anchor="middle" font-size="10" fill="#0b4f3a">CoT → Self‑consistency (math) → Best‑of‑N</text>
-                <text x="500" y="637" text-anchor="middle" font-size="9" fill="#0b4f3a">Compute‑optimal: 4× efficiency</text>
+                <!-- arrow base -> Q1 -->
+                <line x1="500" y1="63" x2="500" y2="100" stroke="#2c3e66" stroke-width="2.5" marker-end="url(#arrowP)"/>
+
+                <!-- Q1 box -->
+                <rect x="330" y="105" width="340" height="56" rx="12" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+                <text x="500" y="129" text-anchor="middle" font-weight="bold" fill="#854d0e" font-size="11">🔍 Q1: Highly specialized domain?</text>
+                <text x="500" y="147" text-anchor="middle" font-size="10" fill="#854d0e">(medical, legal, finance, low‑resource)</text>
+
+                <!-- Q1 -> branches arrows -->
+                <line x1="500" y1="161" x2="500" y2="195" stroke="#2c3e66" stroke-width="2.5" marker-end="url(#arrowP)"/>
+
+                <!-- YES branch (left) -->
+                <rect x="80" y="200" width="280" height="62" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="220" y="223" text-anchor="middle" font-weight="bold" fill="#065f46" font-size="11">✅ YES → Domain SFT</text>
+                <text x="220" y="241" text-anchor="middle" font-size="10" fill="#065f46">instruction / dialogue / CoT (Sec 4.4)</text>
+
+                <!-- NO branch (right) -->
+                <rect x="640" y="200" width="280" height="62" rx="10" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+                <text x="780" y="223" text-anchor="middle" font-weight="bold" fill="#991b1b" font-size="11">❌ NO → skip to Q2</text>
+                <text x="780" y="241" text-anchor="middle" font-size="10" fill="#991b1b">general capabilities exist</text>
+
+                <!-- branch merging lines -->
+                <line x1="220" y1="262" x2="220" y2="305" stroke="#2c3e66" stroke-width="2" marker-end="url(#arrowP)"/>
+                <line x1="780" y1="262" x2="780" y2="305" stroke="#2c3e66" stroke-width="2" marker-end="url(#arrowP)"/>
+                <line x1="220" y1="305" x2="780" y2="305" stroke="#2c3e66" stroke-width="2"/>
+                <line x1="500" y1="305" x2="500" y2="340" stroke="#2c3e66" stroke-width="2.5" marker-end="url(#arrowP)"/>
+
+                <!-- Q2 box -->
+                <rect x="330" y="345" width="340" height="56" rx="12" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+                <text x="500" y="369" text-anchor="middle" font-weight="bold" fill="#854d0e" font-size="11">⚙️ Q2: Verifiable correctness?</text>
+                <text x="500" y="387" text-anchor="middle" font-size="10" fill="#854d0e">(math, code, SQL – outcome/process)</text>
+
+                <!-- Q2 -> GRPO/DPO arrows -->
+                <line x1="500" y1="401" x2="500" y2="440" stroke="#2c3e66" stroke-width="2.5" marker-end="url(#arrowP)"/>
+
+                <!-- GRPO branch -->
+                <rect x="70" y="445" width="300" height="75" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+                <text x="220" y="470" text-anchor="middle" font-weight="bold" fill="#1e3a8a" font-size="11">✅ Verifiable → GRPO</text>
+                <text x="220" y="488" text-anchor="middle" font-size="10" fill="#1e3a8a">Group‑relative advantage, no critic</text>
+                <text x="220" y="505" text-anchor="middle" font-size="9" fill="#1e3a8a">(Sec 3.2.8) DeepSeek‑R1 style</text>
+
+                <!-- DPO/PPO branch -->
+                <rect x="630" y="445" width="300" height="75" rx="12" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+                <text x="780" y="470" text-anchor="middle" font-weight="bold" fill="#9d174d" font-size="11">❌ Subjective → DPO / PPO</text>
+                <text x="780" y="488" text-anchor="middle" font-size="10" fill="#9d174d">DPO: direct preference (no RM)</text>
+                <text x="780" y="505" text-anchor="middle" font-size="9" fill="#9d174d">PPO: critic + KL penalty</text>
+
+                <!-- merge after GRPO/DPO -->
+                <line x1="220" y1="520" x2="220" y2="565" stroke="#2c3e66" stroke-width="2" marker-end="url(#arrowP)"/>
+                <line x1="780" y1="520" x2="780" y2="565" stroke="#2c3e66" stroke-width="2" marker-end="url(#arrowP)"/>
+                <line x1="220" y1="565" x2="780" y2="565" stroke="#2c3e66" stroke-width="2"/>
+                <line x1="500" y1="565" x2="500" y2="605" stroke="#2c3e66" stroke-width="2.5" marker-end="url(#arrowP)"/>
+
+                <!-- TTC stage -->
+                <rect x="310" y="610" width="380" height="70" rx="12" fill="#e6f7f0" stroke="#0e7c5c" stroke-width="2"/>
+                <text x="500" y="635" text-anchor="middle" font-weight="bold" fill="#0b4f3a" font-size="11">⏱️ Test‑Time Scaling (optional)</text>
+                <text x="500" y="655" text-anchor="middle" font-size="10" fill="#0b4f3a">CoT → Self‑consistency (math) → Best‑of‑N</text>
+                <text x="500" y="672" text-anchor="middle" font-size="9" fill="#0b4f3a">Compute‑optimal: 4× efficiency gain</text>
+
+                <!-- final note -->
+                <text x="500" y="745" text-anchor="middle" font-size="10" fill="#475569" font-style="italic">🔁 Final deployed model with optional inference scaling</text>
             </svg>
         </div>
         <div class="summary-grid">
-            <div class="summary-card"><h3>🎯 1. Introduction</h3><div class="section-ref">Pages 1-2</div><p>Pre‑trained LLMs lack reasoning, hallucinate. Post‑training (fine‑tuning, RL, TTC) aligns and improves.</p></div>
+            <div class="summary-card"><h3>🎯 1. Introduction</h3><div class="section-ref">Pages 1-2</div><p>Pre‑trained LLMs lack reasoning & hallucinate. Post‑training (fine‑tuning, RL, TTC) aligns and improves.</p></div>
             <div class="summary-card"><h3>📐 2. MDP & Policy Gradient</h3><div class="section-ref">Pages 3-4</div><p>Text generation = MDP. ∇J = E[Σ ∇log π · A]. Advantage = Q−V.</p></div>
             <div class="summary-card"><h3>🏆 3. Reward Modeling</h3><div class="section-ref">Pages 6-7</div><p>Bradley‑Terry / Plackett‑Luce from preferences. Outcome vs Process rewards.</p></div>
             <div class="summary-card"><h3>🔄 4. PPO / DPO / GRPO</h3><div class="section-ref">Pages 8-11</div><p>PPO (critic+clip), DPO (reparameterized reward), GRPO (group stats, efficient).</p></div>
@@ -326,71 +289,76 @@
         </div>
     </div>
 
-    <!-- ========= TAB 2: AGENTIC RL ========= -->
+    <!-- ========= TAB 2: AGENTIC RL (arrows fully visible) ========= -->
     <div id="agentic" class="tab-content">
         <div class="flowchart-container">
-            <div class="flowchart-title">🤖 Agentic RL: PBRFT → POMDP → Capabilities → Domains</div>
-            <svg viewBox="0 0 1020 700" xmlns="http://www.w3.org/2000/svg" class="flow-svg">
+            <div class="flowchart-title">🤖 Agentic RL: from PBRFT to autonomous agents</div>
+            <svg viewBox="0 0 1020 730" xmlns="http://www.w3.org/2000/svg" class="flow-svg">
                 <defs>
-                    <marker id="arrowA" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
-                        <polygon points="0 0, 9 3.5, 0 7" fill="#2d3e50" />
+                    <marker id="arrowA" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+                        <polygon points="0 0, 10 5, 0 10" fill="#2d3e50" />
                     </marker>
                 </defs>
-                <rect x="90" y="20" width="360" height="60" rx="12" fill="#ffe4e6" stroke="#e11d48" stroke-width="2"/>
+                <!-- PBRFT vs Agentic -->
+                <rect x="80" y="20" width="380" height="60" rx="12" fill="#ffe4e6" stroke="#e11d48" stroke-width="2"/>
                 <text x="270" y="46" text-anchor="middle" font-weight="bold" fill="#881337" font-size="11">📄 PBRFT (classic LLM RL)</text>
                 <text x="270" y="64" text-anchor="middle" font-size="9" fill="#881337">T=1, degenerate MDP, pure text actions</text>
 
-                <rect x="570" y="20" width="360" height="60" rx="12" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+                <rect x="560" y="20" width="380" height="60" rx="12" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
                 <text x="750" y="46" text-anchor="middle" font-weight="bold" fill="#064e3b" font-size="11">🤖 Agentic RL (POMDP)</text>
                 <text x="750" y="64" text-anchor="middle" font-size="9" fill="#064e3b">T>1, partial obs, A_text ∪ A_action</text>
 
-                <line x1="450" y1="50" x2="568" y2="50" stroke="#2d3e50" stroke-width="2.5" marker-end="url(#arrowA)"/>
+                <line x1="460" y1="50" x2="558" y2="50" stroke="#2d3e50" stroke-width="2.5" marker-end="url(#arrowA)"/>
 
-                <rect x="180" y="120" width="660" height="55" rx="14" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+                <!-- Capabilities block -->
+                <rect x="160" y="120" width="700" height="55" rx="14" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
                 <text x="510" y="145" text-anchor="middle" font-weight="bold" fill="#4c1d95" font-size="12">⭐ RL as engine for core agentic capabilities</text>
                 <text x="510" y="163" text-anchor="middle" font-size="10" fill="#5b21b6">Planning · Tool use · Memory · Self‑improvement · Reasoning · Perception</text>
 
-                <line x1="510" y1="175" x2="510" y2="210" stroke="#2d3e50" stroke-width="2" marker-end="url(#arrowA)"/>
+                <line x1="510" y1="175" x2="510" y2="215" stroke="#2d3e50" stroke-width="2.5" marker-end="url(#arrowA)"/>
 
-                <rect x="40" y="225" width="220" height="75" rx="10" fill="#fff0db" stroke="#d97706" stroke-width="2"/>
-                <text x="150" y="250" text-anchor="middle" font-weight="bold" font-size="11">🔍 Search & Research</text>
-                <text x="150" y="268" text-anchor="middle" font-size="9">Web / API / internal</text>
-                <text x="150" y="284" text-anchor="middle" font-size="8">GRPO, DeepResearch</text>
+                <!-- 4 domain branches -->
+                <rect x="30" y="225" width="225" height="78" rx="10" fill="#fff0db" stroke="#d97706" stroke-width="2"/>
+                <text x="142" y="250" text-anchor="middle" font-weight="bold" font-size="11">🔍 Search & Research</text>
+                <text x="142" y="268" text-anchor="middle" font-size="9">Web / API / internal</text>
+                <text x="142" y="285" text-anchor="middle" font-size="8">GRPO, DeepResearch</text>
 
-                <rect x="280" y="225" width="220" height="75" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
-                <text x="390" y="250" text-anchor="middle" font-weight="bold" font-size="11">💻 Code / SWE agents</text>
-                <text x="390" y="268" text-anchor="middle" font-size="9">outcome/process rewards</text>
-                <text x="390" y="284" text-anchor="middle" font-size="8">SWE‑bench, Debug‑Gym</text>
+                <rect x="275" y="225" width="225" height="78" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="387" y="250" text-anchor="middle" font-weight="bold" font-size="11">💻 Code / SWE agents</text>
+                <text x="387" y="268" text-anchor="middle" font-size="9">outcome/process rewards</text>
+                <text x="387" y="285" text-anchor="middle" font-size="8">SWE‑bench, Debug‑Gym</text>
 
-                <rect x="520" y="225" width="220" height="75" rx="10" fill="#e0e7ff" stroke="#3b82f6" stroke-width="2"/>
-                <text x="630" y="250" text-anchor="middle" font-weight="bold" font-size="11">🧮 Mathematical Agents</text>
-                <text x="630" y="268" text-anchor="middle" font-size="9">Informal + Formal (Lean)</text>
-                <text x="630" y="284" text-anchor="middle" font-size="8">DeepSeek‑Prover, rStar2</text>
+                <rect x="520" y="225" width="225" height="78" rx="10" fill="#e0e7ff" stroke="#3b82f6" stroke-width="2"/>
+                <text x="632" y="250" text-anchor="middle" font-weight="bold" font-size="11">🧮 Mathematical Agents</text>
+                <text x="632" y="268" text-anchor="middle" font-size="9">Informal + Formal (Lean)</text>
+                <text x="632" y="285" text-anchor="middle" font-size="8">DeepSeek‑Prover, rStar2</text>
 
-                <rect x="760" y="225" width="220" height="75" rx="10" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
-                <text x="870" y="250" text-anchor="middle" font-weight="bold" font-size="11">🖥️ GUI / Embodied</text>
-                <text x="870" y="268" text-anchor="middle" font-size="9">WebAgent‑R1, Voyager</text>
-                <text x="870" y="284" text-anchor="middle" font-size="8">VLA, multi‑turn RL</text>
+                <rect x="765" y="225" width="225" height="78" rx="10" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+                <text x="877" y="250" text-anchor="middle" font-weight="bold" font-size="11">🖥️ GUI / Embodied</text>
+                <text x="877" y="268" text-anchor="middle" font-size="9">WebAgent‑R1, Voyager</text>
+                <text x="877" y="285" text-anchor="middle" font-size="8">VLA, multi‑turn RL</text>
 
-                <line x1="510" y1="210" x2="150" y2="223" stroke="#2d3e50" stroke-width="1.8" marker-end="url(#arrowA)"/>
-                <line x1="510" y1="210" x2="390" y2="223" stroke="#2d3e50" stroke-width="1.8" marker-end="url(#arrowA)"/>
-                <line x1="510" y1="210" x2="630" y2="223" stroke="#2d3e50" stroke-width="1.8" marker-end="url(#arrowA)"/>
-                <line x1="510" y1="210" x2="870" y2="223" stroke="#2d3e50" stroke-width="1.8" marker-end="url(#arrowA)"/>
+                <!-- lines from capabilities to domains -->
+                <line x1="510" y1="215" x2="142" y2="223" stroke="#2d3e50" stroke-width="2" marker-end="url(#arrowA)"/>
+                <line x1="510" y1="215" x2="387" y2="223" stroke="#2d3e50" stroke-width="2" marker-end="url(#arrowA)"/>
+                <line x1="510" y1="215" x2="632" y2="223" stroke="#2d3e50" stroke-width="2" marker-end="url(#arrowA)"/>
+                <line x1="510" y1="215" x2="877" y2="223" stroke="#2d3e50" stroke-width="2" marker-end="url(#arrowA)"/>
 
-                <line x1="150" y1="300" x2="150" y2="340" stroke="#2d3e50" stroke-width="2" marker-end="url(#arrowA)"/>
-                <line x1="390" y1="300" x2="390" y2="340" stroke="#2d3e50" stroke-width="2" marker-end="url(#arrowA)"/>
-                <line x1="630" y1="300" x2="630" y2="340" stroke="#2d3e50" stroke-width="2" marker-end="url(#arrowA)"/>
-                <line x1="870" y1="300" x2="870" y2="340" stroke="#2d3e50" stroke-width="2" marker-end="url(#arrowA)"/>
+                <!-- down arrows to challenges -->
+                <line x1="142" y1="303" x2="142" y2="345" stroke="#2d3e50" stroke-width="2" marker-end="url(#arrowA)"/>
+                <line x1="387" y1="303" x2="387" y2="345" stroke="#2d3e50" stroke-width="2" marker-end="url(#arrowA)"/>
+                <line x1="632" y1="303" x2="632" y2="345" stroke="#2d3e50" stroke-width="2" marker-end="url(#arrowA)"/>
+                <line x1="877" y1="303" x2="877" y2="345" stroke="#2d3e50" stroke-width="2" marker-end="url(#arrowA)"/>
 
-                <rect x="130" y="345" width="760" height="60" rx="12" fill="#fef2e0" stroke="#e67e22" stroke-width="2"/>
-                <text x="510" y="370" text-anchor="middle" font-weight="bold" fill="#a34e00" font-size="11">⚠️ Key challenges & future (Section 6)</text>
-                <text x="510" y="390" text-anchor="middle" font-size="10">Trustworthiness (security, hallucination, sycophancy) · Scaling compute/data · Credit assignment</text>
+                <rect x="110" y="350" width="800" height="65" rx="12" fill="#fef2e0" stroke="#e67e22" stroke-width="2"/>
+                <text x="510" y="375" text-anchor="middle" font-weight="bold" fill="#a34e00" font-size="11">⚠️ Key challenges & future (Section 6)</text>
+                <text x="510" y="395" text-anchor="middle" font-size="10">Trustworthiness (security, hallucination, sycophancy) · Scaling compute/data · Credit assignment</text>
 
-                <line x1="510" y1="405" x2="510" y2="445" stroke="#2d3e50" stroke-width="2" marker-end="url(#arrowA)"/>
+                <line x1="510" y1="415" x2="510" y2="460" stroke="#2d3e50" stroke-width="2.5" marker-end="url(#arrowA)"/>
 
-                <rect x="270" y="450" width="480" height="55" rx="28" fill="#1e3c72" stroke="#0f172a" stroke-width="2"/>
-                <text x="510" y="477" text-anchor="middle" fill="white" font-weight="bold" font-size="13">🚀 General‑purpose autonomous agents</text>
-                <text x="510" y="495" text-anchor="middle" fill="#b9d0f0" font-size="9">RL + foundation models → scalable, adaptive intelligence</text>
+                <rect x="270" y="465" width="480" height="55" rx="28" fill="#1e3c72" stroke="#0f172a" stroke-width="2"/>
+                <text x="510" y="492" text-anchor="middle" fill="white" font-weight="bold" font-size="13">🚀 General‑purpose autonomous agents</text>
+                <text x="510" y="510" text-anchor="middle" fill="#b9d0f0" font-size="9">RL + foundation models → scalable, adaptive intelligence</text>
             </svg>
         </div>
         <div class="summary-grid">
@@ -406,29 +374,38 @@
     <div id="combined" class="tab-content">
         <div class="flowchart-container">
             <div class="flowchart-title">🔁 Integrated pipeline: post‑training → Agentic RL</div>
-            <svg viewBox="0 0 1000 580" xmlns="http://www.w3.org/2000/svg" class="flow-svg">
-                <defs><marker id="arrowC" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#1f4a6e" /></marker></defs>
+            <svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg" class="flow-svg">
+                <defs>
+                    <marker id="arrowC" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+                        <polygon points="0 0, 10 5, 0 10" fill="#1f4a6e" />
+                    </marker>
+                </defs>
                 <rect x="360" y="15" width="280" height="50" rx="25" fill="#cbd5e1" stroke="#334155" stroke-width="2"/>
                 <text x="500" y="46" text-anchor="middle" font-weight="bold" fill="#0f172a" font-size="11">📦 Base pre‑trained LLM</text>
                 <line x1="500" y1="65" x2="500" y2="100" stroke="#1f4a6e" stroke-width="2.5" marker-end="url(#arrowC)"/>
+
                 <rect x="270" y="105" width="460" height="55" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
                 <text x="500" y="128" text-anchor="middle" font-weight="bold" fill="#1e3a8a" font-size="11">🔧 Stage 1: Supervised fine‑tuning (SFT / LoRA)</text>
                 <text x="500" y="147" text-anchor="middle" font-size="10" fill="#1e3a8a">domain adaptation, instruction tuning, CoT distillation</text>
-                <line x1="500" y1="160" x2="500" y2="195" stroke="#1f4a6e" stroke-width="2.5" marker-end="url(#arrowC)"/>
-                <rect x="270" y="200" width="460" height="55" rx="12" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
-                <text x="500" y="223" text-anchor="middle" font-weight="bold" fill="#854d0e" font-size="11">⚡ Stage 2: RL alignment (GRPO / DPO / PPO)</text>
-                <text x="500" y="242" text-anchor="middle" font-size="10" fill="#854d0e">preference pairs or verifiable rewards → policy optimization</text>
-                <line x1="500" y1="255" x2="500" y2="295" stroke="#1f4a6e" stroke-width="2.5" marker-end="url(#arrowC)"/>
-                <rect x="230" y="300" width="540" height="60" rx="12" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
-                <text x="500" y="325" text-anchor="middle" font-weight="bold" fill="#065f46" font-size="11">🌍 Stage 3: Agentic environment interaction (POMDP)</text>
-                <text x="500" y="345" text-anchor="middle" font-size="10" fill="#065f46">tool use, memory retrieval, planning, multi‑turn reasoning, search</text>
-                <line x1="500" y1="360" x2="500" y2="400" stroke="#1f4a6e" stroke-width="2.5" marker-end="url(#arrowC)"/>
-                <rect x="300" y="405" width="400" height="55" rx="28" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
-                <text x="500" y="430" text-anchor="middle" fill="white" font-weight="bold" font-size="12">✅ Autonomous reasoning agent</text>
-                <text x="500" y="448" text-anchor="middle" fill="#cbd5e1" font-size="9">(DeepSeek‑R1, OpenAI o3, Kimi K2)</text>
-                <line x1="500" y1="460" x2="500" y2="495" stroke="#1f4a6e" stroke-width="2" marker-end="url(#arrowC)"/>
-                <rect x="340" y="500" width="320" height="35" rx="18" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
-                <text x="500" y="523" text-anchor="middle" font-size="10" font-weight="bold" fill="#4c1d95">Test‑time scaling + distillation for deployment</text>
+                <line x1="500" y1="160" x2="500" y2="200" stroke="#1f4a6e" stroke-width="2.5" marker-end="url(#arrowC)"/>
+
+                <rect x="270" y="205" width="460" height="55" rx="12" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+                <text x="500" y="228" text-anchor="middle" font-weight="bold" fill="#854d0e" font-size="11">⚡ Stage 2: RL alignment (GRPO / DPO / PPO)</text>
+                <text x="500" y="247" text-anchor="middle" font-size="10" fill="#854d0e">preference pairs or verifiable rewards → policy optimization</text>
+                <line x1="500" y1="260" x2="500" y2="300" stroke="#1f4a6e" stroke-width="2.5" marker-end="url(#arrowC)"/>
+
+                <rect x="230" y="305" width="540" height="60" rx="12" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="500" y="330" text-anchor="middle" font-weight="bold" fill="#065f46" font-size="11">🌍 Stage 3: Agentic environment interaction (POMDP)</text>
+                <text x="500" y="350" text-anchor="middle" font-size="10" fill="#065f46">tool use, memory retrieval, planning, multi‑turn reasoning, search</text>
+                <line x1="500" y1="365" x2="500" y2="405" stroke="#1f4a6e" stroke-width="2.5" marker-end="url(#arrowC)"/>
+
+                <rect x="300" y="410" width="400" height="55" rx="28" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+                <text x="500" y="435" text-anchor="middle" fill="white" font-weight="bold" font-size="12">✅ Autonomous reasoning agent</text>
+                <text x="500" y="453" text-anchor="middle" fill="#cbd5e1" font-size="9">(DeepSeek‑R1, OpenAI o3, Kimi K2)</text>
+                <line x1="500" y1="465" x2="500" y2="505" stroke="#1f4a6e" stroke-width="2" marker-end="url(#arrowC)"/>
+
+                <rect x="340" y="510" width="320" height="35" rx="18" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+                <text x="500" y="533" text-anchor="middle" font-size="10" font-weight="bold" fill="#4c1d95">Test‑time scaling + distillation for deployment</text>
             </svg>
             <div style="margin-top: 1rem; background: #f1f5f9; padding: 0.8rem; border-radius: 18px;">
                 <span class="badge">🧩 Key synergy</span> <span style="font-size: 0.8rem;">Post‑training creates robust, aligned LLMs; Agentic RL extends them to dynamic, partially observable worlds — together forming the full stack of next‑gen reasoning agents.</span>
@@ -441,13 +418,11 @@
             <div class="summary-card"><h3>📈 Future trajectory</h3><p>Hybrid systems: SFT for grounding, RL for reasoning, test‑time scaling for hard queries, agentic frameworks for long‑horizon tasks.</p></div>
         </div>
     </div>
-
     <footer>
         📄 Based on "LLM Post‑Training" (Kumar et al., 2025) and "Agentic RL for LLMs" (2026).<br>
-        Mobile‑optimized interactive summary — all diagrams scale with your screen.
+        All flowcharts fully responsive — arrows and decision paths are clearly visible.
     </footer>
 </div>
-
 <script>
     const btns = document.querySelectorAll('.tab-btn');
     const contents = {
