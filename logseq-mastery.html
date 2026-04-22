@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logseq Mastery</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Instrument+Serif:ital@0;1&display=swap');
+
+:root {
+–bg: #0d0f0e;
+–surface: #141714;
+–card: #1a1d1a;
+–border: #2a2e2a;
+–accent: #7fff6e;
+–accent2: #4ecdc4;
+–accent3: #ffd166;
+–text: #e8ede8;
+–muted: #7a8a7a;
+–danger: #ff6b6b;
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+font-family: ‘Space Mono’, monospace;
+background: var(–bg);
+color: var(–text);
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* Grid noise background */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image:
+linear-gradient(rgba(127,255,110,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(127,255,110,0.03) 1px, transparent 1px);
+background-size: 40px 40px;
+pointer-events: none;
+z-index: 0;
+}
+
+.container {
+max-width: 900px;
+margin: 0 auto;
+padding: 0 24px 80px;
+position: relative;
+z-index: 1;
+}
+
+/* HEADER */
+header {
+padding: 60px 0 40px;
+border-bottom: 1px solid var(–border);
+margin-bottom: 48px;
+}
+
+.tag {
+display: inline-block;
+font-size: 10px;
+letter-spacing: 0.2em;
+text-transform: uppercase;
+color: var(–accent);
+border: 1px solid var(–accent);
+padding: 3px 10px;
+margin-bottom: 20px;
+}
+
+h1 {
+font-family: ‘Instrument Serif’, serif;
+font-size: clamp(42px, 8vw, 72px);
+line-height: 1.0;
+letter-spacing: -1px;
+margin-bottom: 16px;
+}
+
+h1 em {
+color: var(–accent);
+font-style: italic;
+}
+
+.subtitle {
+color: var(–muted);
+font-size: 12px;
+letter-spacing: 0.05em;
+line-height: 1.8;
+}
+
+/* NAV PILLS */
+.nav {
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+margin-bottom: 48px;
+}
+
+.nav-btn {
+background: transparent;
+border: 1px solid var(–border);
+color: var(–muted);
+font-family: ‘Space Mono’, monospace;
+font-size: 11px;
+padding: 6px 14px;
+cursor: pointer;
+transition: all 0.15s;
+letter-spacing: 0.05em;
+}
+
+.nav-btn:hover, .nav-btn.active {
+border-color: var(–accent);
+color: var(–accent);
+background: rgba(127,255,110,0.05);
+}
+
+/* SECTIONS */
+.section { display: none; }
+.section.active { display: block; animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* SECTION TITLE */
+.section-title {
+font-family: ‘Instrument Serif’, serif;
+font-size: 28px;
+margin-bottom: 8px;
+color: var(–text);
+}
+
+.section-desc {
+color: var(–muted);
+font-size: 11px;
+line-height: 1.8;
+margin-bottom: 32px;
+max-width: 600px;
+}
+
+/* CARDS */
+.card-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+gap: 16px;
+margin-bottom: 32px;
+}
+
+.card {
+background: var(–card);
+border: 1px solid var(–border);
+padding: 20px;
+transition: border-color 0.2s;
+}
+
+.card:hover { border-color: var(–accent); }
+
+.card-icon {
+font-size: 20px;
+margin-bottom: 12px;
+display: block;
+}
+
+.card h3 {
+font-size: 13px;
+letter-spacing: 0.05em;
+color: var(–accent);
+margin-bottom: 8px;
+text-transform: uppercase;
+}
+
+.card p {
+font-size: 11px;
+color: var(–muted);
+line-height: 1.9;
+}
+
+/* SHORTCUT TABLE */
+.shortcut-group { margin-bottom: 32px; }
+
+.shortcut-group h3 {
+font-size: 11px;
+letter-spacing: 0.15em;
+text-transform: uppercase;
+color: var(–accent2);
+margin-bottom: 12px;
+padding-bottom: 8px;
+border-bottom: 1px solid var(–border);
+}
+
+.shortcut-row {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 10px 0;
+border-bottom: 1px solid rgba(42,46,42,0.5);
+font-size: 11px;
+}
+
+.shortcut-desc { color: var(–text); }
+.shortcut-keys { display: flex; gap: 4px; }
+
+kbd {
+background: var(–surface);
+border: 1px solid var(–border);
+color: var(–accent3);
+font-family: ‘Space Mono’, monospace;
+font-size: 10px;
+padding: 2px 7px;
+white-space: nowrap;
+}
+
+/* CODE BLOCKS */
+.code-block {
+background: var(–surface);
+border: 1px solid var(–border);
+border-left: 3px solid var(–accent);
+padding: 16px 20px;
+font-size: 12px;
+line-height: 1.9;
+margin: 12px 0;
+overflow-x: auto;
+}
+
+.code-block .comment { color: var(–muted); }
+.code-block .keyword { color: var(–accent); }
+.code-block .string { color: var(–accent3); }
+.code-block .link { color: var(–accent2); }
+
+/* TIPS */
+.tip {
+background: rgba(127,255,110,0.04);
+border: 1px solid rgba(127,255,110,0.2);
+padding: 14px 18px;
+margin: 12px 0;
+font-size: 11px;
+line-height: 1.9;
+color: var(–text);
+}
+
+.tip .tip-label {
+color: var(–accent);
+font-size: 10px;
+letter-spacing: 0.15em;
+text-transform: uppercase;
+display: block;
+margin-bottom: 6px;
+}
+
+.warning {
+background: rgba(255,107,107,0.04);
+border: 1px solid rgba(255,107,107,0.2);
+padding: 14px 18px;
+margin: 12px 0;
+font-size: 11px;
+line-height: 1.9;
+}
+
+.warning .tip-label { color: var(–danger); }
+
+/* CONCEPT BLOCKS */
+.concept {
+display: grid;
+grid-template-columns: 120px 1fr;
+gap: 0;
+border: 1px solid var(–border);
+margin-bottom: 12px;
+}
+
+.concept-label {
+background: var(–surface);
+padding: 16px;
+font-size: 10px;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+color: var(–accent3);
+display: flex;
+align-items: center;
+border-right: 1px solid var(–border);
+}
+
+.concept-body {
+padding: 16px;
+font-size: 11px;
+line-height: 1.9;
+color: var(–muted);
+}
+
+.concept-body strong { color: var(–text); }
+
+/* WORKFLOW STEPS */
+.steps { margin: 20px 0; }
+
+.step {
+display: flex;
+gap: 16px;
+margin-bottom: 20px;
+align-items: flex-start;
+}
+
+.step-num {
+background: var(–accent);
+color: var(–bg);
+font-size: 11px;
+font-weight: 700;
+width: 26px;
+height: 26px;
+display: flex;
+align-items: center;
+justify-content: center;
+flex-shrink: 0;
+}
+
+.step-content h4 {
+font-size: 12px;
+color: var(–text);
+margin-bottom: 4px;
+}
+
+.step-content p {
+font-size: 11px;
+color: var(–muted);
+line-height: 1.8;
+}
+
+/* QUERY EXAMPLES */
+.query-example {
+background: var(–card);
+border: 1px solid var(–border);
+padding: 16px 20px;
+margin: 12px 0;
+}
+
+.query-title {
+font-size: 10px;
+letter-spacing: 0.15em;
+text-transform: uppercase;
+color: var(–accent2);
+margin-bottom: 8px;
+}
+
+.query-code {
+font-size: 11px;
+color: var(–accent3);
+line-height: 1.8;
+font-family: ‘Space Mono’, monospace;
+white-space: pre-wrap;
+}
+
+/* PROGRESS TRACKER */
+.checklist { list-style: none; }
+
+.checklist li {
+display: flex;
+align-items: flex-start;
+gap: 12px;
+padding: 10px 0;
+border-bottom: 1px solid rgba(42,46,42,0.5);
+font-size: 11px;
+color: var(–muted);
+cursor: pointer;
+transition: color 0.15s;
+}
+
+.checklist li:hover { color: var(–text); }
+
+.checklist li.done { color: var(–muted); text-decoration: line-through; }
+
+.check-box {
+width: 16px;
+height: 16px;
+border: 1px solid var(–border);
+flex-shrink: 0;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 10px;
+color: var(–accent);
+margin-top: 1px;
+}
+
+.checklist li.done .check-box {
+background: rgba(127,255,110,0.1);
+border-color: var(–accent);
+}
+
+/* LEVEL BADGE */
+.level-badge {
+display: inline-block;
+font-size: 9px;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+padding: 2px 8px;
+margin-left: 8px;
+vertical-align: middle;
+}
+.level-badge.beginner { background: rgba(78,205,196,0.15); color: var(–accent2); }
+.level-badge.inter { background: rgba(255,209,102,0.15); color: var(–accent3); }
+.level-badge.adv { background: rgba(127,255,110,0.15); color: var(–accent); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 600px) {
+.two-col { grid-template-columns: 1fr; }
+.concept { grid-template-columns: 1fr; }
+.concept-label { border-right: none; border-bottom: 1px solid var(–border); }
+}
+
+hr-divider {
+display: block;
+border: none;
+border-top: 1px solid var(–border);
+margin: 32px 0;
+}
+
+.inline-code {
+background: var(–surface);
+border: 1px solid var(–border);
+color: var(–accent3);
+font-family: ‘Space Mono’, monospace;
+font-size: 10px;
+padding: 1px 6px;
+}
+</style>
+
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="tag">Expert Guide</div>
+    <h1>Master<br><em>Logseq</em></h1>
+    <p class="subtitle">From basics to power-user workflows — everything you need<br>to think in connected notes and build a second brain.</p>
+  </header>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="show('mental-model')">Mental Model</button>
+    <button class="nav-btn" onclick="show('essentials')">Essentials</button>
+    <button class="nav-btn" onclick="show('shortcuts')">Shortcuts</button>
+    <button class="nav-btn" onclick="show('linking')">Linking & Tags</button>
+    <button class="nav-btn" onclick="show('queries')">Queries</button>
+    <button class="nav-btn" onclick="show('workflows')">Workflows</button>
+    <button class="nav-btn" onclick="show('plugins')">Plugins</button>
+    <button class="nav-btn" onclick="show('mastery')">Mastery Path</button>
+  </nav>
+
+  <!-- MENTAL MODEL -->
+
+  <section id="mental-model" class="section active">
+    <p class="section-title">The Mental Model</p>
+    <p class="section-desc">Logseq isn't a note-taking app — it's an outliner where everything is a block and every block is addressable. Understanding this changes how you use it.</p>
+
+```
+<div class="concept">
+  <div class="concept-label">Graph</div>
+  <div class="concept-body">Your entire knowledge base. All pages and their connections. Stored as <strong>plain Markdown files</strong> on your disk — you always own your data.</div>
+</div>
+<div class="concept">
+  <div class="concept-label">Page</div>
+  <div class="concept-body">A file. It has a title (the filename). Pages are created automatically when you <strong>[[link to them]]</strong> — you never need to "create" one first.</div>
+</div>
+<div class="concept">
+  <div class="concept-label">Block</div>
+  <div class="concept-body">Every bullet point. The <strong>atomic unit</strong> of Logseq. Blocks can be nested, referenced, embedded, queried, and tagged independently. Each block has a unique ID.</div>
+</div>
+<div class="concept">
+  <div class="concept-label">Journal</div>
+  <div class="concept-body">Daily pages auto-created by date. The recommended <strong>capture inbox</strong> — write everything here first, then link it. Don't organize upfront; let queries surface it.</div>
+</div>
+<div class="concept">
+  <div class="concept-label">Graph View</div>
+  <div class="concept-body">Visual map of connections. Useful for exploration, but not the primary interface. The real power is in <strong>linked references and queries</strong>, not the graph.</div>
+</div>
+
+<div class="tip">
+  <span class="tip-label">Core philosophy</span>
+  Write on today's journal page. Link liberally to pages (concepts, people, projects). Let the database emerge. Query it later. Never reorganize — just re-link.
+</div>
+
+<div class="warning">
+  <span class="tip-label">Common mistake</span>
+  Treating Logseq like a folder-based note app. Resist creating elaborate folder hierarchies. Pages and links replace folders. Queries replace search.
+</div>
+```
+
+  </section>
+
+  <!-- ESSENTIALS -->
+
+  <section id="essentials" class="section">
+    <p class="section-title">Essential Syntax</p>
+    <p class="section-desc">Everything in Logseq is Markdown with a few Logseq-specific extensions.</p>
+
+```
+<div class="shortcut-group">
+  <h3>Links & References</h3>
+  <div class="code-block">
+```
+
+<span class="comment"># Page link — creates the page if it doesn’t exist</span>
+<span class="keyword">[[Page Name]]</span>
+
+<span class="comment"># Block reference — embeds a live reference to another block</span>
+<span class="keyword">((block-uuid))</span>
+
+<span class="comment"># Tag — same as a page link, syntactic sugar</span>
+<span class="keyword">#tag</span>   or   <span class="keyword">#[[multi word tag]]</span>
+
+<span class="comment"># Embed a page inline</span>
+<span class="keyword">{{embed [[Page Name]]}}</span>
+
+<span class="comment"># Embed a block inline</span>
+<span class="keyword">{{embed ((block-uuid))}}</span>
+</div>
+</div>
+
+```
+<div class="shortcut-group">
+  <h3>Properties (Block & Page Metadata)</h3>
+  <div class="code-block">
+```
+
+<span class="comment"># Page property — must be first block of page</span>
+<span class="keyword">type::</span> <span class="string">book</span>
+<span class="keyword">author::</span> <span class="string">[[Cal Newport]]</span>
+<span class="keyword">status::</span> <span class="string">reading</span>
+<span class="keyword">rating::</span> <span class="string">5</span>
+
+<span class="comment"># Block property — add to any block</span>
+
+- Meeting with [[Alice]]
+  <span class="keyword">date::</span> <span class="string">2024-01-15</span>
+  <span class="keyword">project::</span> <span class="string">[[Project Alpha]]</span>
+  </div>
+  <div class="tip">
+  <span class="tip-label">Pro tip</span>
+  Properties are what make queries powerful. Every piece of metadata you add is queryable. Build a small consistent vocabulary of properties and use it everywhere.
+  </div>
+  
+    </div>
+  
+    <div class="shortcut-group">
+      <h3>Formatting</h3>
+      <div class="code-block">
+
+<span class="string">**bold**</span>    <span class="string">*italic*</span>    <span class="string">~strikethrough~</span>    <span class="string">^^highlight^^</span>
+
+<span class="comment"># Task states</span>
+<span class="keyword">TODO</span> Buy groceries
+<span class="keyword">DOING</span> Write report  
+<span class="keyword">DONE</span> Send email
+<span class="keyword">LATER</span> Read that article
+<span class="keyword">NOW</span> Fix the bug
+
+<span class="comment"># Priority</span>
+<span class="keyword">TODO</span> [#A] Critical task
+<span class="keyword">TODO</span> [#B] Important task
+
+<span class="comment"># Scheduled / Deadline</span>
+SCHEDULED: <span class="string"><2024-01-20 Sat></span>
+DEADLINE: <span class="string"><2024-01-25 Thu></span>
+</div>
+</div>
+
+  </section>
+
+  <!-- SHORTCUTS -->
+
+  <section id="shortcuts" class="section">
+    <p class="section-title">Keyboard Shortcuts</p>
+    <p class="section-desc">Learn these 20 shortcuts and you'll be faster than 95% of users. The first 8 are non-negotiable.</p>
+
+```
+<div class="shortcut-group">
+  <h3>Navigation</h3>
+  <div class="shortcut-row"><span class="shortcut-desc">Open search / jump to page</span><div class="shortcut-keys"><kbd>Ctrl/⌘</kbd><kbd>K</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Go to today's journal</span><div class="shortcut-keys"><kbd>Alt</kbd><kbd>J</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Back / Forward</span><div class="shortcut-keys"><kbd>Alt</kbd><kbd>←</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Open page in sidebar</span><div class="shortcut-keys"><kbd>Shift</kbd><kbd>Click</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Toggle right sidebar</span><div class="shortcut-keys"><kbd>Ctrl/⌘</kbd><kbd>Shift</kbd><kbd>L</kbd></div></div>
+</div>
+
+<div class="shortcut-group">
+  <h3>Editing Blocks</h3>
+  <div class="shortcut-row"><span class="shortcut-desc">New block below</span><div class="shortcut-keys"><kbd>Enter</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">New line within block</span><div class="shortcut-keys"><kbd>Shift</kbd><kbd>Enter</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Indent block (child)</span><div class="shortcut-keys"><kbd>Tab</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Outdent block (parent)</span><div class="shortcut-keys"><kbd>Shift</kbd><kbd>Tab</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Move block up / down</span><div class="shortcut-keys"><kbd>Alt</kbd><kbd>↑/↓</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Delete block</span><div class="shortcut-keys"><kbd>Backspace</kbd> on empty block</div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Select block (non-edit mode)</span><div class="shortcut-keys"><kbd>Esc</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Select multiple blocks</span><div class="shortcut-keys"><kbd>Shift</kbd><kbd>↑/↓</kbd></div></div>
+</div>
+
+<div class="shortcut-group">
+  <h3>Slash Commands (type / in any block)</h3>
+  <div class="shortcut-row"><span class="shortcut-desc">Insert date picker</span><div class="shortcut-keys"><kbd>/date</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Insert template</span><div class="shortcut-keys"><kbd>/template</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Insert block reference</span><div class="shortcut-keys"><kbd>/block ref</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Draw diagram</span><div class="shortcut-keys"><kbd>/draw</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Add TODO</span><div class="shortcut-keys"><kbd>/TODO</kbd></div></div>
+</div>
+
+<div class="shortcut-group">
+  <h3>Views & Commands</h3>
+  <div class="shortcut-row"><span class="shortcut-desc">Toggle document / outline mode</span><div class="shortcut-keys"><kbd>Ctrl/⌘</kbd><kbd>Shift</kbd><kbd>D</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Command palette</span><div class="shortcut-keys"><kbd>Ctrl/⌘</kbd><kbd>Shift</kbd><kbd>P</kbd></div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Zoom into block</span><div class="shortcut-keys"><kbd>Ctrl/⌘</kbd><kbd>Click</kbd> bullet</div></div>
+  <div class="shortcut-row"><span class="shortcut-desc">Collapse / expand block</span><div class="shortcut-keys"><kbd>Ctrl/⌘</kbd><kbd>↑/↓</kbd></div></div>
+</div>
+```
+
+  </section>
+
+  <!-- LINKING & TAGS -->
+
+  <section id="linking" class="section">
+    <p class="section-title">Linking & Tagging Strategy</p>
+    <p class="section-desc">The difference between a useless graph and a powerful one is intentional linking. Here's the expert system.</p>
+
+```
+<div class="shortcut-group">
+  <h3>When to Use Each Link Type</h3>
+
+  <div class="concept">
+    <div class="concept-label">[[Page Link]]</div>
+    <div class="concept-body">Use for <strong>concepts, people, projects, places, books, companies</strong> — anything that deserves its own page and will accumulate references over time. The backbone of your graph.</div>
+  </div>
+  <div class="concept">
+    <div class="concept-label">#tag</div>
+    <div class="concept-body">Use for <strong>categories and types</strong> you want to filter by. Best for things like <span class="inline-code">#idea</span> <span class="inline-code">#question</span> <span class="inline-code">#resource</span> <span class="inline-code">#insight</span>. These are really just page links with different syntax.</div>
+  </div>
+  <div class="concept">
+    <div class="concept-label">((block ref))</div>
+    <div class="concept-body">Use when you want to <strong>reuse specific content</strong> without copy-pasting. The reference stays live — edit the source and all references update. Great for recurring definitions or key quotes.</div>
+  </div>
+  <div class="concept">
+    <div class="concept-label">property::</div>
+    <div class="concept-body">Use for <strong>structured metadata</strong> you'll query. If you find yourself writing "Status: In Progress" in prose, make it a property instead. Queryable, consistent, powerful.</div>
+  </div>
+</div>
+
+<div class="shortcut-group">
+  <h3>Namespaces — The Expert Move</h3>
+  <div class="tip">
+    <span class="tip-label">What they are</span>
+    Use <span class="inline-code">/</span> in page names to create hierarchy: <span class="inline-code">[[Books/Deep Work]]</span>, <span class="inline-code">[[Projects/Q1 Launch]]</span>, <span class="inline-code">[[People/Alice Smith]]</span>. This creates a parent page automatically and lets you navigate hierarchically.
+  </div>
+  <div class="code-block">
+```
+
+<span class="comment"># Good namespace patterns</span>
+<span class="link">[[Books/Atomic Habits]]</span>
+<span class="link">[[People/John Doe]]</span>
+<span class="link">[[Projects/Website Redesign]]</span>
+<span class="link">[[Areas/Health]]</span>
+<span class="link">[[Resources/Productivity]]</span>
+
+<span class="comment"># Then query all books:</span>
+<span class="keyword">{{query (namespace Books)}}</span>
+</div>
+</div>
+
+```
+<div class="shortcut-group">
+  <h3>Linked References — The Hidden Feature</h3>
+  <p style="font-size:11px;color:var(--muted);line-height:1.9;margin-bottom:12px;">
+    At the bottom of every page is a "Linked References" section showing every block that links to this page. This is automatic, zero-effort indexing. It means you never need to manually maintain a list — just write and link.
+  </p>
+  <div class="tip">
+    <span class="tip-label">Power move</span>
+    Create a page called <span class="inline-code">[[Alice Smith]]</span> and never write on it. Just mention <span class="inline-code">[[Alice Smith]]</span> in your journal and meeting notes. Her page becomes an automatic log of every interaction. Same for any project or concept.
+  </div>
+</div>
+```
+
+  </section>
+
+  <!-- QUERIES -->
+
+  <section id="queries" class="section">
+    <p class="section-title">Queries — Logseq's Superpower</p>
+    <p class="section-desc">Queries let you surface blocks dynamically based on tags, properties, and content. They turn your graph into a database.</p>
+
+```
+<div class="shortcut-group">
+  <h3>Simple Queries</h3>
+  <p style="font-size:11px;color:var(--muted);line-height:1.9;margin-bottom:12px;">Use <span class="inline-code">{{query ...}}</span> in any block. Simple queries use a basic syntax:</p>
+
+  <div class="query-example">
+    <div class="query-title">All TODO tasks</div>
+    <div class="query-code">{{query (todo todo)}}</div>
+  </div>
+
+  <div class="query-example">
+    <div class="query-title">All pages with a specific tag</div>
+    <div class="query-code">{{query [[project]]}}</div>
+  </div>
+
+  <div class="query-example">
+    <div class="query-title">Tasks due this week</div>
+    <div class="query-code">{{query (and (todo todo doing) (between -7d +7d))}}</div>
+  </div>
+
+  <div class="query-example">
+    <div class="query-title">All blocks tagged #idea containing "AI"</div>
+    <div class="query-code">{{query (and [[idea]] (full-text-search "AI"))}}</div>
+  </div>
+</div>
+
+<div class="shortcut-group">
+  <h3>Advanced Queries (Datalog)</h3>
+  <p style="font-size:11px;color:var(--muted);line-height:1.9;margin-bottom:12px;">For true power, use advanced queries in a <span class="inline-code">query</span> code block. These use Datalog syntax:</p>
+
+  <div class="code-block">
+```
+
+<span class="comment"># All books with status = “reading”</span>
+<span class="keyword">#+BEGIN_QUERY</span>
+{:title “Currently Reading”
+:query [:find (pull ?b [*])
+:where
+[?b :block/properties ?props]
+[(get ?props :type) ?type]
+[(= ?type “book”)]
+[(get ?props :status) ?status]
+[(= ?status “reading”)]]}
+<span class="keyword">#+END_QUERY</span>
+</div>
+
+```
+  <div class="code-block">
+```
+
+<span class="comment"># Tasks scheduled for today</span>
+<span class="keyword">#+BEGIN_QUERY</span>
+{:title “Due Today”
+:query [:find (pull ?b [*])
+:in $ ?start ?end
+:where
+[?b :block/scheduled ?d]
+[(>= ?d ?start)]
+[(<= ?d ?end)]]
+:inputs [:today :today]
+:result-transform (fn [result]
+(sort-by (fn [r] (get r :block/scheduled)) result))}
+<span class="keyword">#+END_QUERY</span>
+</div>
+
+```
+  <div class="tip">
+    <span class="tip-label">Strategy</span>
+    Don't memorize Datalog. Build a "Query Library" page and save your best queries there. Use block references to reuse them. The key insight: properties you define = columns in your database.
+  </div>
+</div>
+
+<div class="shortcut-group">
+  <h3>Query Operators Reference</h3>
+  <div class="shortcut-row"><span class="shortcut-desc"><span class="inline-code">(and ...)</span></span><span style="font-size:11px;color:var(--muted)">All conditions must match</span></div>
+  <div class="shortcut-row"><span class="shortcut-desc"><span class="inline-code">(or ...)</span></span><span style="font-size:11px;color:var(--muted)">Any condition must match</span></div>
+  <div class="shortcut-row"><span class="shortcut-desc"><span class="inline-code">(not ...)</span></span><span style="font-size:11px;color:var(--muted)">Exclude matching blocks</span></div>
+  <div class="shortcut-row"><span class="shortcut-desc"><span class="inline-code">(todo todo doing)</span></span><span style="font-size:11px;color:var(--muted)">Blocks with task state</span></div>
+  <div class="shortcut-row"><span class="shortcut-desc"><span class="inline-code">(between -7d now)</span></span><span style="font-size:11px;color:var(--muted)">Date range filter</span></div>
+  <div class="shortcut-row"><span class="shortcut-desc"><span class="inline-code">(property status "done")</span></span><span style="font-size:11px;color:var(--muted)">Match a property value</span></div>
+  <div class="shortcut-row"><span class="shortcut-desc"><span class="inline-code">(page-property type "book")</span></span><span style="font-size:11px;color:var(--muted)">Match page-level property</span></div>
+</div>
+```
+
+  </section>
+
+  <!-- WORKFLOWS -->
+
+  <section id="workflows" class="section">
+    <p class="section-title">Expert Workflows</p>
+    <p class="section-desc">Concrete systems used by power users. Pick one, run it for a month, then add another.</p>
+
+```
+<div class="shortcut-group">
+  <h3>Daily Journaling System <span class="level-badge beginner">Beginner</span></h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Morning capture</h4><p>Open journal (<kbd>Alt+J</kbd>). Log your top 3 priorities as TODOs. Add <span class="inline-code">[[Projects/X]]</span> links to each.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Capture throughout the day</h4><p>Every note, idea, or meeting goes in today's journal. Tag liberally: <span class="inline-code">#idea</span> <span class="inline-code">#question</span> <span class="inline-code">[[Person Name]]</span>.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Evening review</h4><p>Mark tasks done. Add a quick <span class="inline-code">reflect::</span> property with the day's key lesson. Nothing else required.</p></div></div>
+  </div>
+</div>
+
+<div class="shortcut-group">
+  <h3>Book Notes System <span class="level-badge inter">Intermediate</span></h3>
+  <div class="code-block">
+```
+
+<span class="comment"># Template: Books/[Title]</span>
+<span class="keyword">type::</span> <span class="string">book</span>
+<span class="keyword">author::</span> <span class="string">[[Author Name]]</span>
+<span class="keyword">status::</span> <span class="string">reading</span>   <span class="comment"># → reading → done</span>
+<span class="keyword">rating::</span> <span class="string">-</span>
+<span class="keyword">finished::</span> <span class="string">-</span>
+
+- ## Summary
+  - 
+- ## Key Ideas
+  - 
+- ## Highlights
+  - 
+- ## Actions
+  - <span class="keyword">TODO</span>
+    
+      </div>
+      <p style="font-size:11px;color:var(--muted);line-height:1.9;margin-top:8px;">Then query all books with a rating: <span class="inline-code">{{query (and (page-property type "book") (page-property rating))}}</span></p>
+    </div>
+    
+    <div class="shortcut-group">
+      <h3>Meeting Notes System <span class="level-badge inter">Intermediate</span></h3>
+      <div class="code-block">
+
+<span class="comment"># On today’s journal page:</span>
+
+- Meeting: Q1 Planning
+  <span class="keyword">attendees::</span> <span class="string">[[Alice]] [[Bob]]</span>
+  <span class="keyword">project::</span> <span class="string">[[Projects/Website]]</span>
+  <span class="keyword">date::</span> <span class="string">[[2024-01-15]]</span>
+  - ## Decisions
+    - Launching March 1
+  - ## Action Items
+    - <span class="keyword">TODO</span> [[Alice]] to send mockups by Friday
+    - <span class="keyword">TODO</span> [[Bob]] to review budget
+      
+      </div>
+      <div class="tip">
+        <span class="tip-label">Result</span>
+        Alice's page now shows this meeting in linked references. The project page shows it too. Query <span class="inline-code">{{query (and (todo todo) (property project [[Projects/Website]]))}}</span> to see all open tasks for the project.
+      </div>
+    
+    </div>
+    
+    <div class="shortcut-group">
+      <h3>GTD Task System <span class="level-badge adv">Advanced</span></h3>
+      <p style="font-size:11px;color:var(--muted);line-height:1.9;margin-bottom:16px;">Create a "Dashboard" page with embedded queries:</p>
+      <div class="two-col">
+        <div class="query-example">
+          <div class="query-title">NOW / DOING</div>
+          <div class="query-code">{{query (todo now doing)}}</div>
+        </div>
+        <div class="query-example">
+          <div class="query-title">Scheduled Today</div>
+          <div class="query-code">{{query (and (todo todo) (scheduled :today))}}</div>
+        </div>
+        <div class="query-example">
+          <div class="query-title">Overdue</div>
+          <div class="query-code">{{query (and (todo todo) (deadline :before :today))}}</div>
+        </div>
+        <div class="query-example">
+          <div class="query-title">Waiting On</div>
+          <div class="query-code">{{query (and (todo todo) [[waiting]])}}</div>
+        </div>
+      </div>
+    </div>
+  
+  </section>
+  
+  <!-- PLUGINS -->
+  
+  <section id="plugins" class="section">
+    <p class="section-title">Essential Plugins</p>
+    <p class="section-desc">Install from Settings → Plugins. These are the ones experts actually use.</p>
+  
+    <div class="card-grid">
+      <div class="card">
+        <span class="card-icon">🗓</span>
+        <h3>Logseq Calendar</h3>
+        <p>Monthly calendar view with dots on days with journal entries. Instant visual navigation to any past day. Install this first.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">📋</span>
+        <h3>Logseq Kanban</h3>
+        <p>Turns any tagged list into a Kanban board. Create boards from <span class="inline-code">type:: kanban</span> pages. Perfect for project management.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🎨</span>
+        <h3>Logseq Diagrams</h3>
+        <p>Draw.io integration built in. Use <span class="inline-code">/draw</span> to create flowcharts, diagrams, and visual maps stored in your graph.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🔗</span>
+        <h3>Random Note</h3>
+        <p>Opens a random page from your graph. Incredible for rediscovering forgotten notes and making unexpected connections. Use daily.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">📊</span>
+        <h3>Logseq Charts</h3>
+        <p>Render charts from your data. Define chart data in a code block with type <span class="inline-code">echarts</span>. Good for tracking habits and metrics.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">⚡</span>
+        <h3>Quickly Capture</h3>
+        <p>Global hotkey to capture a note to today's journal from anywhere on your computer, without switching to Logseq. Essential for quick capture.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🔎</span>
+        <h3>Smart Blocks</h3>
+        <p>Dynamic templates with variables, conditional blocks, and auto-fill. The most powerful templating system for Logseq power users.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🌙</span>
+        <h3>Logseq Bujo</h3>
+        <p>Bullet Journal inspired views. Adds weekly/monthly log views and future log — great if you like BuJo-style planning.</p>
+      </div>
+    </div>
+  
+    <div class="tip">
+      <span class="tip-label">Plugin philosophy</span>
+      Install one plugin at a time and actually use it for 2 weeks before adding another. Plugin overload kills productivity. The graph and queries are the real power — plugins are multipliers, not foundations.
+    </div>
+  </section>
+  
+  <!-- MASTERY PATH -->
+  
+  <section id="mastery" class="section">
+    <p class="section-title">Your Mastery Path</p>
+    <p class="section-desc">Work through this checklist. Click items to mark them done. These are ordered by impact — do them in sequence.</p>
+  
+    <div class="shortcut-group">
+      <h3>Week 1 — Foundations</h3>
+      <ul class="checklist" id="list1">
+        <li onclick="toggle(this)"><div class="check-box"></div>Write in journal every day for 7 days straight</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Learn Ctrl+K (search) — use it instead of clicking pages</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Create 10 page links [[like this]] naturally in your writing</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Add a property (like <span class="inline-code">status::</span>) to 5 blocks</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Explore Linked References on a page you've mentioned often</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Create your first template with /template</li>
+      </ul>
+    </div>
+  
+    <div class="shortcut-group">
+      <h3>Week 2-3 — Structure</h3>
+      <ul class="checklist" id="list2">
+        <li onclick="toggle(this)"><div class="check-box"></div>Set up a consistent namespace system (Books/, Projects/, People/)</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Create a Dashboard page with 3 live queries</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Write your first advanced query (#+BEGIN_QUERY)</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Use block references ((uuid)) to link two related blocks</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Create your book notes template and log 3 books</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Install and use the Calendar plugin for 1 week</li>
+      </ul>
+    </div>
+  
+    <div class="shortcut-group">
+      <h3>Month 2 — Systems</h3>
+      <ul class="checklist" id="list3">
+        <li onclick="toggle(this)"><div class="check-box"></div>Have 100+ pages in your graph — you've earned the power</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Build a project management system with queries</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Set up Smart Blocks for your most-used templates</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Use Random Note plugin weekly for spaced repetition</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Write a "meta-note" about how you use Logseq — query it later</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Configure a syncing solution (Git, iCloud, or Logseq Sync)</li>
+      </ul>
+    </div>
+  
+    <div class="shortcut-group">
+      <h3>Expert Level — Mastery Signs</h3>
+      <ul class="checklist" id="list4">
+        <li onclick="toggle(this)"><div class="check-box"></div>You write first, organize never — queries surface everything</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>Your graph has unexpected connections you didn't plan</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>You can write a Datalog query from scratch in under 5 minutes</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>You've found something in your notes that changed a decision</li>
+        <li onclick="toggle(this)"><div class="check-box"></div>You feel genuine resistance to using any other note app</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  function show(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function toggle(li) {
+    li.classList.toggle('done');
+    const box = li.querySelector('.check-box');
+    box.textContent = li.classList.contains('done') ? '✓' : '';
+  }
+</script>
+
+</body>
+</html>
